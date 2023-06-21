@@ -1,41 +1,34 @@
 {
   "project_info": {
-    "project_number": "864085896533",
-    "project_id": "tutorgo-project",
-    "storage_bucket": "tutorgo-project.appspot.com"
+    "project_number": "258700664055",
+    "project_id": "tutorgo-420b7",
+    "storage_bucket": "tutorgo-420b7.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:864085896533:android:e9002d177f628fa36553dc",
+        "mobilesdk_app_id": "1:258700664055:android:347d3b0cb440444b99c7f2",
         "android_client_info": {
           "package_name": "com.example.tutorgo"
         }
       },
       "oauth_client": [
         {
-          "client_id": "864085896533-ck0jk24hqgrphfkgqmiugm0hl58e9k29.apps.googleusercontent.com",
+          "client_id": "258700664055-fvi3ihci1luokp3dra9jtnadlsh06q2l.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAFUQpRJ3KkQptAyzK0zSjoOZELhS4rayE"
+          "current_key": "AIzaSyAO-xNdNfbkS5GtwOaoCIuGJt0F1hmT9f0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "864085896533-ck0jk24hqgrphfkgqmiugm0hl58e9k29.apps.googleusercontent.com",
+              "client_id": "258700664055-fvi3ihci1luokp3dra9jtnadlsh06q2l.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "864085896533-4vau608d3phlurp0ekj46pd36mn2c1pf.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.tutorgo.RunnerTests"
-              }
             }
           ]
         }
