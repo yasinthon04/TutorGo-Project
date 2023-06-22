@@ -18,7 +18,7 @@ class WidgetTree extends StatefulWidget {
           if (snapshot.hasData) {
             return HomePage();
           } else {
-            return const LoginPage();
+            return LoginPage();
           }
         },
       );
