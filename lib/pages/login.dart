@@ -232,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
             .get()
             .then((DocumentSnapshot documentSnapshot) {
       if (documentSnapshot.exists) {
-        if (documentSnapshot.get('rool') == "Tutor") {
+        if (documentSnapshot.get('role') == "Tutor") {
            Navigator.pushReplacement(
           context,
           MaterialPageRoute(

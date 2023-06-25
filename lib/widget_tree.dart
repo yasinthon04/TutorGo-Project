@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tutorgo/auth.dart';
-import 'package:tutorgo/pages/home.dart';
 import 'package:tutorgo/pages/login.dart';
+import 'package:tutorgo/pages/navpage/mainpage.dart';
 
 class WidgetTree extends StatefulWidget {
   const WidgetTree({Key? key}) : super(key: key);
@@ -16,7 +16,7 @@ class WidgetTree extends StatefulWidget {
         stream: Auth().authStateChanges,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return HomePage();
+            return MainPage();
           } else {
             return LoginPage();
           }

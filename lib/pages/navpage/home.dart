@@ -2,8 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorgo/auth.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({Key? key}) : super(key: key);
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
 
   final User? user = Auth().currentUser;
 
@@ -12,18 +18,11 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _title() {
-    return const Text('TutorGO');
+    return const Text('Home page');
   }
 
   Widget _userUid() {
     return Text(user?.email ?? 'User email');
-  }
-
-  Widget _signOutButton() {
-    return ElevatedButton(
-      onPressed: signOut, 
-      child: const Text('Sign Out'),
-    );
   }
 
   @override
@@ -40,15 +39,10 @@ class HomePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _userUid(),
-            _signOutButton(),
+            _userUid()
           ],
         ),
       ),
     );
-
   }
 }
-
-
-
