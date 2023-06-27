@@ -20,11 +20,12 @@ class _RegisterState extends State<Register> {
   final _auth = FirebaseAuth.instance;
 
   final TextEditingController passwordController = new TextEditingController();
-  final TextEditingController confirmpassController =
-      new TextEditingController();
-  final TextEditingController name = new TextEditingController();
+  final TextEditingController confirmpassController = new TextEditingController();
+  final TextEditingController firstname= new TextEditingController();
+  final TextEditingController lastname= new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
   final TextEditingController mobile = new TextEditingController();
+  
   bool _isObscure = true;
   bool _isObscure2 = true;
   File? file;
@@ -38,12 +39,12 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.orange[900],
+      backgroundColor: Colors.indigo,
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             Container(
-              color: Colors.orangeAccent[700],
+              color: Colors.indigo,
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
               child: SingleChildScrollView(
@@ -71,6 +72,68 @@ class _RegisterState extends State<Register> {
                         ),
                         SizedBox(
                           height: 50,
+                        ),
+                        TextFormField(
+                          controller: firstname,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: 'Firstname',
+                            enabled: true,
+                            contentPadding: const EdgeInsets.only(
+                                left: 14.0, bottom: 8.0, top: 8.0),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.white),
+                              borderRadius: new BorderRadius.circular(20),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.white),
+                              borderRadius: new BorderRadius.circular(20),
+                            ),
+                          ),
+                          // validator: (value) {
+                          //   if (value!.length == 0) {
+                          //     return "Firstname cannot be empty";
+                          //   } else {
+                          //     return ("Please enter a valid firstname");
+                          //   }
+                          // },
+                          onChanged: (value) {},
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        TextFormField(
+                          controller: lastname,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: 'Lastname',
+                            enabled: true,
+                            contentPadding: const EdgeInsets.only(
+                                left: 14.0, bottom: 8.0, top: 8.0),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.white),
+                              borderRadius: new BorderRadius.circular(20),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.white),
+                              borderRadius: new BorderRadius.circular(20),
+                            ),
+                          ),
+                          // validator: (value) {
+                          //   if (value!.length == 0) {
+                          //     return "Lastname cannot be empty";
+                          //   } else {
+                          //     return ("Please enter a valid lastname");
+                          //   }
+                          // },
+                          onChanged: (value) {},
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        SizedBox(
+                          height: 20,
                         ),
                         TextFormField(
                           controller: emailController,
@@ -102,6 +165,37 @@ class _RegisterState extends State<Register> {
                               return null;
                             }
                           },
+                          onChanged: (value) {},
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        TextFormField(
+                          controller: mobile,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: 'Mobile',
+                            enabled: true,
+                            contentPadding: const EdgeInsets.only(
+                                left: 14.0, bottom: 8.0, top: 8.0),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.white),
+                              borderRadius: new BorderRadius.circular(20),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.white),
+                              borderRadius: new BorderRadius.circular(20),
+                            ),
+                          ),
+                          // validator: (value) {
+                          //   if (value!.length == 0) {
+                          //     return "Mobile cannot be empty";
+                          //   } else {
+                          //     return ("Please enter a valid mobile");
+                          //   }
+                          // },
                           onChanged: (value) {},
                           keyboardType: TextInputType.emailAddress,
                         ),
@@ -309,11 +403,16 @@ class _RegisterState extends State<Register> {
     }
   }
 
-  postDetailsToFirestore(String email, String rool) async {
+  postDetailsToFirestore(String email, String role) async {
     FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
     var user = _auth.currentUser;
     CollectionReference ref = FirebaseFirestore.instance.collection('users');
-    ref.doc(user!.uid).set({'email': emailController.text, 'role': role});
+    ref.doc(user!.uid).set({
+    'firstname': firstname.text,
+    'lastname':lastname.text,
+    'email': emailController.text,
+    'mobile':mobile.text,
+    'role': role});
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => LoginPage()));
   }
