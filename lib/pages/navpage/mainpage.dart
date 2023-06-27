@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tutorgo/auth.dart';
 import 'package:tutorgo/pages/navpage/account.dart';
 import 'package:tutorgo/pages/navpage/home.dart';
 import 'package:tutorgo/pages/navpage/schedule.dart';
