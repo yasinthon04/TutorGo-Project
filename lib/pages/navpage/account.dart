@@ -29,13 +29,26 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Widget _userUid() {
-    return Text(user?.email ?? 'User email');
+    return Text(
+      user?.email ?? 'User email',
+      style: Theme.of(context).textTheme.bodyText2,
+    );
   }
 
   Widget _signOutButton() {
-    return ElevatedButton(
-      onPressed: signOut,
-      child: const Text('Sign Out'),
+    return SizedBox(
+      width: 200,
+      child: ElevatedButton(
+        onPressed: signOut,
+        style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red.withOpacity(0.6),
+            side: BorderSide.none,
+            shape: const StadiumBorder()),
+        child: const Text(
+          'Sign Out',
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
     );
   }
 @override
