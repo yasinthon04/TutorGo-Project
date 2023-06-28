@@ -11,8 +11,8 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   MyApp({Key? key}) : super(key: key);
-  Color _primaryColor = HexColor('#DC54FE');
-  Color _accentColor = HexColor('#8A02AE');
+  Color _primaryColor = HexColor('2E2252');
+  Color _accentColor = HexColor('27445C');
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

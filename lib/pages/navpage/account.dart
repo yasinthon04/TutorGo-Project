@@ -137,7 +137,7 @@ class _AccountPageState extends State<AccountPage> {
       child: ElevatedButton(
         onPressed: signOut,
         style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.purple.withOpacity(0.2),
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
             side: BorderSide.none,
             shape: const StadiumBorder()),
         child: const Text(
