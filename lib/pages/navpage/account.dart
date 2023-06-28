@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorgo/auth.dart';
+import 'package:tutorgo/pages/navpage/update_profile.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:flutter/services.dart';
 import 'package:tutorgo/pages/login.dart';
@@ -54,11 +55,11 @@ class _AccountPageState extends State<AccountPage> {
                 '$fname $lname',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 20),
-              Text(
-                'Role: $role',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              // SizedBox(height: 20),
+              // Text(
+              //   'Role: $role',
+              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              // ),
               SizedBox(height: 10),
             ],
           );
@@ -168,41 +169,41 @@ class _AccountPageState extends State<AccountPage> {
                 Theme.of(context).hintColor,
               ])),
         ),
-        actions: [
-          Container(
-            margin: EdgeInsets.only(
-              top: 16,
-              right: 16,
-            ),
-            child: Stack(
-              children: <Widget>[
-                Icon(Icons.notifications),
-                Positioned(
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: 12,
-                      minHeight: 12,
-                    ),
-                    child: Text(
-                      '5',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              ],
-            ),
-          )
-        ],
+        // actions: [
+        //   Container(
+        //     margin: EdgeInsets.only(
+        //       top: 16,
+        //       right: 16,
+        //     ),
+        //     child: Stack(
+        //       children: <Widget>[
+        //         Icon(Icons.notifications),
+        //         Positioned(
+        //           right: 0,
+        //           child: Container(
+        //             padding: EdgeInsets.all(1),
+        //             decoration: BoxDecoration(
+        //               color: Colors.red,
+        //               borderRadius: BorderRadius.circular(6),
+        //             ),
+        //             constraints: BoxConstraints(
+        //               minWidth: 12,
+        //               minHeight: 12,
+        //             ),
+        //             child: Text(
+        //               '5',
+        //               style: TextStyle(
+        //                 color: Colors.white,
+        //                 fontSize: 8,
+        //               ),
+        //               textAlign: TextAlign.center,
+        //             ),
+        //           ),
+        //         )
+        //       ],
+        //     ),
+        //   )
+        // ],
       ),
       // drawer: Drawer(
       //   child: Container(
@@ -475,6 +476,24 @@ class _AccountPageState extends State<AccountPage> {
                   ),
                   SizedBox(
                     height: 10,
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context, 
+                            MaterialPageRoute(builder: (context) => updateProfilePage()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.yellow,
+                            side: BorderSide.none,
+                            shape: const StadiumBorder()),
+                        child: const Text(
+                          'Edit Profile',
+                          style: TextStyle(color: Colors.black),
+                        )),
                   ),
                   _signOutButton(),
                 ],
