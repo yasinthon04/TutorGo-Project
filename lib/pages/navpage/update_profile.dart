@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorgo/auth.dart';
+import 'package:tutorgo/pages/navpage/account.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:flutter/services.dart';
 import 'package:tutorgo/pages/login.dart';
@@ -19,59 +20,85 @@ class _updateProfilePageState extends State<updateProfilePage> {
   double _drawerFontSize = 17;
   final User? user = Auth().currentUser;
 
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _firstnameController = TextEditingController();
+  final TextEditingController _lastnameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
+
+  void _updateUserData(String updatedEmail, String updatedFirstname,
+    String updatedLastname, String updatedPhone) {
+  FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+    'email': updatedEmail,
+    'firstname': updatedFirstname,
+    'lastname': updatedLastname,
+    'mobile': updatedPhone,
+  }).then((value) {
+    // Data successfully updated
+    print('User data updated successfully');
+  }).catchError((error) {
+    // Error occurred while updating data
+    print('Failed to update user data: $error');
+  });
+}
+
   Widget _userInfo() {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(user?.uid)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user?.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          }
 
-        if (!snapshot.hasData || snapshot.data == null) {
-          return Text('No data available');
-        }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return Text('No data available');
+          }
 
-        var userData = snapshot.data!.data() as Map<String, dynamic>;
+          var userData = snapshot.data!.data() as Map<String, dynamic>;
 
-        String email = userData['email'] ?? 'User email';
-        String fname = userData['firstname'] ?? 'User firstname';
-        String lname = userData['lastname'] ?? 'User lastname';
-        String phone = userData['mobile'] ?? 'User mobile';
-        String role = userData['role'] ?? 'User role';
+          String email = userData['email'] ?? 'User email';
+          String firstname = userData['firstname'] ?? 'User firstname';
+          String lastname = userData['lastname'] ?? 'User lastname';
+          String phone = userData['mobile'] ?? 'User mobile';
 
-        return Column(
-          children: [
-            ListTile(
-              leading: Icon(Icons.mail),
-              title: Text("email"),
-              subtitle: Text(email),
-            ),
-            ListTile(
-              leading: Icon(Icons.text_format),
-              title: Text("Name"),
-              subtitle: Text(fname + ' ' + lname),
-            ),
-            ListTile(
-              leading: Icon(Icons.phone),
-              title: Text("Phone"),
-              subtitle: Text(phone),
-            ),
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text("Role"),
-              subtitle: Text(role),
-            ),
-          ],
-        );
-      },
-    );
+          _emailController.text = email;
+          _firstnameController.text = firstname;
+          _lastnameController.text = lastname;
+          _phoneController.text = phone;
+
+          return Column(
+            children: [
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                    labelText: 'Email', prefixIcon: Icon(Icons.email)),
+              ),
+              TextFormField(
+                controller: _firstnameController,
+                decoration: const InputDecoration(
+                    labelText: 'Firstname',
+                    prefixIcon: Icon(Icons.text_format)),
+              ),
+              TextFormField(
+                controller: _lastnameController,
+                decoration: const InputDecoration(
+                    labelText: 'Lastname', prefixIcon: Icon(Icons.text_format)),
+              ),
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(
+                    labelText: 'Phone', prefixIcon: Icon(Icons.phone)),
+              ),
+            ],
+          );
+        });
   }
 
   Widget _title() {
@@ -84,7 +111,6 @@ class _updateProfilePageState extends State<updateProfilePage> {
       style: Theme.of(context).textTheme.bodyText2,
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +133,6 @@ class _updateProfilePageState extends State<updateProfilePage> {
               ])),
         ),
       ),
-      
       body: SingleChildScrollView(
         child: Stack(
           children: [
@@ -122,25 +147,50 @@ class _updateProfilePageState extends State<updateProfilePage> {
               child: Column(
                 children: <Widget>[
                   Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(width: 5, color: Colors.white),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 20,
-                          offset: const Offset(5, 5),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      size: 80,
-                      color: Colors.grey.shade300,
-                    ),
-                  ),
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(width: 5, color: Colors.white),
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 20,
+                            offset: const Offset(5, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Stack(
+                            children: [
+                              SizedBox(
+                                width: 120,
+                                height: 120,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(100),
+                                  child: Image.asset(''),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                    width: 35,
+                                    height: 35,
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(100),
+                                        color: Colors.purple),
+                                    child: const Icon(
+                                      Icons.camera,
+                                      size: 20,
+                                    )),
+                              )
+                            ],
+                          )
+                        ],
+                      )),
                   SizedBox(
                     height: 20,
                   ),
@@ -162,7 +212,7 @@ class _updateProfilePageState extends State<updateProfilePage> {
                             textAlign: TextAlign.left,
                           ),
                         ),
-                        Card(
+                        Form(
                           child: Container(
                             alignment: Alignment.topLeft,
                             padding: EdgeInsets.all(15),
@@ -192,10 +242,19 @@ class _updateProfilePageState extends State<updateProfilePage> {
                     width: 200,
                     child: ElevatedButton(
                         onPressed: () {
-                          // Navigator.push(
-                          //   context, 
-                          //   MaterialPageRoute(builder: (context) => updateProfilePage()),
-                          // );
+                          // Get the updated values from the TextFormField widgets
+                          String updatedEmail = _emailController.text;
+                          String updatedFirstname = _firstnameController.text;
+                          String updatedLasttname = _lastnameController.text;
+                          String updatedPhone = _phoneController.text;
+
+                          // Call the method to update the user data
+                          _updateUserData(updatedEmail, updatedFirstname,
+                              updatedLasttname, updatedPhone);
+                          Navigator.pop(
+                            context,
+                            MaterialPageRoute(builder: (context) => AccountPage()),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.yellow,
@@ -213,6 +272,5 @@ class _updateProfilePageState extends State<updateProfilePage> {
         ),
       ),
     );
-
   }
 }
