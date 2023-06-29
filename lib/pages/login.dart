@@ -1,16 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:tutorgo/roles/student.dart';
 import 'package:tutorgo/roles/tutor.dart';
 import 'register.dart';
-import 'profile_page.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:tutorgo/common/theme_helper.dart';
-import 'package:tutorgo/pages/widget/header_widget.dart';
-import 'package:tutorgo/auth.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -24,8 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = new TextEditingController();
   final TextEditingController passwordController = new TextEditingController();
   final _auth = FirebaseAuth.instance;
-  double _headerHeight = 250;
-  
+  double _headerHeight = 300;
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +30,24 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             Container(
-              height: _headerHeight,
-              child: HeaderWidget(_headerHeight, true,
-                  Icons.login_rounded), //let's create a common header widget
-            ),
+  height: 250,
+  child: Stack(
+    children: [
+      const HeaderWidget(250, false, Icons.ac_unit),
+      Positioned(
+        top: 50,
+        left: 0,
+        right: 0,
+        child: Image.asset(
+          'lib/assets/images/logo.png',
+          width: 130,
+          height: 130,
+        ),
+      ),
+    ],
+  ),
+),
+            
             SafeArea(
               child: Container(
                   padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -47,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                       Text(
-                        'TutorGo',
+                        'SIGN IN',
                         style: TextStyle(
                             fontSize: 60, fontWeight: FontWeight.bold),
                       ),
@@ -63,12 +72,8 @@ class _LoginPageState extends State<LoginPage> {
                               Container(
                                 child: TextFormField(
                                   controller: emailController,
-                                  
                                   decoration: ThemeHelper().textInputDecoration(
-                                    
                                       'E-mail', 'Enter your e-mail'),
-                                      
-                                      
                                   validator: (value) {
                                     if (value!.length == 0) {
                                       return "Email cannot be empty";
@@ -148,7 +153,6 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   ),
                                   onPressed: () {
-                                    
                                     setState(() {
                                       visible = true;
                                     });
@@ -219,7 +223,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void signIn(String email, String password) async {
-    
     if (_formkey.currentState!.validate()) {
       print('login');
       try {
