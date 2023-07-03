@@ -8,8 +8,6 @@ import 'package:tutorgo/common/theme_helper.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:hexcolor/hexcolor.dart';
 
-
-
 class Register extends StatefulWidget {
   @override
   _RegisterState createState() => _RegisterState();
@@ -43,7 +41,6 @@ class _RegisterState extends State<Register> {
   bool checkedValue = false;
   bool checkboxValue = false;
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,8 +69,8 @@ class _RegisterState extends State<Register> {
                                 padding: EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(
-                                      width: 5, color: Colors.white),
+                                  border:
+                                      Border.all(width: 5, color: Colors.white),
                                   color: Colors.white,
                                   boxShadow: [
                                     BoxShadow(
@@ -100,41 +97,43 @@ class _RegisterState extends State<Register> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 30,),
+                        SizedBox(
+                          height: 30,
+                        ),
                         Container(
                           child: TextFormField(
                             controller: firstname,
                             decoration: ThemeHelper().textInputDecoration(
-                              'First Name', 'Enter your first name'),
-                          // validator: (value) {
-                          //   if (value!.length == 0) {
-                          //     return "Firstname cannot be empty";
-                          //   } else {
-                          //     return ("Please enter a valid firstname");
-                          //   }
-                          // },
-                          onChanged: (value) {},
-                          keyboardType: TextInputType.emailAddress,
-                        
+                                'First Name', 'Enter your first name'),
+                            // validator: (value) {
+                            //   if (value!.length == 0) {
+                            //     return "Firstname cannot be empty";
+                            //   } else {
+                            //     return ("Please enter a valid firstname");
+                            //   }
+                            // },
+                            onChanged: (value) {},
+                            keyboardType: TextInputType.emailAddress,
                           ),
-                          
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 30,),
+                        SizedBox(
+                          height: 30,
+                        ),
                         Container(
                           child: TextFormField(
                             controller: lastname,
                             decoration: ThemeHelper().textInputDecoration(
-                              'Last Name', 'Enter your last name'),
-                          //   validator: (value) {
-                          //   if (value!.length == 0) {
-                          //     return "Lastname cannot be empty";
-                          //   } else {
-                          //     return ("Please enter a valid lastname");
-                          //   }
-                          // },
-                          onChanged: (value) {},
-                          keyboardType: TextInputType.emailAddress,
+                                'Last Name', 'Enter your last name'),
+                            //   validator: (value) {
+                            //   if (value!.length == 0) {
+                            //     return "Lastname cannot be empty";
+                            //   } else {
+                            //     return ("Please enter a valid lastname");
+                            //   }
+                            // },
+                            onChanged: (value) {},
+                            keyboardType: TextInputType.emailAddress,
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -143,40 +142,39 @@ class _RegisterState extends State<Register> {
                           child: TextFormField(
                             controller: emailController,
                             decoration: ThemeHelper().textInputDecoration(
-                              "E-mail address", "Enter your email"),
+                                "E-mail address", "Enter your email"),
                             validator: (value) {
-                            if (value!.length == 0) {
-                              return "Email cannot be empty";
-                            }
-                            if (!RegExp(
-                                    "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]")
-                                .hasMatch(value)) {
-                              return ("Please enter a valid email");
-                            } else {
-                              return null;
-                            }
-                          },
-                          onChanged: (value) {},
-                          keyboardType: TextInputType.emailAddress,
+                              if (value!.length == 0) {
+                                return "Email cannot be empty";
+                              }
+                              if (!RegExp(
+                                      "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]")
+                                  .hasMatch(value)) {
+                                return ("Please enter a valid email");
+                              } else {
+                                return null;
+                              }
+                            },
+                            onChanged: (value) {},
+                            keyboardType: TextInputType.emailAddress,
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
+                            controller: mobile,
                             decoration: ThemeHelper().textInputDecoration(
-                                "Mobile Number",
-                                "Enter your mobile number"),
+                                "Mobile Number", "Enter your mobile number"),
                             keyboardType: TextInputType.phone,
-                          //   validator: (value) {
-                          //   if (value!.length == 0) {
-                          //     return "Mobile cannot be empty";
-                          //   } else {
-                          //     return ("Please enter a valid mobile");
-                          //   }
-                          // },
-                          onChanged: (value) {},
-                          
+                            //   validator: (value) {
+                            //   if (value!.length == 0) {
+                            //     return "Mobile cannot be empty";
+                            //   } else {
+                            //     return ("Please enter a valid mobile");
+                            //   }
+                            // },
+                            onChanged: (value) {},
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -188,17 +186,17 @@ class _RegisterState extends State<Register> {
                             decoration: ThemeHelper().textInputDecoration(
                                 "Password*", "Enter your password"),
                             validator: (value) {
-                            RegExp regex = new RegExp(r'^.{6,}$');
-                            if (value!.isEmpty) {
-                              return "Password cannot be empty";
-                            }
-                            if (!regex.hasMatch(value)) {
-                              return ("please enter valid password min. 6 character");
-                            } else {
-                              return null;
-                            }
-                          },
-                          onChanged: (value) {},
+                              RegExp regex = new RegExp(r'^.{6,}$');
+                              if (value!.isEmpty) {
+                                return "Password cannot be empty";
+                              }
+                              if (!regex.hasMatch(value)) {
+                                return ("please enter valid password min. 6 character");
+                              } else {
+                                return null;
+                              }
+                            },
+                            onChanged: (value) {},
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -218,7 +216,8 @@ class _RegisterState extends State<Register> {
                               dropdownColor: Theme.of(context).primaryColor,
                               isDense: true,
                               isExpanded: false,
-                              iconEnabledColor: const Color.fromARGB(255, 14, 8, 8),
+                              iconEnabledColor:
+                                  const Color.fromARGB(255, 14, 8, 8),
                               focusColor: const Color.fromARGB(255, 19, 12, 12),
                               items: options.map((String dropDownStringItem) {
                                 return DropdownMenuItem<String>(
@@ -260,7 +259,10 @@ class _RegisterState extends State<Register> {
                                             state.didChange(value);
                                           });
                                         }),
-                                    Text("I accept all terms and conditions.", style: TextStyle(color: Colors.grey),),
+                                    Text(
+                                      "I accept all terms and conditions.",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
                                   ],
                                 ),
                                 Container(
@@ -268,7 +270,10 @@ class _RegisterState extends State<Register> {
                                   child: Text(
                                     state.errorText ?? '',
                                     textAlign: TextAlign.left,
-                                    style: TextStyle(color: Theme.of(context).errorColor,fontSize: 12,),
+                                    style: TextStyle(
+                                      color: Theme.of(context).errorColor,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 )
                               ],
@@ -284,11 +289,13 @@ class _RegisterState extends State<Register> {
                         ),
                         SizedBox(height: 20.0),
                         Container(
-                          decoration: ThemeHelper().buttonBoxDecoration(context),
+                          decoration:
+                              ThemeHelper().buttonBoxDecoration(context),
                           child: ElevatedButton(
                             style: ThemeHelper().buttonStyle(),
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(40, 10, 40, 10),
+                              padding:
+                                  const EdgeInsets.fromLTRB(40, 10, 40, 10),
                               child: Text(
                                 "Register".toUpperCase(),
                                 style: TextStyle(
@@ -296,76 +303,94 @@ class _RegisterState extends State<Register> {
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
-                                
                               ),
-                              
                             ),
-                    
                             onPressed: () {
-                                setState(() {
-                                  showProgress = true;
-                                });
-                                signUp(emailController.text,
-                                    passwordController.text, role);
-                              },
+                              setState(() {
+                                showProgress = true;
+                              });
+                              signUp(emailController.text,
+                                  passwordController.text, role);
+                            },
                           ),
                         ),
                         SizedBox(height: 30.0),
-                        Text("Or create account using social media",  style: TextStyle(color: Colors.grey),),
+                        Text(
+                          "Or create account using social media",
+                          style: TextStyle(color: Colors.grey),
+                        ),
                         SizedBox(height: 25.0),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             GestureDetector(
                               child: FaIcon(
-                                FontAwesomeIcons.googlePlus, size: 35,
-                                color: HexColor("#EC2D2F"),),
-                              onTap: () {
-                                setState(() {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return ThemeHelper().alartDialog("Google Plus","You tap on GooglePlus social icon.",context);
-                                    },
-                                  );
-                                });
-                              },
-                            ),
-                            SizedBox(width: 30.0,),
-                            GestureDetector(
-                              child: Container(
-                                padding: EdgeInsets.all(0),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(width: 5, color: HexColor("#40ABF0")),
-                                  color: HexColor("#40ABF0"),
-                                ),
-                                child: FaIcon(
-                                  FontAwesomeIcons.twitter, size: 23,
-                                  color: HexColor("#FFFFFF"),),
+                                FontAwesomeIcons.googlePlus,
+                                size: 35,
+                                color: HexColor("#EC2D2F"),
                               ),
                               onTap: () {
                                 setState(() {
                                   showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return ThemeHelper().alartDialog("Twitter","You tap on Twitter social icon.",context);
+                                      return ThemeHelper().alartDialog(
+                                          "Google Plus",
+                                          "You tap on GooglePlus social icon.",
+                                          context);
                                     },
                                   );
                                 });
                               },
                             ),
-                            SizedBox(width: 30.0,),
+                            SizedBox(
+                              width: 30.0,
+                            ),
                             GestureDetector(
-                              child: FaIcon(
-                                FontAwesomeIcons.facebook, size: 35,
-                                color: HexColor("#3E529C"),),
+                              child: Container(
+                                padding: EdgeInsets.all(0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  border: Border.all(
+                                      width: 5, color: HexColor("#40ABF0")),
+                                  color: HexColor("#40ABF0"),
+                                ),
+                                child: FaIcon(
+                                  FontAwesomeIcons.twitter,
+                                  size: 23,
+                                  color: HexColor("#FFFFFF"),
+                                ),
+                              ),
                               onTap: () {
                                 setState(() {
                                   showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return ThemeHelper().alartDialog("Facebook",
+                                      return ThemeHelper().alartDialog(
+                                          "Twitter",
+                                          "You tap on Twitter social icon.",
+                                          context);
+                                    },
+                                  );
+                                });
+                              },
+                            ),
+                            SizedBox(
+                              width: 30.0,
+                            ),
+                            GestureDetector(
+                              child: FaIcon(
+                                FontAwesomeIcons.facebook,
+                                size: 35,
+                                color: HexColor("#3E529C"),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return ThemeHelper().alartDialog(
+                                          "Facebook",
                                           "You tap on Facebook social icon.",
                                           context);
                                     },
@@ -390,10 +415,18 @@ class _RegisterState extends State<Register> {
   void signUp(String email, String password, String role) async {
     CircularProgressIndicator();
     if (_formkey.currentState!.validate()) {
-      await _auth
-          .createUserWithEmailAndPassword(email: email, password: password)
-          .then((value) => {postDetailsToFirestore(email, role)})
-          .catchError((e) {});
+      try {
+        await _auth.createUserWithEmailAndPassword(
+            email: email, password: password);
+        await postDetailsToFirestore(email, role);
+      } catch (e) {
+        // Handle the error and return a value
+        print('Error occurred during sign up: $e');
+        setState(() {
+          showProgress = false;
+        });
+        return null; // Or return a specific value
+      }
     }
   }
 
@@ -401,12 +434,13 @@ class _RegisterState extends State<Register> {
     FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
     var user = _auth.currentUser;
     CollectionReference ref = FirebaseFirestore.instance.collection('users');
-    ref.doc(user!.uid).set({
-    'firstname': firstname.text,
-    'lastname':lastname.text,
-    'email': emailController.text,
-    'mobile':mobile.text,
-    'role': role});
+    ref.doc(user?.uid).set({
+      'firstname': firstname.text,
+      'lastname': lastname.text,
+      'email': emailController.text,
+      'mobile': mobile.text,
+      'role': role,
+    });
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => LoginPage()));
   }

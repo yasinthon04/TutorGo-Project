@@ -25,6 +25,23 @@ class _HomePageState extends State<HomePage> {
     return Text(user?.email ?? 'User email');
   }
 
+  Widget _signOutButton() {
+    return SizedBox(
+      width: 200,
+      child: ElevatedButton(
+        onPressed: signOut,
+        style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+            side: BorderSide.none,
+            shape: const StadiumBorder()),
+        child: const Text(
+          'Sign Out',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +56,8 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _userUid()
+            _userUid(),
+            _signOutButton(),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorgo/pages/navpage/mainpage.dart';
 import 'package:tutorgo/roles/student.dart';
 import 'package:tutorgo/roles/tutor.dart';
 import 'register.dart';
@@ -197,21 +198,27 @@ class _LoginPageState extends State<LoginPage> {
         .get()
         .then((DocumentSnapshot documentSnapshot) {
       if (documentSnapshot.exists) {
-        if (documentSnapshot.get('role') == "Tutor") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Tutor(),
-            ),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Student(),
-            ),
-          );
-        }
+        Navigator.pop(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainPage(), // Replace MainPage with your main page widget
+        ),
+      );
+        // if (documentSnapshot.get('role') == "Tutor") {
+        //   Navigator.pushReplacement(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => Tutor(),
+        //     ),
+        //   );
+        // } else {
+        //   Navigator.pushReplacement(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => Student(),
+        //     ),
+        //   );
+        // }
       } else {
         print('Document does not exist on the database');
       }
