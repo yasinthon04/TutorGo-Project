@@ -201,21 +201,27 @@ class _LoginPageState extends State<LoginPage> {
         .get()
         .then((DocumentSnapshot documentSnapshot) {
       if (documentSnapshot.exists) {
-        if (documentSnapshot.get('role') == "Tutor") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Tutor(),
-            ),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Student(),
-            ),
-          );
-        }
+        Navigator.pop(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainPage(), // Replace MainPage with your main page widget
+        ),
+      );
+        // if (documentSnapshot.get('role') == "Tutor") {
+        //   Navigator.pushReplacement(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => Tutor(),
+        //     ),
+        //   );
+        // } else {
+        //   Navigator.pushReplacement(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => Student(),
+        //     ),
+        //   );
+        // }
       } else {
         print('Document does not exist on the database');
       }

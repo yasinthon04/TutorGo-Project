@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorgo/auth.dart';
+import 'package:tutorgo/pages/navpage/update_profile.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:flutter/services.dart';
 import 'package:tutorgo/pages/login.dart';
 import 'package:tutorgo/pages/register.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class AccountPage extends StatefulWidget {
   const AccountPage({Key? key}) : super(key: key);
@@ -24,6 +26,11 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Widget _userHeadinfo() {
+    if (user == null) {
+      // User is not authenticated
+      return Text('User not authenticated');
+    }
+
     return StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -47,22 +54,71 @@ class _AccountPageState extends State<AccountPage> {
           String fname = userData['firstname'] ?? 'User firstname';
           String lname = userData['lastname'] ?? 'User lastname';
           String role = userData['role'] ?? 'User role';
+          String imageName = userData['profilePicture'] ?? 'User Image';
 
           return Column(
             children: [
+              FutureBuilder<String>(
+                future: _getImageUrl(imageName),
+                builder: (context, imageNameSnapshot) {
+                  if (imageNameSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  }
+
+                  // if (imageUrlSnapshot.hasError) {
+                  //   return Text('Error: ${imageUrlSnapshot.error}');
+                  // }
+
+                  // String imageUrl = imageUrlSnapshot.data ?? '';
+
+                  if (imageName.isNotEmpty) {
+                    return ClipOval(
+                      child: SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: Image.network(
+                          imageName,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  } else {
+                    return ClipOval(
+                      child: SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: Image.asset(
+                          'assets/profile-icon.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+              SizedBox(height: 10),
               Text(
                 '$fname $lname',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Role: $role',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 10),
             ],
           );
         });
+  }
+
+  Future<String> _getImageUrl(String imageName) async {
+    // Refresh user token
+    final idTokenResult = await user?.getIdTokenResult();
+    final token = idTokenResult?.token;
+
+    final ref = firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child('profile_pictures/$imageName');
+    final url = await ref.getDownloadURL();
+
+    return url;
   }
 
   Widget _userInfo() {
@@ -168,194 +224,7 @@ class _AccountPageState extends State<AccountPage> {
                 Theme.of(context).hintColor,
               ])),
         ),
-        actions: [
-          Container(
-            margin: EdgeInsets.only(
-              top: 16,
-              right: 16,
-            ),
-            child: Stack(
-              children: <Widget>[
-                Icon(Icons.notifications),
-                Positioned(
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: 12,
-                      minHeight: 12,
-                    ),
-                    child: Text(
-                      '5',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              ],
-            ),
-          )
-        ],
       ),
-      // drawer: Drawer(
-      //   child: Container(
-      //     decoration: BoxDecoration(
-      //         gradient: LinearGradient(
-      //             begin: Alignment.topLeft,
-      //             end: Alignment.bottomRight,
-      //             stops: [
-      //           0.0,
-      //           1.0
-      //         ],
-      //             colors: [
-      //           Theme.of(context).primaryColor.withOpacity(0.2),
-      //           Theme.of(context).hintColor.withOpacity(0.5),
-      //         ])),
-      //     child: ListView(
-      //       children: [
-      //         DrawerHeader(
-      //           decoration: BoxDecoration(
-      //             color: Theme.of(context).primaryColor,
-      //             gradient: LinearGradient(
-      //               begin: Alignment.topLeft,
-      //               end: Alignment.bottomRight,
-      //               stops: [0.0, 1.0],
-      //               colors: [
-      //                 Theme.of(context).primaryColor,
-      //                 Theme.of(context).hintColor,
-      //               ],
-      //             ),
-      //           ),
-      //           child: Container(
-      //             alignment: Alignment.bottomLeft,
-      //             child: Text(
-      //               "FlutterTutorial.Net",
-      //               style: TextStyle(
-      //                   fontSize: 25,
-      //                   color: Colors.white,
-      //                   fontWeight: FontWeight.bold),
-      //             ),
-      //           ),
-      //         ),
-      //         ListTile(
-      //           leading: Icon(
-      //             Icons.screen_lock_landscape_rounded,
-      //             size: _drawerIconSize,
-      //             color: Theme.of(context).hintColor,
-      //           ),
-      //           title: Text(
-      //             'Splash Screen',
-      //             style: TextStyle(
-      //                 fontSize: 17, color: Theme.of(context).hintColor),
-      //           ),
-      //           onTap: () {
-      //             //Navigator.push(context, MaterialPageRoute(builder: (context) => SplashScreen(title: "Splash Screen")));
-      //           },
-      //         ),
-      //         ListTile(
-      //           leading: Icon(Icons.login_rounded,
-      //               size: _drawerIconSize, color: Theme.of(context).hintColor),
-      //           title: Text(
-      //             'Login Page',
-      //             style: TextStyle(
-      //                 fontSize: _drawerFontSize,
-      //                 color: Theme.of(context).hintColor),
-      //           ),
-      //           onTap: () {
-      //             Navigator.push(
-      //               context,
-      //               MaterialPageRoute(builder: (context) => LoginPage()),
-      //             );
-      //           },
-      //         ),
-      //         Divider(
-      //           color: Theme.of(context).primaryColor,
-      //           height: 1,
-      //         ),
-      //         ListTile(
-      //           leading: Icon(Icons.person_add_alt_1,
-      //               size: _drawerIconSize, color: Theme.of(context).hintColor),
-      //           title: Text(
-      //             'Registration Page',
-      //             style: TextStyle(
-      //                 fontSize: _drawerFontSize,
-      //                 color: Theme.of(context).hintColor),
-      //           ),
-      //           onTap: () {
-      //             //Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrationPage()),);
-      //           },
-      //         ),
-      //         Divider(
-      //           color: Theme.of(context).primaryColor,
-      //           height: 1,
-      //         ),
-      //         ListTile(
-      //           leading: Icon(
-      //             Icons.password_rounded,
-      //             size: _drawerIconSize,
-      //             color: Theme.of(context).hintColor,
-      //           ),
-      //           title: Text(
-      //             'Forgot Password Page',
-      //             style: TextStyle(
-      //                 fontSize: _drawerFontSize,
-      //                 color: Theme.of(context).hintColor),
-      //           ),
-      //           onTap: () {
-      //             // Navigator.push( context, MaterialPageRoute(builder: (context) => ForgotPasswordPage()),);
-      //           },
-      //         ),
-      //         Divider(
-      //           color: Theme.of(context).primaryColor,
-      //           height: 1,
-      //         ),
-      //         ListTile(
-      //           leading: Icon(
-      //             Icons.verified_user_sharp,
-      //             size: _drawerIconSize,
-      //             color: Theme.of(context).hintColor,
-      //           ),
-      //           title: Text(
-      //             'Verification Page',
-      //             style: TextStyle(
-      //                 fontSize: _drawerFontSize,
-      //                 color: Theme.of(context).hintColor),
-      //           ),
-      //           onTap: () {
-      //             //Navigator.push( context, MaterialPageRoute(builder: (context) => ForgotPasswordVerificationPage()), );
-      //           },
-      //         ),
-      //         Divider(
-      //           color: Theme.of(context).primaryColor,
-      //           height: 1,
-      //         ),
-      //         ListTile(
-      //           leading: Icon(
-      //             Icons.logout_rounded,
-      //             size: _drawerIconSize,
-      //             color: Theme.of(context).hintColor,
-      //           ),
-      //           title: Text(
-      //             'Logout',
-      //             style: TextStyle(
-      //                 fontSize: _drawerFontSize,
-      //                 color: Theme.of(context).hintColor),
-      //           ),
-      //           onTap: () {
-      //             SystemNavigator.pop();
-      //           },
-      //         ),
-      //       ],
-      //     ),
-      //   ),
-      // ),
       body: SingleChildScrollView(
         child: Stack(
           children: [
@@ -383,27 +252,11 @@ class _AccountPageState extends State<AccountPage> {
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.person,
-                      size: 80,
-                      color: Colors.grey.shade300,
-                    ),
                   ),
                   SizedBox(
                     height: 20,
                   ),
                   _userHeadinfo(),
-                  // Text(
-                  //   'User name: ',
-                  //   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  // ),
-                  // SizedBox(
-                  //   height: 20,
-                  // ),
-                  // Text(
-                  //   'Role: ',
-                  //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  // ),
                   SizedBox(
                     height: 10,
                   ),
@@ -438,31 +291,6 @@ class _AccountPageState extends State<AccountPage> {
                                       tiles: [
                                         _userInfo(),
                                       ],
-                                      // tiles: [
-                                      //   ListTile(
-                                      //     leading: Icon(Icons.email),
-                                      //     title: Text("Email"),
-                                      //     subtitle:
-                                      //         Text(user?.email ?? 'User email'),
-                                      //   ),
-                                      //   ListTile(
-                                      //     leading: Icon(Icons.text_format),
-                                      //     title: Text("Name"),
-                                      //     subtitle: Text(user?.displayName ??
-                                      //         'User firstname '),
-                                      //   ),
-                                      //   ListTile(
-                                      //     leading: Icon(Icons.phone),
-                                      //     title: Text("Phone"),
-                                      //     subtitle: Text(user?.phoneNumber ??
-                                      //         'User phone'),
-                                      //   ),
-                                      //   ListTile(
-                                      //     leading: Icon(Icons.person),
-                                      //     title: Text("Role"),
-                                      //     //subtitle: Text(user?.role ?? 'User role'),
-                                      //   ),
-                                      // ],
                                     ),
                                   ],
                                 )
@@ -476,6 +304,25 @@ class _AccountPageState extends State<AccountPage> {
                   SizedBox(
                     height: 10,
                   ),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => updateProfilePage()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.yellow,
+                            side: BorderSide.none,
+                            shape: const StadiumBorder()),
+                        child: const Text(
+                          'Edit Profile',
+                          style: TextStyle(color: Colors.black),
+                        )),
+                  ),
                   _signOutButton(),
                 ],
               ),
@@ -484,26 +331,5 @@ class _AccountPageState extends State<AccountPage> {
         ),
       ),
     );
-
-    // @override
-    // Widget build(BuildContext context) {
-    //   return Scaffold(
-    //     appBar: AppBar(
-    //       title: _title(),
-    //     ),
-    //     body: Container(
-    //       height: double.infinity,
-    //       width: double.infinity,
-    //       padding: const EdgeInsets.all(20),
-    //       child: Column(
-    //         crossAxisAlignment: CrossAxisAlignment.center,
-    //         mainAxisAlignment: MainAxisAlignment.center,
-    //         children: <Widget>[
-    //           _userUid(),
-    //           _signOutButton(),
-    //         ],
-    //       ),
-    //     ),
-    //   );
   }
 }
