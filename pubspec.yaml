@@ -42,8 +42,7 @@ dependencies:
   image_picker: ^1.0.0
   hexcolor: ^3.0.1
   font_awesome_flutter: ^10.4.0
-  firebase_storage: ^11.2.4
-  image_picker: ^1.0.0
+
 
 dev_dependencies:
   flutter_test:
@@ -69,8 +68,9 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/profile-icon.png
     - lib/assets/images/logo.png
+
+
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
