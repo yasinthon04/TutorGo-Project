@@ -58,11 +58,11 @@ class _AccountPageState extends State<AccountPage> {
 
           return Column(
             children: [
-              if (imageName.isNotEmpty)
+              if (imageName.isNotEmpty && Uri.parse(imageName).isAbsolute)
                 ClipOval(
                   child: SizedBox(
-                    width: 80,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     child: Image.network(
                       imageName,
                       fit: BoxFit.cover,
@@ -72,12 +72,14 @@ class _AccountPageState extends State<AccountPage> {
               else
                 ClipOval(
                   child: SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Image.asset(
-                      'assets/profile-icon.png',
-                      fit: BoxFit.cover,
-                    ),
+                    width: 100,
+                    height: 100,
+                    child: Container(
+                        color: Colors.white,
+                        child: Image.asset(
+                          'assets/profile-icon.png',
+                          fit: BoxFit.cover,
+                        )),
                   ),
                 ),
               SizedBox(height: 10),
@@ -85,7 +87,6 @@ class _AccountPageState extends State<AccountPage> {
                 '$fname $lname',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
             ],
           );
         });
@@ -208,23 +209,8 @@ class _AccountPageState extends State<AccountPage> {
               padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
               child: Column(
                 children: <Widget>[
-                  // Container(
-                  //   padding: EdgeInsets.all(10),
-                  //   decoration: BoxDecoration(
-                  //     borderRadius: BorderRadius.circular(100),
-                  //     border: Border.all(width: 5, color: Colors.white),
-                  //     color: Colors.white,
-                  //     boxShadow: [
-                  //       BoxShadow(
-                  //         color: Colors.black12,
-                  //         blurRadius: 20,
-                  //         offset: const Offset(5, 5),
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
                   SizedBox(
-                    height: 20,
+                    height: 10,
                   ),
                   _userHeadinfo(),
                   SizedBox(
