@@ -21,15 +21,13 @@ class _RegisterState extends State<Register> {
 
   final _formkey = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
-
   final TextEditingController passwordController = new TextEditingController();
   // final TextEditingController confirmpassController = new TextEditingController();
   final TextEditingController firstname = new TextEditingController();
   final TextEditingController lastname = new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
   final TextEditingController mobile = new TextEditingController();
-  bool _isObscure = true;
-  bool _isObscure2 = true;
+
   File? file;
   var options = [
     'Student',
@@ -49,8 +47,8 @@ class _RegisterState extends State<Register> {
         child: Stack(
           children: [
             Container(
-              height: 150,
-              child: HeaderWidget(150, false, Icons.person_add_alt_1_rounded),
+              height: 200,
+              child: HeaderWidget(180, false, Icons.person_add_alt_1_rounded),
             ),
             Container(
               margin: EdgeInsets.fromLTRB(25, 50, 25, 10),
@@ -58,6 +56,14 @@ class _RegisterState extends State<Register> {
               alignment: Alignment.center,
               child: Column(
                 children: [
+                   Text(
+                    'Register', // Replace with your desired text
+                    style: TextStyle(
+                      fontSize: 60,
+                      fontWeight: FontWeight.bold,
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                    ),
+                  ),
                   Form(
                     key: _formkey,
                     child: Column(
@@ -97,10 +103,13 @@ class _RegisterState extends State<Register> {
                         //     ],
                         //   ),
                         // ),
+                        
                         SizedBox(
                           height: 100,
                         ),
+                        
                         Container(
+                          
                           child: TextFormField(
                             controller: firstname,
                             decoration: ThemeHelper().textInputDecoration(
@@ -213,7 +222,7 @@ class _RegisterState extends State<Register> {
                               ),
                             ),
                             DropdownButton<String>(
-                              dropdownColor: Theme.of(context).primaryColor,
+                              dropdownColor: Colors.grey,
                               isDense: true,
                               isExpanded: false,
                               iconEnabledColor:
@@ -431,7 +440,6 @@ class _RegisterState extends State<Register> {
   }
 
   postDetailsToFirestore(String email, String role) async {
-    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
     var user = _auth.currentUser;
     CollectionReference ref = FirebaseFirestore.instance.collection('users');
     ref.doc(user?.uid).set({
