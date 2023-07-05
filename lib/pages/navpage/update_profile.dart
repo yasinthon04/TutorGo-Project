@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorgo/auth.dart';
 import 'package:tutorgo/pages/navpage/account.dart';
@@ -18,7 +22,10 @@ class updateProfilePage extends StatefulWidget {
 class _updateProfilePageState extends State<updateProfilePage> {
   double _drawerIconSize = 24;
   double _drawerFontSize = 17;
+  File? _imageFile;
   final User? user = Auth().currentUser;
+  final Reference storageReference =
+      FirebaseStorage.instance.ref().child('profile_pictures');
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _firstnameController = TextEditingController();
@@ -27,20 +34,20 @@ class _updateProfilePageState extends State<updateProfilePage> {
   final TextEditingController _roleController = TextEditingController();
 
   void _updateUserData(String updatedEmail, String updatedFirstname,
-    String updatedLastname, String updatedPhone) {
-  FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
-    'email': updatedEmail,
-    'firstname': updatedFirstname,
-    'lastname': updatedLastname,
-    'mobile': updatedPhone,
-  }).then((value) {
-    // Data successfully updated
-    print('User data updated successfully');
-  }).catchError((error) {
-    // Error occurred while updating data
-    print('Failed to update user data: $error');
-  });
-}
+      String updatedLastname, String updatedPhone) {
+    FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+      'email': updatedEmail,
+      'firstname': updatedFirstname,
+      'lastname': updatedLastname,
+      'mobile': updatedPhone,
+    }).then((value) {
+      // Data successfully updated
+      print('User data updated successfully');
+    }).catchError((error) {
+      // Error occurred while updating data
+      print('Failed to update user data: $error');
+    });
+  }
 
   Widget _userInfo() {
     return StreamBuilder<DocumentSnapshot>(
@@ -112,6 +119,45 @@ class _updateProfilePageState extends State<updateProfilePage> {
     );
   }
 
+  void _uploadImage(File imageFile) async {
+    // Create a unique filename for the image
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+    // Create a reference to the file in Firebase storage
+    Reference fileReference = storageReference.child(fileName);
+
+    // Upload the file to Firebase storage
+    UploadTask uploadTask = fileReference.putFile(imageFile);
+
+    // Get the download URL of the uploaded file
+    TaskSnapshot taskSnapshot = await uploadTask.whenComplete(() {});
+    String downloadURL = await taskSnapshot.ref.getDownloadURL();
+
+    // Update the user's profile picture URL in Firestore
+    FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+      'profilePicture': downloadURL,
+    }).then((value) {
+      // Data successfully updated
+      print('Profile picture uploaded successfully');
+    }).catchError((error) {
+      // Error occurred while updating data
+      print('Failed to upload profile picture: $error');
+    });
+
+    setState(() {
+      _imageFile = imageFile;
+    });
+  }
+
+  Future<File?> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      return File(pickedFile.path);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -169,26 +215,39 @@ class _updateProfilePageState extends State<updateProfilePage> {
                                 height: 120,
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(100),
-                                  child: Image.asset(''),
+                                  child: _imageFile != null
+                                      ? Image.file(_imageFile!,
+                                          fit: BoxFit.cover)
+                                      : Image.asset('assets/profile-icon.png',
+                                          fit: BoxFit.cover),
                                 ),
                               ),
                               Positioned(
                                 bottom: 0,
                                 right: 0,
-                                child: Container(
+                                child: InkWell(
+                                  onTap: () async {
+                                    File? imageFile = await _pickImage();
+                                    if (imageFile != null) {
+                                      _uploadImage(imageFile);
+                                    }
+                                  },
+                                  child: Container(
                                     width: 35,
                                     height: 35,
                                     decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(100),
-                                        color: Colors.purple),
+                                      borderRadius: BorderRadius.circular(100),
+                                      color: Colors.yellow,
+                                    ),
                                     child: const Icon(
-                                      Icons.camera,
+                                      Icons.edit,
                                       size: 20,
-                                    )),
+                                    ),
+                                  ),
+                                ),
                               )
                             ],
-                          )
+                          ),
                         ],
                       )),
                   SizedBox(
@@ -253,7 +312,8 @@ class _updateProfilePageState extends State<updateProfilePage> {
                               updatedLasttname, updatedPhone);
                           Navigator.pop(
                             context,
-                            MaterialPageRoute(builder: (context) => AccountPage()),
+                            MaterialPageRoute(
+                                builder: (context) => AccountPage()),
                           );
                         },
                         style: ElevatedButton.styleFrom(
