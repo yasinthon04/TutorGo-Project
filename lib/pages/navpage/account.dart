@@ -58,45 +58,28 @@ class _AccountPageState extends State<AccountPage> {
 
           return Column(
             children: [
-              FutureBuilder<String>(
-                future: _getImageUrl(imageName),
-                builder: (context, imageNameSnapshot) {
-                  if (imageNameSnapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  }
-
-                  // if (imageUrlSnapshot.hasError) {
-                  //   return Text('Error: ${imageUrlSnapshot.error}');
-                  // }
-
-                  // String imageUrl = imageUrlSnapshot.data ?? '';
-
-                  if (imageName.isNotEmpty) {
-                    return ClipOval(
-                      child: SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: Image.network(
-                          imageName,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    );
-                  } else {
-                    return ClipOval(
-                      child: SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: Image.asset(
-                          'assets/profile-icon.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
+              if (imageName.isNotEmpty)
+                ClipOval(
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: Image.network(
+                      imageName,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
+              else
+                ClipOval(
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: Image.asset(
+                      'assets/profile-icon.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
               SizedBox(height: 10),
               Text(
                 '$fname $lname',
@@ -106,19 +89,6 @@ class _AccountPageState extends State<AccountPage> {
             ],
           );
         });
-  }
-
-  Future<String> _getImageUrl(String imageName) async {
-    // Refresh user token
-    final idTokenResult = await user?.getIdTokenResult();
-    final token = idTokenResult?.token;
-
-    final ref = firebase_storage.FirebaseStorage.instance
-        .ref()
-        .child('profile_pictures/$imageName');
-    final url = await ref.getDownloadURL();
-
-    return url;
   }
 
   Widget _userInfo() {
@@ -238,21 +208,21 @@ class _AccountPageState extends State<AccountPage> {
               padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
               child: Column(
                 children: <Widget>[
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(width: 5, color: Colors.white),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 20,
-                          offset: const Offset(5, 5),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Container(
+                  //   padding: EdgeInsets.all(10),
+                  //   decoration: BoxDecoration(
+                  //     borderRadius: BorderRadius.circular(100),
+                  //     border: Border.all(width: 5, color: Colors.white),
+                  //     color: Colors.white,
+                  //     boxShadow: [
+                  //       BoxShadow(
+                  //         color: Colors.black12,
+                  //         blurRadius: 20,
+                  //         offset: const Offset(5, 5),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                   SizedBox(
                     height: 20,
                   ),
