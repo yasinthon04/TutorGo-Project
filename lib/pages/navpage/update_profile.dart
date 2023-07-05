@@ -194,32 +194,58 @@ class _updateProfilePageState extends State<updateProfilePage> {
                 children: <Widget>[
                   Container(
                       padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(width: 5, color: Colors.white),
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 20,
-                            offset: const Offset(5, 5),
-                          ),
-                        ],
-                      ),
                       child: Column(
                         children: [
                           Stack(
                             children: [
                               SizedBox(
-                                width: 120,
-                                height: 120,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(100),
+                                width: 100,
+                                height: 100,
+                                child: ClipOval(
                                   child: _imageFile != null
                                       ? Image.file(_imageFile!,
                                           fit: BoxFit.cover)
-                                      : Image.asset('assets/profile-icon.png',
-                                          fit: BoxFit.cover),
+                                      : StreamBuilder<DocumentSnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('users')
+                                              .doc(user?.uid)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasError) {
+                                              return Text(
+                                                  'Error: ${snapshot.error}');
+                                            }
+
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return CircularProgressIndicator();
+                                            }
+
+                                            if (!snapshot.hasData ||
+                                                snapshot.data == null) {
+                                              return Image.asset(
+                                                  'assets/profile-icon.png',
+                                                  fit: BoxFit.cover);
+                                            }
+
+                                            var userData = snapshot.data!
+                                                .data() as Map<String, dynamic>;
+
+                                            String? profilePicture =
+                                                userData['profilePicture'];
+
+                                            if (profilePicture != null) {
+                                              return Image.network(
+                                                profilePicture,
+                                                fit: BoxFit.cover,
+                                              );
+                                            } else {
+                                              return Image.asset(
+                                                  'assets/profile-icon.png',
+                                                  fit: BoxFit.cover);
+                                            }
+                                          },
+                                        ),
                                 ),
                               ),
                               Positioned(
