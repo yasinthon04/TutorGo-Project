@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tutorgo/pages/navpage/mainpage.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
+import 'package:tutorgo/roles/admin.dart';
 import 'package:tutorgo/roles/student.dart';
 import 'package:tutorgo/roles/tutor.dart';
 import 'register.dart';
@@ -31,24 +32,23 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             Container(
-  height: 250,
-  child: Stack(
-    children: [
-      const HeaderWidget(250, false, Icons.ac_unit),
-      Positioned(
-        top: 50,
-        left: 0,
-        right: 0,
-        child: Image.asset(
-          'lib/assets/images/logo.png',
-          width: 130,
-          height: 130,
-        ),
-      ),
-    ],
-  ),
-),
-            
+              height: 250,
+              child: Stack(
+                children: [
+                  const HeaderWidget(250, false, Icons.ac_unit),
+                  Positioned(
+                    top: 50,
+                    left: 0,
+                    right: 0,
+                    child: Image.asset(
+                      'lib/assets/images/logo.png',
+                      width: 130,
+                      height: 130,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             SafeArea(
               child: Container(
                   padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -194,51 +194,46 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void route() {
-    User? user = FirebaseAuth.instance.currentUser;
-    var kk = FirebaseFirestore.instance
+  void route(BuildContext context) {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    FirebaseFirestore.instance
         .collection('users')
-        .doc(user!.uid)
+        .doc(user.uid)
         .get()
         .then((DocumentSnapshot documentSnapshot) {
-      if (documentSnapshot.exists) {
-        Navigator.pop(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MainPage(), // Replace MainPage with your main page widget
-        ),
-      );
-        // if (documentSnapshot.get('role') == "Tutor") {
-        //   Navigator.pushReplacement(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => Tutor(),
-        //     ),
-        //   );
-        // } else {
-        //   Navigator.pushReplacement(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => Student(),
-        //     ),
-        //   );
-        // }
+      if (documentSnapshot.get('role') == "admin") {
+        print(documentSnapshot.get('role'));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Admin(),
+          ),
+        );
       } else {
-        print('Document does not exist on the database');
+        Navigator.pop(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainPage(),
+          ),
+        );
       }
     });
+  } else {
+    // Handle the case when the user is null (not authenticated)
+    // For example, you could redirect the user to a login screen.
   }
+}
 
   void signIn(String email, String password) async {
     if (_formkey.currentState!.validate()) {
-      print('login');
       try {
         UserCredential userCredential =
             await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
-        route();
+        route(context);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found') {
           print('No user found for that email.');
