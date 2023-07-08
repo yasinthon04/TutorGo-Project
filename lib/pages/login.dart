@@ -57,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                       Text(
-                        'SIGN IN',
+                        'Sign in',
                         style: TextStyle(
                             fontSize: 60, fontWeight: FontWeight.bold),
                       ),

@@ -324,91 +324,91 @@ class _RegisterState extends State<Register> {
                           ),
                         ),
                         SizedBox(height: 30.0),
-                        Text(
-                          "Or create account using social media",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        SizedBox(height: 25.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            GestureDetector(
-                              child: FaIcon(
-                                FontAwesomeIcons.googlePlus,
-                                size: 35,
-                                color: HexColor("#EC2D2F"),
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return ThemeHelper().alartDialog(
-                                          "Google Plus",
-                                          "You tap on GooglePlus social icon.",
-                                          context);
-                                    },
-                                  );
-                                });
-                              },
-                            ),
-                            SizedBox(
-                              width: 30.0,
-                            ),
-                            GestureDetector(
-                              child: Container(
-                                padding: EdgeInsets.all(0),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(
-                                      width: 5, color: HexColor("#40ABF0")),
-                                  color: HexColor("#40ABF0"),
-                                ),
-                                child: FaIcon(
-                                  FontAwesomeIcons.twitter,
-                                  size: 23,
-                                  color: HexColor("#FFFFFF"),
-                                ),
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return ThemeHelper().alartDialog(
-                                          "Twitter",
-                                          "You tap on Twitter social icon.",
-                                          context);
-                                    },
-                                  );
-                                });
-                              },
-                            ),
-                            SizedBox(
-                              width: 30.0,
-                            ),
-                            GestureDetector(
-                              child: FaIcon(
-                                FontAwesomeIcons.facebook,
-                                size: 35,
-                                color: HexColor("#3E529C"),
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return ThemeHelper().alartDialog(
-                                          "Facebook",
-                                          "You tap on Facebook social icon.",
-                                          context);
-                                    },
-                                  );
-                                });
-                              },
-                            ),
-                          ],
-                        ),
+                        // Text(
+                        //   "Or create account using social media",
+                        //   style: TextStyle(color: Colors.grey),
+                        // ),
+                        // SizedBox(height: 25.0),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.center,
+                        //   children: [
+                        //     GestureDetector(
+                        //       child: FaIcon(
+                        //         FontAwesomeIcons.googlePlus,
+                        //         size: 35,
+                        //         color: HexColor("#EC2D2F"),
+                        //       ),
+                        //       onTap: () {
+                        //         setState(() {
+                        //           showDialog(
+                        //             context: context,
+                        //             builder: (BuildContext context) {
+                        //               return ThemeHelper().alartDialog(
+                        //                   "Google Plus",
+                        //                   "You tap on GooglePlus social icon.",
+                        //                   context);
+                        //             },
+                        //           );
+                        //         });
+                        //       },
+                        //     ),
+                        //     SizedBox(
+                        //       width: 30.0,
+                        //     ),
+                        //     GestureDetector(
+                        //       child: Container(
+                        //         padding: EdgeInsets.all(0),
+                        //         decoration: BoxDecoration(
+                        //           borderRadius: BorderRadius.circular(100),
+                        //           border: Border.all(
+                        //               width: 5, color: HexColor("#40ABF0")),
+                        //           color: HexColor("#40ABF0"),
+                        //         ),
+                        //         child: FaIcon(
+                        //           FontAwesomeIcons.twitter,
+                        //           size: 23,
+                        //           color: HexColor("#FFFFFF"),
+                        //         ),
+                        //       ),
+                        //       onTap: () {
+                        //         setState(() {
+                        //           showDialog(
+                        //             context: context,
+                        //             builder: (BuildContext context) {
+                        //               return ThemeHelper().alartDialog(
+                        //                   "Twitter",
+                        //                   "You tap on Twitter social icon.",
+                        //                   context);
+                        //             },
+                        //           );
+                        //         });
+                        //       },
+                        //     ),
+                        //     SizedBox(
+                        //       width: 30.0,
+                        //     ),
+                        //     GestureDetector(
+                        //       child: FaIcon(
+                        //         FontAwesomeIcons.facebook,
+                        //         size: 35,
+                        //         color: HexColor("#3E529C"),
+                        //       ),
+                        //       onTap: () {
+                        //         setState(() {
+                        //           showDialog(
+                        //             context: context,
+                        //             builder: (BuildContext context) {
+                        //               return ThemeHelper().alartDialog(
+                        //                   "Facebook",
+                        //                   "You tap on Facebook social icon.",
+                        //                   context);
+                        //             },
+                        //           );
+                        //         });
+                        //       },
+                        //     ),
+                        //   ],
+                        // ),
                       ],
                     ),
                   ),
