@@ -21,6 +21,11 @@ class _AccountPageState extends State<AccountPage> {
 
   Future<void> signOut() async {
     await Auth().signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (route) => false,
+    );
   }
 
   Widget _userHeadinfo() {

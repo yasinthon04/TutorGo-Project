@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:tutorgo/pages/login.dart';
-import 'package:image_picker/image_picker.dart';
 import '../auth.dart';
 
 class Admin extends StatefulWidget {
@@ -31,8 +31,10 @@ class _AdminState extends State<Admin> {
 
   Future<void> fetchUsers() async {
     try {
-      QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('users').get();
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .orderBy('firstname')
+          .get();
       List<Map<String, dynamic>> users = snapshot.docs.map((doc) {
         Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
 
@@ -57,60 +59,59 @@ class _AdminState extends State<Admin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Admin"),
-          actions: [
-            IconButton(
-              onPressed: refreshUsers, // Call the refresh function
-              icon: Icon(Icons.refresh),
+      appBar: AppBar(
+        title: Text("Admin"),
+        actions: [
+          IconButton(
+            onPressed: refreshUsers, // Call the refresh function
+            icon: Icon(Icons.refresh),
+          ),
+          IconButton(
+            onPressed: () {
+              logout(context);
+            },
+            icon: Icon(Icons.logout),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: userList.length,
+        itemBuilder: (context, index) {
+          String firstname = userList[index]['firstname'] ?? 'N/A';
+          String lastname = userList[index]['lastname'] ?? 'N/A';
+          String fullName = '$firstname $lastname';
+
+          String email = userList[index]['email'] ?? 'N/A';
+
+          String profilePicture = userList[index]['profilePicture'] ?? '';
+
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundImage: NetworkImage(profilePicture),
             ),
-            IconButton(
-              onPressed: () {
-                logout(context);
-              },
-              icon: Icon(Icons.logout),
+            title: Text(fullName),
+            subtitle: Text(email),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    editUser(userList[index], index);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    deleteUser(userList[index]['userId']);
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        body: ListView.builder(
-          itemCount: userList.length,
-          itemBuilder: (context, index) {
-            String firstname = userList[index]['firstname'] ?? 'N/A';
-            String lastname = userList[index]['lastname'] ?? 'N/A';
-            String fullName = '$firstname $lastname';
-
-            String email = userList[index]['email'] ?? 'N/A';
-
-            String profilePicture = userList[index]['profilePicture'] ??
-                ''; // Fetch the user's photo URL
-
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundImage:
-                    NetworkImage(profilePicture), // Display the user's photo
-              ),
-              title: Text(fullName),
-              subtitle: Text(email),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: () {
-                      editUser(userList[index], index);
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      deleteUser(userList[index]);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ));
+          );
+        },
+      ),
+    );
   }
 
   void editUser(Map<String, dynamic> userData, int index) {
@@ -136,16 +137,18 @@ class _AdminState extends State<Admin> {
                 final fileName =
                     DateTime.now().millisecondsSinceEpoch.toString();
                 final reference =
-                    storage.ref().child('profilePictures/$fileName');
+                    storage.ref().child('profilePicture/$fileName');
                 final uploadTask = reference.putFile(File(pickedFile.path));
-                final snapshot = await uploadTask.whenComplete(() {});
+                final snapshot = await uploadTask;
 
                 if (snapshot.state == TaskState.success) {
                   final downloadUrl = await reference.getDownloadURL();
                   setState(() {
-                    photoUrl = downloadUrl; // Update the photo URL
-                    userList[index]['profilePicture'] =
-                        downloadUrl; // Update the profilePicture field in the user list
+                    photoUrl = downloadUrl;
+                    userList[index]['profilePicture'] = downloadUrl;
+                  });
+                  updateUser(userId, {
+                    'profilePicture': downloadUrl,
                   });
                 } else {
                   print('Failed to upload photo');
@@ -204,15 +207,12 @@ class _AdminState extends State<Admin> {
                   String updatedMobile = _mobileController.text;
 
                   if (userId != null) {
-                    updateUser(
-                      userId,
-                      updatedFirstname,
-                      updatedLastname,
-                      updatedEmail,
-                      updatedMobile,
-                      photoUrl,
-                      index, // Pass the updated photo URL
-                    );
+                    updateUser(userId, {
+                      'email': updatedEmail,
+                      'firstname': updatedFirstname,
+                      'lastname': updatedLastname,
+                      'mobile': updatedMobile,
+                    });
                   }
 
                   Navigator.of(context).pop();
@@ -234,54 +234,25 @@ class _AdminState extends State<Admin> {
     }
   }
 
-  Future<String> uploadPhotoAndGetUrl(String filePath) async {
-    final storage = FirebaseStorage.instance;
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    final ref = storage.ref().child('profilePicture').child(fileName);
-
-    final uploadTask = ref.putFile(File(filePath));
-    final snapshot = await uploadTask.whenComplete(() {});
-
-    if (snapshot.state == TaskState.success) {
-      final photoUrl = await ref.getDownloadURL();
-      return photoUrl;
-    } else {
-      throw Exception('Failed to upload photo');
+  Future<void> updateUser(String userId, Map<String, dynamic> updatedData) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update(updatedData);
+      print('User updated successfully');
+    } catch (e) {
+      print('Failed to update user: $e');
     }
   }
 
-  void updateUser(
-  String userId,
-  String? updatedFirstname,
-  String? updatedLastname,
-  String? updatedEmail,
-  String? updatedMobile,
-  String? updatedPhotoUrl,
-  int index, // Receive the index value
-) {
-  try {
-    FirebaseFirestore.instance.collection('users').doc(userId).update({
-      'firstname': updatedFirstname ?? '',
-      'lastname': updatedLastname ?? '',
-      'email': updatedEmail ?? '',
-      'mobile': updatedMobile ?? '',
-      'profilePicture': updatedPhotoUrl ?? '',
-    }).then((_) {
-      setState(() {
-        userList[index]['profilePicture'] = updatedPhotoUrl;
-      });
-
-      print('User updated successfully');
-    }).catchError((error) {
-      print('Failed to update user: $error');
-    });
-  } catch (e) {
-    print('Error updating user: $e');
-  }
-}
-
-  void deleteUser(Map<String, dynamic> userData) {
-    print('Delete user: $userData');
+  void deleteUser(String userId) {
+    try {
+      FirebaseFirestore.instance.collection('users').doc(userId).delete();
+      print('User deleted successfully');
+    } catch (e) {
+      print('Failed to delete user: $e');
+    }
   }
 
   Future<void> logout(BuildContext context) async {
