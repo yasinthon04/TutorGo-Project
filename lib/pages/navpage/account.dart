@@ -17,12 +17,15 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  double _drawerIconSize = 24;
-  double _drawerFontSize = 17;
   final User? user = Auth().currentUser;
 
   Future<void> signOut() async {
     await Auth().signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (route) => false,
+    );
   }
 
   Widget _userHeadinfo() {

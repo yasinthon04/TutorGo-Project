@@ -20,12 +20,10 @@ class updateProfilePage extends StatefulWidget {
 }
 
 class _updateProfilePageState extends State<updateProfilePage> {
-  double _drawerIconSize = 24;
-  double _drawerFontSize = 17;
   File? _imageFile;
   final User? user = Auth().currentUser;
   final Reference storageReference =
-      FirebaseStorage.instance.ref().child('profile_pictures');
+      FirebaseStorage.instance.ref().child('profilePicture');
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _firstnameController = TextEditingController();

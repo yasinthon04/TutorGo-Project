@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorgo/auth.dart';
+import 'package:tutorgo/pages/login.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -10,7 +11,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   final User? user = Auth().currentUser;
 
   Future<void> signOut() async {
@@ -25,20 +25,11 @@ class _HomePageState extends State<HomePage> {
     return Text(user?.email ?? 'User email');
   }
 
-  Widget _signOutButton() {
-    return SizedBox(
-      width: 200,
-      child: ElevatedButton(
-        onPressed: signOut,
-        style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
-            side: BorderSide.none,
-            shape: const StadiumBorder()),
-        child: const Text(
-          'Sign Out',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+  Future<void> _signOutButton() async {
+    await signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
     );
   }
 
@@ -57,7 +48,20 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             _userUid(),
-            _signOutButton(),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _signOutButton,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    Theme.of(context).primaryColor.withOpacity(0.2),
+                side: BorderSide.none,
+                shape: const StadiumBorder(),
+              ),
+              child: const Text(
+                'Sign Out',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
           ],
         ),
       ),
