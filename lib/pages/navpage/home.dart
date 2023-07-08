@@ -33,8 +33,60 @@ class _HomePageState extends State<HomePage> {
     return role;
   }
 
-  void _showCourseInfoDialog(String courseName, String address, String price,
-      String contactInfo, String userId, String courseId) {
+  void _viewTutorInformation(String userId) async {
+    final tutorSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+    if (tutorSnapshot.exists) {
+      final tutorData = tutorSnapshot.data() as Map<String, dynamic>;
+      final tutorFirstname = tutorData['firstname'] ?? '';
+      final tutorLastname = tutorData['lastname'] ?? '';
+      final tutorEmail = tutorData['email'] ?? '';
+      final tutorMobile = tutorData['mobile'] ?? '';
+      final tutorImage = tutorData['profilePicture'] ?? '';
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Tutor Information'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (tutorImage.isNotEmpty)
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: NetworkImage(tutorImage),
+                  ),
+                Text('Name: $tutorFirstname $tutorLastname'),
+                Text('Email: $tutorEmail'),
+                Text('Mobile: $tutorMobile'),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void _showCourseInfoDialog(
+    String courseName,
+    String address,
+    String price,
+    String contactInfo,
+    String userId,
+    String courseId,
+    bool isCurrentUserCourseCreator,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -51,26 +103,46 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           actions: [
-            if (userId ==
-                user?.uid) // Show edit and delete buttons for the current user
+            if (isCurrentUserCourseCreator)
               ElevatedButton(
                 onPressed: () {
-                  // Handle edit button action
                   Navigator.pop(context);
                   _showEditCourseDialog(
-                      courseId, courseName, address, price, contactInfo);
+                    courseId,
+                    courseName,
+                    address,
+                    price,
+                    contactInfo,
+                  );
                 },
                 child: Text('Edit'),
               ),
-            if (userId ==
-                user?.uid) // Show edit and delete buttons for the current user
+            if (isCurrentUserCourseCreator)
               ElevatedButton(
                 onPressed: () {
-                  // Handle delete button action
                   Navigator.pop(context);
                   _showDeleteCourseDialog(courseId, courseName);
                 },
                 child: Text('Delete'),
+              ),
+            if (!isCurrentUserCourseCreator)
+              FutureBuilder<String>(
+                future: getUserRole(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final userRole = snapshot.data!;
+                    if (userRole == 'Student') {
+                      return ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _viewTutorInformation(userId);
+                        },
+                        child: Text('View Tutor Information'),
+                      );
+                    }
+                  }
+                  return SizedBox.shrink();
+                },
               ),
             ElevatedButton(
               onPressed: () {
@@ -84,8 +156,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showEditCourseDialog(
-      String courseId, String courseName, String address, String price, String contactInfo) {
+  void _showEditCourseDialog(String courseId, String courseName, String address,
+      String price, String contactInfo) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -153,7 +225,6 @@ class _HomePageState extends State<HomePage> {
                   if (userRole == 'Tutor') {
                     return ElevatedButton(
                       onPressed: () {
-                        // Show the create course form
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -192,6 +263,10 @@ class _HomePageState extends State<HomePage> {
                       final userId = courseData['userId'] ?? '';
                       final courseId = courseDocs[index].id;
 
+                      // Check if the current user is the creator of the course
+                      final bool isCurrentUserCourseCreator =
+                          userId == user?.uid;
+
                       return Card(
                         child: ListTile(
                           leading: imageName.isNotEmpty
@@ -199,8 +274,15 @@ class _HomePageState extends State<HomePage> {
                               : Image.asset('assets/default_image.png'),
                           title: Text(courseName),
                           onTap: () {
-                            _showCourseInfoDialog(courseName, address, price,
-                                contactInfo, userId, courseId);
+                            _showCourseInfoDialog(
+                              courseName,
+                              address,
+                              price,
+                              contactInfo,
+                              userId,
+                              courseId,
+                              isCurrentUserCourseCreator,
+                            );
                           },
                         ),
                       );
