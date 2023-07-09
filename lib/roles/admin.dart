@@ -57,32 +57,74 @@ class _AdminState extends State<Admin> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text("Admin"),
-      actions: [
-        IconButton(
-          onPressed: refreshUsers,
-          icon: Icon(Icons.refresh),
-        ),
-        IconButton(
-          onPressed: () {
-            logout(context);
-          },
-          icon: Icon(Icons.logout),
-        ),
-      ],
-    ),
-    body: ListView.builder(
-      itemCount: userList.length,
-      itemBuilder: (context, index) {
-        String firstname = userList[index]['firstname'] ?? 'N/A';
-        String lastname = userList[index]['lastname'] ?? 'N/A';
-        String fullName = '$firstname $lastname';
+  Widget build(BuildContext context) {
+    List<Map<String, dynamic>> studentList = [];
+    List<Map<String, dynamic>> adminList = [];
+    List<Map<String, dynamic>> tutorList = [];
 
-        String email = userList[index]['email'] ?? 'N/A';
-        String profilePicture = userList[index]['profilePicture'] ?? '';
+    // Separate the users based on role
+    for (var user in userList) {
+      if (user['role'] == 'Student') {
+        studentList.add(user);
+      } else if (user['role'] == 'admin') {
+        adminList.add(user);
+      } else {
+        tutorList.add(user);
+      }
+    }
+
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Admin"),
+          actions: [
+            IconButton(
+              onPressed: refreshUsers,
+              icon: Icon(Icons.refresh),
+            ),
+            IconButton(
+              onPressed: () {
+                logout(context);
+              },
+              icon: Icon(Icons.logout),
+            ),
+          ],
+          bottom: TabBar(
+            tabs: [
+              Tab(text: 'Students'),
+              Tab(text: 'Tutor'),
+              Tab(text: 'Admin'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            buildUserList(studentList),
+            buildUserList(tutorList),
+            buildUserList(adminList),
+            
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            addUser();
+          },
+          child: Icon(Icons.add),
+        ),
+      ),
+    );
+  }
+
+  Widget buildUserList(List<Map<String, dynamic>> users) {
+    return ListView.builder(
+      itemCount: users.length,
+      itemBuilder: (context, index) {
+        String firstname = users[index]['firstname'] ?? 'N/A';
+        String lastname = users[index]['lastname'] ?? 'N/A';
+        String fullName = '$firstname $lastname';
+        String email = users[index]['email'] ?? 'N/A';
+        String profilePicture = users[index]['profilePicture'] ?? '';
 
         return Card(
           elevation: 2,
@@ -101,14 +143,14 @@ Widget build(BuildContext context) {
                     IconButton(
                       icon: Icon(Icons.edit),
                       onPressed: () {
-                        editUser(userList[index], index);
+                        editUser(users[index], index);
                       },
                       color: Colors.blue,
                     ),
                     IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () {
-                        deleteUser(userList[index]['userId']);
+                        deleteUser(users[index]['userId']);
                       },
                       color: Colors.red,
                     ),
@@ -120,13 +162,23 @@ Widget build(BuildContext context) {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        FutureBuilder<QuerySnapshot>(
-                          future: FirebaseFirestore.instance
-                              .collection('courses')
-                              .where('userId', isEqualTo: userList[index]['userId'])
-                              .get(),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
+                        if (users[index]['role'] == 'Student')
+                          ListTile(
+                            title: Text('Role: Student'),
+                          )
+                        else if (users[index]['role'] == 'admin')
+                          ListTile(
+                            title: Text('Role: Administrator'),
+                          )
+                        else
+                          FutureBuilder<QuerySnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('courses')
+                                .where('userId',
+                                    isEqualTo: users[index]['userId'])
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
                               final courseDocs = snapshot.data!.docs;
                               String userRole = userList[index]['role'];
                               if (userRole == 'Student') {
@@ -189,8 +241,8 @@ Widget build(BuildContext context) {
                             } else {
                               return CircularProgressIndicator();
                             }
-                          },
-                        ),
+                            },
+                          ),
                         SizedBox(height: 16),
                       ],
                     ),
@@ -201,16 +253,8 @@ Widget build(BuildContext context) {
           ),
         );
       },
-    ),
-    floatingActionButton: FloatingActionButton(
-      onPressed: () {
-        addUser();
-      },
-      child: Icon(Icons.add),
-    ),
-  );
-}
-
+    );
+  }
 
   void addUser() {
     showDialog(
@@ -222,6 +266,7 @@ Widget build(BuildContext context) {
         final TextEditingController lastnameController =
             TextEditingController();
         final TextEditingController mobileController = TextEditingController();
+        String? selectedRole;
         String? photoUrl;
 
         Future<void> addPhoto() async {
@@ -297,6 +342,27 @@ Widget build(BuildContext context) {
                 ),
                 controller: mobileController,
               ),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Role',
+                ),
+                value: selectedRole,
+                items: [
+                  DropdownMenuItem(
+                    value: 'Student',
+                    child: Text('Student'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Tutor',
+                    child: Text('Tutor'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedRole = value;
+                  });
+                },
+              ),
             ],
           ),
           actions: [
@@ -318,7 +384,8 @@ Widget build(BuildContext context) {
                 String lastname = lastnameController.text;
                 String mobile = mobileController.text;
 
-                createUser(email, firstname, lastname, mobile, photoUrl);
+                createUser(
+                    email, firstname, lastname, mobile, selectedRole, photoUrl);
                 Navigator.of(context).pop();
               },
               child: Text(
@@ -335,13 +402,14 @@ Widget build(BuildContext context) {
   }
 
   void createUser(String email, String firstname, String lastname,
-      String mobile, String? photoUrl) async {
+      String mobile, String? role, String? photoUrl) async {
     try {
       await FirebaseFirestore.instance.collection('users').add({
         'email': email,
         'firstname': firstname,
         'lastname': lastname,
         'mobile': mobile,
+        'role': role,
         'profilePicture': photoUrl,
       });
       print('User created successfully');
@@ -361,6 +429,7 @@ Widget build(BuildContext context) {
           _emailController.text = userData['email'];
           _mobileController.text = userData['mobile'];
           String photoUrl = userData['profilePicture'] ?? '';
+          String selectedRole = userData['role'] ?? '';
 
           Future<void> updatePhoto() async {
             final picker = ImagePicker();
@@ -407,14 +476,12 @@ Widget build(BuildContext context) {
                 ElevatedButton(
                   onPressed: updatePhoto,
                   style: ElevatedButton.styleFrom(
-                    primary: Colors
-                        .blue,
+                    primary: Colors.blue,
                   ),
                   child: Text(
                     'Edit Photo',
                     style: TextStyle(
-                      color: Colors
-                          .white, 
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -442,6 +509,27 @@ Widget build(BuildContext context) {
                   ),
                   controller: _mobileController,
                 ),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Role',
+                  ),
+                  value: selectedRole,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'Student',
+                      child: Text('Student'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Tutor',
+                      child: Text('Tutor'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRole = value!;
+                    });
+                  },
+                ),
               ],
             ),
             actions: [
@@ -458,6 +546,7 @@ Widget build(BuildContext context) {
                       'firstname': updatedFirstname,
                       'lastname': updatedLastname,
                       'mobile': updatedMobile,
+                      'role': selectedRole, // Update the role field
                     });
                   }
 
