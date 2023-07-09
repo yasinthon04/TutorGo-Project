@@ -57,77 +57,160 @@ class _AdminState extends State<Admin> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Admin"),
-        actions: [
-          IconButton(
-            onPressed: refreshUsers, // Call the refresh function
-            icon: Icon(Icons.refresh),
-          ),
-          IconButton(
-            onPressed: () {
-              logout(context);
-            },
-            icon: Icon(Icons.logout),
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: userList.length,
-        itemBuilder: (context, index) {
-          String firstname = userList[index]['firstname'] ?? 'N/A';
-          String lastname = userList[index]['lastname'] ?? 'N/A';
-          String fullName = '$firstname $lastname';
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text("Admin"),
+      actions: [
+        IconButton(
+          onPressed: refreshUsers,
+          icon: Icon(Icons.refresh),
+        ),
+        IconButton(
+          onPressed: () {
+            logout(context);
+          },
+          icon: Icon(Icons.logout),
+        ),
+      ],
+    ),
+    body: ListView.builder(
+      itemCount: userList.length,
+      itemBuilder: (context, index) {
+        String firstname = userList[index]['firstname'] ?? 'N/A';
+        String lastname = userList[index]['lastname'] ?? 'N/A';
+        String fullName = '$firstname $lastname';
 
-          String email = userList[index]['email'] ?? 'N/A';
+        String email = userList[index]['email'] ?? 'N/A';
+        String profilePicture = userList[index]['profilePicture'] ?? '';
 
-          String profilePicture = userList[index]['profilePicture'] ?? '';
-
-          return Card(
-            elevation: 2,
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundImage: NetworkImage(profilePicture),
-              ),
-              title: Text(
-                fullName,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(email),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
+        return Card(
+          elevation: 2,
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            children: [
+              ExpansionTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(profilePicture),
+                ),
+                title: Text(fullName),
+                subtitle: Text(email),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: () {
+                        editUser(userList[index], index);
+                      },
+                      color: Colors.blue,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () {
+                        deleteUser(userList[index]['userId']);
+                      },
+                      color: Colors.red,
+                    ),
+                  ],
+                ),
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: () {
-                      editUser(userList[index], index);
-                    },
-                    color: Colors.blue,
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      deleteUser(userList[index]['userId']);
-                    },
-                    color: Colors.red,
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FutureBuilder<QuerySnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('courses')
+                              .where('userId', isEqualTo: userList[index]['userId'])
+                              .get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final courseDocs = snapshot.data!.docs;
+                              String userRole = userList[index]['role'];
+                              if (userRole == 'Student') {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'Role: Student',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    ),
+                                    SizedBox(height: 8),
+                                  ],
+                                );
+                              } else if (userRole == 'admin') {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'Role: Administrator',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    ),
+                                    SizedBox(height: 8),
+                                  ],
+                                );
+                              } else if (courseDocs.isNotEmpty) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Courses:',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    ),
+                                    SizedBox(height: 8),
+                                    ...courseDocs.map((courseDoc) {
+                                      final courseData = courseDoc.data() as Map<String, dynamic>;
+                                      final courseName = courseData['courseName'] ?? '';
+
+                                      return ListTile(
+                                        title: Text(courseName),
+                                        onTap: () {
+                                          showCourseInfo(courseData);
+                                        },
+                                        trailing: IconButton(
+                                          icon: Icon(Icons.delete),
+                                          onPressed: () {
+                                            deleteCourse(courseDoc.id);
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ],
+                                );
+                              } else {
+                                return Text('No courses found');
+                              }
+                            } else if (snapshot.hasError) {
+                              return Text('Error loading courses');
+                            } else {
+                              return CircularProgressIndicator();
+                            }
+                          },
+                        ),
+                        SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          addUser();
-        },
-        child: Icon(Icons.add),
-      ),
-    );
-  }
+            ],
+          ),
+        );
+      },
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () {
+        addUser();
+      },
+      child: Icon(Icons.add),
+    ),
+  );
+}
+
 
   void addUser() {
     showDialog(
@@ -474,5 +557,54 @@ class _AdminState extends State<Admin> {
         builder: (context) => LoginPage(),
       ),
     );
+  }
+
+  void showCourseInfo(Map<String, dynamic> courseData) {
+    String courseName = courseData['courseName'] ?? '';
+    String address = courseData['address'] ?? '';
+    String price = courseData['price'] ?? '';
+    String contactInfo = courseData['contactInfo'] ?? '';
+    String courseImage = courseData['imageName'] ?? ''; // Add this line
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Course Information'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (courseImage.isNotEmpty) // Add this condition
+                Image.network(courseImage),
+              SizedBox(
+                height: 10,
+              ), // Display the course image
+              Text('Course Name: $courseName'),
+              Text('Address: $address'),
+              Text('Price: $price'),
+              Text('Contact Information: $contactInfo'),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void deleteCourse(String courseId) {
+    try {
+      FirebaseFirestore.instance.collection('courses').doc(courseId).delete();
+      print('Course deleted successfully');
+    } catch (e) {
+      print('Failed to delete course: $e');
+    }
   }
 }
