@@ -37,7 +37,6 @@ class _AdminState extends State<Admin> {
           .get();
       List<Map<String, dynamic>> users = snapshot.docs.map((doc) {
         Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
-
         userData['userId'] = doc.id; // Add the userId field
         return userData;
       }).toList();
@@ -58,63 +57,63 @@ class _AdminState extends State<Admin> {
 
   @override
   Widget build(BuildContext context) {
-    List<Map<String, dynamic>> studentList = [];
-    List<Map<String, dynamic>> adminList = [];
-    List<Map<String, dynamic>> tutorList = [];
+  List<Map<String, dynamic>> studentList = [];
+  List<Map<String, dynamic>> adminList = [];
+  List<Map<String, dynamic>> tutorList = [];
 
-    // Separate the users based on role
-    for (var user in userList) {
-      if (user['role'] == 'Student') {
-        studentList.add(user);
-      } else if (user['role'] == 'admin') {
-        adminList.add(user);
-      } else {
-        tutorList.add(user);
-      }
+  // Separate the users based on role
+  for (var user in userList) {
+    if (user['role'] == 'Student') {
+      studentList.add(user);
+    } else if (user['role'] == 'admin') {
+      adminList.add(user);
+    } else {
+      tutorList.add(user);
     }
+  }
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("Admin"),
-          actions: [
-            IconButton(
-              onPressed: refreshUsers,
-              icon: Icon(Icons.refresh),
-            ),
-            IconButton(
-              onPressed: () {
-                logout(context);
-              },
-              icon: Icon(Icons.logout),
-            ),
-          ],
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'Students'),
-              Tab(text: 'Tutor'),
-              Tab(text: 'Admin'),
-            ],
+  return DefaultTabController(
+    length: 3,
+    child: Scaffold(
+      appBar: AppBar(
+        title: Text("Admin"),
+        actions: [
+          IconButton(
+            onPressed: refreshUsers,
+            icon: Icon(Icons.refresh),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            buildUserList(studentList),
-            buildUserList(tutorList),
-            buildUserList(adminList),
-            
+          IconButton(
+            onPressed: () {
+              logout(context);
+            },
+            icon: Icon(Icons.logout),
+          ),
+        ],
+        bottom: TabBar(
+          tabs: [
+            Tab(text: 'Students'),
+            Tab(text: 'Tutors'),
+            Tab(text: 'Admins'),
           ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            addUser();
-          },
-          child: Icon(Icons.add),
+          indicatorColor: Colors.white,
         ),
       ),
-    );
-  }
+      body: TabBarView(
+        children: [
+          buildUserList(studentList),
+          buildUserList(tutorList),
+          buildUserList(adminList),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: addUser,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
+      ),
+    ),
+  );
+}
+
 
   Widget buildUserList(List<Map<String, dynamic>> users) {
     return ListView.builder(
@@ -261,10 +260,9 @@ class _AdminState extends State<Admin> {
       context: context,
       builder: (BuildContext context) {
         final TextEditingController emailController = TextEditingController();
-        final TextEditingController firstnameController =
-            TextEditingController();
-        final TextEditingController lastnameController =
-            TextEditingController();
+        final TextEditingController passwordController = new TextEditingController();
+        final TextEditingController firstnameController = TextEditingController();
+        final TextEditingController lastnameController = TextEditingController();
         final TextEditingController mobileController = TextEditingController();
         String? selectedRole;
         String? photoUrl;
@@ -326,6 +324,12 @@ class _AdminState extends State<Admin> {
               ),
               TextField(
                 decoration: InputDecoration(
+                  labelText: 'Password',
+                ),
+                controller: passwordController,
+              ),
+              TextField(
+                decoration: InputDecoration(
                   labelText: 'First Name',
                 ),
                 controller: firstnameController,
@@ -380,12 +384,13 @@ class _AdminState extends State<Admin> {
             TextButton(
               onPressed: () {
                 String email = emailController.text;
+                String password = passwordController.text;
                 String firstname = firstnameController.text;
                 String lastname = lastnameController.text;
                 String mobile = mobileController.text;
 
                 createUser(
-                    email, firstname, lastname, mobile, selectedRole, photoUrl);
+                    email,password, firstname, lastname, mobile, selectedRole!, photoUrl);
                 Navigator.of(context).pop();
               },
               child: Text(
@@ -401,10 +406,17 @@ class _AdminState extends State<Admin> {
     );
   }
 
-  void createUser(String email, String firstname, String lastname,
+  void createUser(String email, String password, String firstname, String lastname,
       String mobile, String? role, String? photoUrl) async {
     try {
-      await FirebaseFirestore.instance.collection('users').add({
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      String userId = userCredential.user!.uid;
+
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'email': email,
         'firstname': firstname,
         'lastname': lastname,
@@ -416,7 +428,7 @@ class _AdminState extends State<Admin> {
     } catch (e) {
       print('Failed to create user: $e');
     }
-  }
+}
 
   void editUser(Map<String, dynamic> userData, int index) {
     String? userId = userData['userId'] as String?;
