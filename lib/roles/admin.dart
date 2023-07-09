@@ -85,33 +85,186 @@ class _AdminState extends State<Admin> {
 
           String profilePicture = userList[index]['profilePicture'] ?? '';
 
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(profilePicture),
-            ),
-            title: Text(fullName),
-            subtitle: Text(email),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    editUser(userList[index], index);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () {
-                    deleteUser(userList[index]['userId']);
-                  },
-                ),
-              ],
+          return Card(
+            elevation: 2,
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundImage: NetworkImage(profilePicture),
+              ),
+              title: Text(
+                fullName,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(email),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      editUser(userList[index], index);
+                    },
+                    color: Colors.blue,
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      deleteUser(userList[index]['userId']);
+                    },
+                    color: Colors.red,
+                  ),
+                ],
+              ),
             ),
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          addUser();
+        },
+        child: Icon(Icons.add),
+      ),
     );
+  }
+
+  void addUser() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final TextEditingController emailController = TextEditingController();
+        final TextEditingController firstnameController =
+            TextEditingController();
+        final TextEditingController lastnameController =
+            TextEditingController();
+        final TextEditingController mobileController = TextEditingController();
+        String? photoUrl;
+
+        Future<void> addPhoto() async {
+          final picker = ImagePicker();
+          final pickedFile =
+              await picker.pickImage(source: ImageSource.gallery);
+
+          if (pickedFile != null) {
+            try {
+              final storage = FirebaseStorage.instance;
+              final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+              final reference = storage.ref().child('profilePicture/$fileName');
+              final uploadTask = reference.putFile(File(pickedFile.path));
+              final snapshot = await uploadTask;
+
+              if (snapshot.state == TaskState.success) {
+                final downloadUrl = await reference.getDownloadURL();
+                setState(() {
+                  photoUrl = downloadUrl;
+                });
+              } else {
+                print('Failed to upload photo');
+              }
+            } catch (e) {
+              print('Error uploading photo: $e');
+            }
+          }
+        }
+
+        return AlertDialog(
+          title: Text('Add User'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                backgroundImage:
+                    photoUrl != null ? NetworkImage(photoUrl!) : null,
+                radius: 40,
+              ),
+              ElevatedButton(
+                onPressed: addPhoto,
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.blue,
+                ),
+                child: Text(
+                  'Add Photo',
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                ),
+                controller: emailController,
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'First Name',
+                ),
+                controller: firstnameController,
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Last Name',
+                ),
+                controller: lastnameController,
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Mobile',
+                ),
+                controller: mobileController,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                String email = emailController.text;
+                String firstname = firstnameController.text;
+                String lastname = lastnameController.text;
+                String mobile = mobileController.text;
+
+                createUser(email, firstname, lastname, mobile, photoUrl);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Add',
+                style: TextStyle(
+                  color: Colors.green,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void createUser(String email, String firstname, String lastname,
+      String mobile, String? photoUrl) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').add({
+        'email': email,
+        'firstname': firstname,
+        'lastname': lastname,
+        'mobile': mobile,
+        'profilePicture': photoUrl,
+      });
+      print('User created successfully');
+    } catch (e) {
+      print('Failed to create user: $e');
+    }
   }
 
   void editUser(Map<String, dynamic> userData, int index) {
@@ -170,7 +323,17 @@ class _AdminState extends State<Admin> {
                 ),
                 ElevatedButton(
                   onPressed: updatePhoto,
-                  child: Text('Edit Photo'),
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors
+                        .blue,
+                  ),
+                  child: Text(
+                    'Edit Photo',
+                    style: TextStyle(
+                      color: Colors
+                          .white, 
+                    ),
+                  ),
                 ),
                 TextField(
                   decoration: InputDecoration(
@@ -217,13 +380,23 @@ class _AdminState extends State<Admin> {
 
                   Navigator.of(context).pop();
                 },
-                child: Text('Save'),
+                child: Text(
+                  'Save',
+                  style: TextStyle(
+                    color: Colors.green,
+                  ),
+                ),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Cancel'),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: Colors.red,
+                  ),
+                ),
               ),
             ],
           );
@@ -234,7 +407,8 @@ class _AdminState extends State<Admin> {
     }
   }
 
-  Future<void> updateUser(String userId, Map<String, dynamic> updatedData) async {
+  Future<void> updateUser(
+      String userId, Map<String, dynamic> updatedData) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -247,6 +421,43 @@ class _AdminState extends State<Admin> {
   }
 
   void deleteUser(String userId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Delete'),
+          content: Text('Are you sure you want to delete this user?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                deleteConfirmedUser(userId);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void deleteConfirmedUser(String userId) {
     try {
       FirebaseFirestore.instance.collection('users').doc(userId).delete();
       print('User deleted successfully');
