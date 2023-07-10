@@ -57,63 +57,62 @@ class _AdminState extends State<Admin> {
 
   @override
   Widget build(BuildContext context) {
-  List<Map<String, dynamic>> studentList = [];
-  List<Map<String, dynamic>> adminList = [];
-  List<Map<String, dynamic>> tutorList = [];
+    List<Map<String, dynamic>> studentList = [];
+    List<Map<String, dynamic>> adminList = [];
+    List<Map<String, dynamic>> tutorList = [];
 
-  // Separate the users based on role
-  for (var user in userList) {
-    if (user['role'] == 'Student') {
-      studentList.add(user);
-    } else if (user['role'] == 'admin') {
-      adminList.add(user);
-    } else {
-      tutorList.add(user);
+    // Separate the users based on role
+    for (var user in userList) {
+      if (user['role'] == 'Student') {
+        studentList.add(user);
+      } else if (user['role'] == 'admin') {
+        adminList.add(user);
+      } else {
+        tutorList.add(user);
+      }
     }
-  }
 
-  return DefaultTabController(
-    length: 3,
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text("Admin"),
-        actions: [
-          IconButton(
-            onPressed: refreshUsers,
-            icon: Icon(Icons.refresh),
-          ),
-          IconButton(
-            onPressed: () {
-              logout(context);
-            },
-            icon: Icon(Icons.logout),
-          ),
-        ],
-        bottom: TabBar(
-          tabs: [
-            Tab(text: 'Students'),
-            Tab(text: 'Tutors'),
-            Tab(text: 'Admins'),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Admin"),
+          actions: [
+            IconButton(
+              onPressed: refreshUsers,
+              icon: Icon(Icons.refresh),
+            ),
+            IconButton(
+              onPressed: () {
+                logout(context);
+              },
+              icon: Icon(Icons.logout),
+            ),
           ],
-          indicatorColor: Colors.white,
+          bottom: TabBar(
+            tabs: [
+              Tab(text: 'Students'),
+              Tab(text: 'Tutors'),
+              Tab(text: 'Admins'),
+            ],
+            indicatorColor: Colors.white,
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            buildUserList(studentList),
+            buildUserList(tutorList),
+            buildUserList(adminList),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: addUser,
+          child: Icon(Icons.add),
+          backgroundColor: Colors.blue,
         ),
       ),
-      body: TabBarView(
-        children: [
-          buildUserList(studentList),
-          buildUserList(tutorList),
-          buildUserList(adminList),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: addUser,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.blue,
-      ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget buildUserList(List<Map<String, dynamic>> users) {
     return ListView.builder(
@@ -165,6 +164,7 @@ class _AdminState extends State<Admin> {
                           ListTile(
                             title: Text('Role: Student'),
                           )
+                        
                         else if (users[index]['role'] == 'admin')
                           ListTile(
                             title: Text('Role: Administrator'),
@@ -178,68 +178,96 @@ class _AdminState extends State<Admin> {
                                 .get(),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
-                              final courseDocs = snapshot.data!.docs;
-                              String userRole = userList[index]['role'];
-                              if (userRole == 'Student') {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(height: 16),
-                                    Text(
-                                      'Role: Student',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                                    SizedBox(height: 8),
-                                  ],
-                                );
-                              } else if (userRole == 'admin') {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(height: 16),
-                                    Text(
-                                      'Role: Administrator',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                                    SizedBox(height: 8),
-                                  ],
-                                );
-                              } else if (courseDocs.isNotEmpty) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Courses:',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                                    SizedBox(height: 8),
-                                    ...courseDocs.map((courseDoc) {
-                                      final courseData = courseDoc.data() as Map<String, dynamic>;
-                                      final courseName = courseData['courseName'] ?? '';
+                                final courseDocs = snapshot.data!.docs;
+                                String userRole = userList[index]['role'];
+                                if (userRole == 'Student') {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'Role: Student',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
+                                      SizedBox(height: 8),
+                                    ],
+                                  );
+                                } else if (userRole == 'Tutor') {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'Role: Tutor',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
+                                      SizedBox(height: 8),
+                                      if (courseDocs.isNotEmpty)
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Courses:',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16),
+                                            ),
+                                            SizedBox(height: 8),
+                                            ...courseDocs.map((courseDoc) {
+                                              final courseData =
+                                                  courseDoc.data()
+                                                      as Map<String, dynamic>;
+                                              final courseName =
+                                                  courseData['courseName'] ??
+                                                      '';
 
-                                      return ListTile(
-                                        title: Text(courseName),
-                                        onTap: () {
-                                          showCourseInfo(courseData);
-                                        },
-                                        trailing: IconButton(
-                                          icon: Icon(Icons.delete),
-                                          onPressed: () {
-                                            deleteCourse(courseDoc.id);
-                                          },
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ],
-                                );
+                                              return ListTile(
+                                                title: Text(courseName),
+                                                onTap: () {
+                                                  showCourseInfo(courseData);
+                                                },
+                                                trailing: IconButton(
+                                                  icon: Icon(Icons.delete),
+                                                  onPressed: () {
+                                                    deleteCourse(courseDoc.id);
+                                                  },
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ],
+                                        )
+                                    ],
+                                  );
+                                } else if (userRole == 'admin') {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'Role: Administrator',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
+                                      SizedBox(height: 8),
+                                    ],
+                                  );
+                                } else {
+                                  return Text('No courses found');
+                                }
+                              } else if (snapshot.hasError) {
+                                return Text('Error loading courses');
                               } else {
-                                return Text('No courses found');
+                                return CircularProgressIndicator();
                               }
-                            } else if (snapshot.hasError) {
-                              return Text('Error loading courses');
-                            } else {
-                              return CircularProgressIndicator();
-                            }
                             },
                           ),
                         SizedBox(height: 16),
@@ -260,9 +288,12 @@ class _AdminState extends State<Admin> {
       context: context,
       builder: (BuildContext context) {
         final TextEditingController emailController = TextEditingController();
-        final TextEditingController passwordController = new TextEditingController();
-        final TextEditingController firstnameController = TextEditingController();
-        final TextEditingController lastnameController = TextEditingController();
+        final TextEditingController passwordController =
+            new TextEditingController();
+        final TextEditingController firstnameController =
+            TextEditingController();
+        final TextEditingController lastnameController =
+            TextEditingController();
         final TextEditingController mobileController = TextEditingController();
         String? selectedRole;
         String? photoUrl;
@@ -296,80 +327,101 @@ class _AdminState extends State<Admin> {
 
         return AlertDialog(
           title: Text('Add User'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                backgroundImage:
-                    photoUrl != null ? NetworkImage(photoUrl!) : null,
-                radius: 40,
-              ),
-              ElevatedButton(
-                onPressed: addPhoto,
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.blue,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  backgroundImage:
+                      photoUrl != null ? NetworkImage(photoUrl!) : null,
+                  radius: 40,
                 ),
-                child: Text(
-                  'Add Photo',
-                  style: TextStyle(
-                    color: Colors.white,
+                ElevatedButton(
+                  onPressed: addPhoto,
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.blue,
+                  ),
+                  child: Text(
+                    'Add Photo',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                ),
-                controller: emailController,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                ),
-                controller: passwordController,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'First Name',
-                ),
-                controller: firstnameController,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Last Name',
-                ),
-                controller: lastnameController,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Mobile',
-                ),
-                controller: mobileController,
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Role',
-                ),
-                value: selectedRole,
-                items: [
-                  DropdownMenuItem(
-                    value: 'Student',
-                    child: Text('Student'),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Email',
                   ),
-                  DropdownMenuItem(
-                    value: 'Tutor',
-                    child: Text('Tutor'),
+                  controller: emailController,
+                ),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Password',
                   ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedRole = value;
-                  });
-                },
-              ),
-            ],
+                  controller: passwordController,
+                ),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'First Name',
+                  ),
+                  controller: firstnameController,
+                ),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Last Name',
+                  ),
+                  controller: lastnameController,
+                ),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Mobile',
+                  ),
+                  controller: mobileController,
+                ),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Role',
+                  ),
+                  value: selectedRole,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'Student',
+                      child: Text('Student'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Tutor',
+                      child: Text('Tutor'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRole = value!;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
+            TextButton(
+              onPressed: () {
+                String email = emailController.text;
+                String password = passwordController.text;
+                String firstname = firstnameController.text;
+                String lastname = lastnameController.text;
+                String mobile = mobileController.text;
+
+                createUser(email, password, firstname, lastname, mobile,
+                    selectedRole!, photoUrl);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Add',
+                style: TextStyle(
+                  color: Colors.green,
+                ),
+              ),
+            ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -381,35 +433,17 @@ class _AdminState extends State<Admin> {
                 ),
               ),
             ),
-            TextButton(
-              onPressed: () {
-                String email = emailController.text;
-                String password = passwordController.text;
-                String firstname = firstnameController.text;
-                String lastname = lastnameController.text;
-                String mobile = mobileController.text;
-
-                createUser(
-                    email,password, firstname, lastname, mobile, selectedRole!, photoUrl);
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Add',
-                style: TextStyle(
-                  color: Colors.green,
-                ),
-              ),
-            ),
           ],
         );
       },
     );
   }
 
-  void createUser(String email, String password, String firstname, String lastname,
-      String mobile, String? role, String? photoUrl) async {
+  void createUser(String email, String password, String firstname,
+      String lastname, String mobile, String? role, String? photoUrl) async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -428,7 +462,7 @@ class _AdminState extends State<Admin> {
     } catch (e) {
       print('Failed to create user: $e');
     }
-}
+  }
 
   void editUser(Map<String, dynamic> userData, int index) {
     String? userId = userData['userId'] as String?;
@@ -478,71 +512,73 @@ class _AdminState extends State<Admin> {
 
           return AlertDialog(
             title: Text('Edit User'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(photoUrl),
-                  radius: 40,
-                ),
-                ElevatedButton(
-                  onPressed: updatePhoto,
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.blue,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(photoUrl),
+                    radius: 40,
                   ),
-                  child: Text(
-                    'Edit Photo',
-                    style: TextStyle(
-                      color: Colors.white,
+                  ElevatedButton(
+                    onPressed: updatePhoto,
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.blue,
+                    ),
+                    child: Text(
+                      'Edit Photo',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'First Name',
-                  ),
-                  controller: _firstnameController,
-                ),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Last Name',
-                  ),
-                  controller: _lastnameController,
-                ),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                  ),
-                  controller: _emailController,
-                ),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Mobile',
-                  ),
-                  controller: _mobileController,
-                ),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Role',
-                  ),
-                  value: selectedRole,
-                  items: [
-                    DropdownMenuItem(
-                      value: 'Student',
-                      child: Text('Student'),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'First Name',
                     ),
-                    DropdownMenuItem(
-                      value: 'Tutor',
-                      child: Text('Tutor'),
+                    controller: _firstnameController,
+                  ),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Last Name',
                     ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedRole = value!;
-                    });
-                  },
-                ),
-              ],
+                    controller: _lastnameController,
+                  ),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                    ),
+                    controller: _emailController,
+                  ),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Mobile',
+                    ),
+                    controller: _mobileController,
+                  ),
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Role',
+                    ),
+                    value: selectedRole,
+                    items: [
+                      DropdownMenuItem(
+                        value: 'Student',
+                        child: Text('Student'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Tutor',
+                        child: Text('Tutor'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedRole = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
