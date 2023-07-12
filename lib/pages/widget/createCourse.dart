@@ -120,7 +120,17 @@ class _CreateCourseState extends State<CreateCourse> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _pickImage(ImageSource.gallery),
-              child: Text('Add Image Course'),
+              child: Text(
+                'Add Image Course',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary:
+                    Theme.of(context).hintColor, // Set the button color here
+              ),
             ),
             if (_imageFile != null)
               Image.file(
@@ -134,7 +144,31 @@ class _CreateCourseState extends State<CreateCourse> {
       actions: [
         ElevatedButton(
           onPressed: _submitForm,
-          child: Text('Submit'),
+          child: Text(
+            'Save',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            primary: Colors.green, // Set the button color here
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            primary: Colors.red, // Set the button color here
+          ),
         ),
       ],
     );

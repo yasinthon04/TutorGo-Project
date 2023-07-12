@@ -68,44 +68,44 @@ class _RegisterState extends State<Register> {
                     key: _formkey,
                     child: Column(
                       children: [
-                        // GestureDetector(
-                        //   child: Stack(
-                        //     children: [
-                        //       Container(
-                        //         padding: EdgeInsets.all(10),
-                        //         decoration: BoxDecoration(
-                        //           borderRadius: BorderRadius.circular(100),
-                        //           border:
-                        //               Border.all(width: 5, color: Colors.white),
-                        //           color: Colors.white,
-                        //           boxShadow: [
-                        //             BoxShadow(
-                        //               color: Colors.black12,
-                        //               blurRadius: 20,
-                        //               offset: const Offset(5, 5),
-                        //             ),
-                        //           ],
-                        //         ),
-                        //         child: Icon(
-                        //           Icons.person,
-                        //           color: Colors.grey.shade300,
-                        //           size: 80.0,
-                        //         ),
-                        //       ),
-                        //       Container(
-                        //         padding: EdgeInsets.fromLTRB(80, 80, 0, 0),
-                        //         child: Icon(
-                        //           Icons.add_circle,
-                        //           color: Colors.grey.shade700,
-                        //           size: 25.0,
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
+                        GestureDetector(
+                          child: Stack(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  border:
+                                      Border.all(width: 5, color: Colors.white),
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 20,
+                                      offset: const Offset(5, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.grey.shade300,
+                                  size: 80.0,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.fromLTRB(80, 80, 0, 0),
+                                child: Icon(
+                                  Icons.add_circle,
+                                  color: Colors.grey.shade700,
+                                  size: 25.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         
                         SizedBox(
-                          height: 100,
+                          height: 20,
                         ),
                         
                         Container(
@@ -114,13 +114,13 @@ class _RegisterState extends State<Register> {
                             controller: firstname,
                             decoration: ThemeHelper().textInputDecoration(
                                 'First Name', 'Enter your first name'),
-                            // validator: (value) {
-                            //   if (value!.length == 0) {
-                            //     return "Firstname cannot be empty";
-                            //   } else {
-                            //     return ("Please enter a valid firstname");
-                            //   }
-                            // },
+                            validator: (value) {
+                              if (value!.length == 0) {
+                                return "Firstname cannot be empty";
+                              } else {
+                                return ("Please enter a valid firstname");
+                              }
+                            },
                             onChanged: (value) {},
                             keyboardType: TextInputType.emailAddress,
                           ),
@@ -134,13 +134,13 @@ class _RegisterState extends State<Register> {
                             controller: lastname,
                             decoration: ThemeHelper().textInputDecoration(
                                 'Last Name', 'Enter your last name'),
-                            //   validator: (value) {
-                            //   if (value!.length == 0) {
-                            //     return "Lastname cannot be empty";
-                            //   } else {
-                            //     return ("Please enter a valid lastname");
-                            //   }
-                            // },
+                              validator: (value) {
+                              if (value!.length == 0) {
+                                return "Lastname cannot be empty";
+                              } else {
+                                return ("Please enter a valid lastname");
+                              }
+                            },
                             onChanged: (value) {},
                             keyboardType: TextInputType.emailAddress,
                           ),
@@ -176,13 +176,13 @@ class _RegisterState extends State<Register> {
                             decoration: ThemeHelper().textInputDecoration(
                                 "Mobile Number", "Enter your mobile number"),
                             keyboardType: TextInputType.phone,
-                            //   validator: (value) {
-                            //   if (value!.length == 0) {
-                            //     return "Mobile cannot be empty";
-                            //   } else {
-                            //     return ("Please enter a valid mobile");
-                            //   }
-                            // },
+                              validator: (value) {
+                              if (value!.length == 0) {
+                                return "Mobile cannot be empty";
+                              } else {
+                                return ("Please enter a valid mobile");
+                              }
+                            },
                             onChanged: (value) {},
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
@@ -324,91 +324,6 @@ class _RegisterState extends State<Register> {
                           ),
                         ),
                         SizedBox(height: 30.0),
-                        // Text(
-                        //   "Or create account using social media",
-                        //   style: TextStyle(color: Colors.grey),
-                        // ),
-                        // SizedBox(height: 25.0),
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.center,
-                        //   children: [
-                        //     GestureDetector(
-                        //       child: FaIcon(
-                        //         FontAwesomeIcons.googlePlus,
-                        //         size: 35,
-                        //         color: HexColor("#EC2D2F"),
-                        //       ),
-                        //       onTap: () {
-                        //         setState(() {
-                        //           showDialog(
-                        //             context: context,
-                        //             builder: (BuildContext context) {
-                        //               return ThemeHelper().alartDialog(
-                        //                   "Google Plus",
-                        //                   "You tap on GooglePlus social icon.",
-                        //                   context);
-                        //             },
-                        //           );
-                        //         });
-                        //       },
-                        //     ),
-                        //     SizedBox(
-                        //       width: 30.0,
-                        //     ),
-                        //     GestureDetector(
-                        //       child: Container(
-                        //         padding: EdgeInsets.all(0),
-                        //         decoration: BoxDecoration(
-                        //           borderRadius: BorderRadius.circular(100),
-                        //           border: Border.all(
-                        //               width: 5, color: HexColor("#40ABF0")),
-                        //           color: HexColor("#40ABF0"),
-                        //         ),
-                        //         child: FaIcon(
-                        //           FontAwesomeIcons.twitter,
-                        //           size: 23,
-                        //           color: HexColor("#FFFFFF"),
-                        //         ),
-                        //       ),
-                        //       onTap: () {
-                        //         setState(() {
-                        //           showDialog(
-                        //             context: context,
-                        //             builder: (BuildContext context) {
-                        //               return ThemeHelper().alartDialog(
-                        //                   "Twitter",
-                        //                   "You tap on Twitter social icon.",
-                        //                   context);
-                        //             },
-                        //           );
-                        //         });
-                        //       },
-                        //     ),
-                        //     SizedBox(
-                        //       width: 30.0,
-                        //     ),
-                        //     GestureDetector(
-                        //       child: FaIcon(
-                        //         FontAwesomeIcons.facebook,
-                        //         size: 35,
-                        //         color: HexColor("#3E529C"),
-                        //       ),
-                        //       onTap: () {
-                        //         setState(() {
-                        //           showDialog(
-                        //             context: context,
-                        //             builder: (BuildContext context) {
-                        //               return ThemeHelper().alartDialog(
-                        //                   "Facebook",
-                        //                   "You tap on Facebook social icon.",
-                        //                   context);
-                        //             },
-                        //           );
-                        //         });
-                        //       },
-                        //     ),
-                        //   ],
-                        // ),
                       ],
                     ),
                   ),

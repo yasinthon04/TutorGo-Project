@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tutorgo/auth.dart';
 import 'package:tutorgo/pages/login.dart';
+import 'package:tutorgo/pages/widget/header_widget.dart';
 import '../widget/createCourse.dart';
 import '../widget/editCourse.dart';
 import '../widget/deleteCourse.dart';
@@ -49,7 +50,10 @@ class _HomePageState extends State<HomePage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Tutor Information'),
+            title: Text(
+              'Tutor Information',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,9 +63,60 @@ class _HomePageState extends State<HomePage> {
                     radius: 40,
                     backgroundImage: NetworkImage(tutorImage),
                   ),
-                Text('Name: $tutorFirstname $tutorLastname'),
-                Text('Email: $tutorEmail'),
-                Text('Mobile: $tutorMobile'),
+                  SizedBox(height: 10),
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: [
+                      TextSpan(
+                        text: 'Name : ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text: tutorFirstname,
+                        style: TextStyle(fontWeight: FontWeight.normal),
+                      ),
+                      TextSpan(
+                        text: ' ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text: tutorLastname,
+                        style: TextStyle(fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: [
+                      TextSpan(
+                        text: 'Email : ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text: tutorEmail,
+                        style: TextStyle(fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: [
+                      TextSpan(
+                        text: 'Mobile : ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text: tutorMobile,
+                        style: TextStyle(fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             actions: [
@@ -69,7 +124,17 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Text('Close'),
+                child: Text(
+                  'Close',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary:
+                      Theme.of(context).hintColor, // Set the button color here
+                ),
               ),
             ],
           );
@@ -91,15 +156,74 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Course Information'),
+          title: Text(
+            'Course Information',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Course Name: $courseName'),
-              Text('Address: $address'),
-              Text('Price: $price'),
-              Text('Contact Information: $contactInfo'),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: [
+                    TextSpan(
+                      text: 'Course Name: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: courseName,
+                      style: TextStyle(fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
+              ),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: [
+                    TextSpan(
+                      text: 'Address: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: address,
+                      style: TextStyle(fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
+              ),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: [
+                    TextSpan(
+                      text: 'Price: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: price,
+                      style: TextStyle(fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
+              ),
+              RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: [
+                    TextSpan(
+                      text: 'Contact Information: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: contactInfo,
+                      style: TextStyle(fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
@@ -115,7 +239,16 @@ class _HomePageState extends State<HomePage> {
                     contactInfo,
                   );
                 },
-                child: Text('Edit'),
+                child: Text(
+                  'Edit',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green, // Set the button color here
+                ),
               ),
             if (isCurrentUserCourseCreator)
               ElevatedButton(
@@ -123,7 +256,16 @@ class _HomePageState extends State<HomePage> {
                   Navigator.pop(context);
                   _showDeleteCourseDialog(courseId, courseName);
                 },
-                child: Text('Delete'),
+                child: Text(
+                  'Delete',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.red, // Set the button color here
+                ),
               ),
             if (!isCurrentUserCourseCreator)
               FutureBuilder<String>(
@@ -137,7 +279,16 @@ class _HomePageState extends State<HomePage> {
                           Navigator.pop(context);
                           _viewTutorInformation(userId);
                         },
-                        child: Text('View Tutor Information'),
+                        child: Text(
+                          'View Tutor Information',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.blue, // Set the button color here
+                        ),
                       );
                     }
                   }
@@ -148,7 +299,17 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Close'),
+              child: Text(
+                'Close',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary:
+                    Theme.of(context).hintColor, // Set the button color here
+              ),
             ),
           ],
         );
@@ -186,7 +347,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _title() {
-    return const Text('Home page');
+    return const Text(
+      'Home page',
+      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    );
   }
 
   Widget _userUid() {
@@ -206,106 +370,171 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: _title(),
+        elevation: 0.5,
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                Theme.of(context).primaryColor,
+                Theme.of(context).hintColor,
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          FutureBuilder<String>(
+            future: getUserRole(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final userRole = snapshot.data!;
+                if (userRole == 'Tutor') {
+                  return IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return CreateCourse();
+                        },
+                      );
+                    },
+                    icon: Icon(Icons.add),
+                  );
+                }
+              }
+              return SizedBox.shrink();
+            },
+          ),
+        ],
       ),
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _userUid(),
-            SizedBox(height: 20),
-            FutureBuilder<String>(
-              future: getUserRole(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final userRole = snapshot.data!;
-                  if (userRole == 'Tutor') {
-                    return ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return CreateCourse();
-                          },
-                        );
-                      },
-                      child: const Text(
-                        'Create Course',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
-                  }
-                }
-                return SizedBox.shrink();
-              },
+            Container(
+              height: 75,
+              child: HeaderWidget(75, false, Icons.house_rounded),
             ),
-            SizedBox(height: 20),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15.0),
+                child: Text(
+                  'For you',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
             StreamBuilder<QuerySnapshot>(
               stream:
                   FirebaseFirestore.instance.collection('courses').snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   final courseDocs = snapshot.data!.docs;
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: courseDocs.length,
-                    itemBuilder: (context, index) {
-                      final courseData =
-                          courseDocs[index].data() as Map<String, dynamic>;
-                      final courseName = courseData['courseName'] ?? '';
-                      final address = courseData['address'] ?? '';
-                      final price = courseData['price'] ?? '';
-                      final contactInfo = courseData['contactInfo'] ?? '';
-                      final imageName = courseData['imageName'] ?? '';
-                      final userId = courseData['userId'] ?? '';
-                      final courseId = courseDocs[index].id;
+                  return SizedBox(
+                    height: MediaQuery.of(context).size.height -
+                        250, // Adjust the height as needed
+                    child: GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.72,
+                      children: courseDocs.map((courseDoc) {
+                        final courseData =
+                            courseDoc.data() as Map<String, dynamic>;
+                        final courseName = courseData['courseName'] ?? '';
+                        final address = courseData['address'] ?? '';
+                        final price = courseData['price'] ?? '';
+                        final contactInfo = courseData['contactInfo'] ?? '';
+                        final imageName = courseData['imageName'] ?? '';
+                        final userId = courseData['userId'] ?? '';
+                        final courseId = courseDoc.id;
 
-                      // Check if the current user is the creator of the course
-                      final bool isCurrentUserCourseCreator =
-                          userId == user?.uid;
+                        // Check if the current user is the creator of the course
+                        final bool isCurrentUserCourseCreator =
+                            userId == user?.uid;
 
-                      return Card(
-                        child: ListTile(
-                          leading: imageName.isNotEmpty
-                              ? Image.network(imageName)
-                              : Image.asset('assets/default_image.png'),
-                          title: Text(courseName),
-                          onTap: () {
-                            _showCourseInfoDialog(
-                              courseName,
-                              address,
-                              price,
-                              contactInfo,
-                              userId,
-                              courseId,
-                              isCurrentUserCourseCreator,
-                            );
+                        return FutureBuilder<DocumentSnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(userId)
+                              .get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final tutorData =
+                                  snapshot.data!.data() as Map<String, dynamic>;
+                              final tutorFirstname =
+                                  tutorData['firstname'] ?? '';
+
+                              return GestureDetector(
+                                onTap: () {
+                                  _showCourseInfoDialog(
+                                    courseName,
+                                    address,
+                                    price,
+                                    contactInfo,
+                                    userId,
+                                    courseId,
+                                    isCurrentUserCourseCreator,
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: Card(
+                                    child: Column(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            height: 170,
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                              child: imageName.isNotEmpty
+                                                  ? Image.network(
+                                                      imageName,
+                                                      fit: BoxFit.cover,
+                                                    )
+                                                  : Image.asset(
+                                                      'assets/default_image.png',
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                        ListTile(
+                                          title: Text(
+                                            courseName,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          subtitle: Text(
+                                            'Tutor: $tutorFirstname',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              return SizedBox.shrink();
+                            }
                           },
-                        ),
-                      );
-                    },
+                        );
+                      }).toList(),
+                    ),
                   );
                 } else {
                   return SizedBox.shrink();
                 }
               },
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _signOutButton,
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).primaryColor.withOpacity(0.2),
-                side: BorderSide.none,
-                shape: const StadiumBorder(),
-              ),
-              child: const Text(
-                'Sign Out',
-                style: TextStyle(color: Colors.white),
-              ),
             ),
           ],
         ),

@@ -76,7 +76,24 @@ class _AdminState extends State<Admin> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Admin"),
+          title: Text(
+            "Admin",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          elevation: 0.5,
+          iconTheme: IconThemeData(color: Colors.white),
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  Theme.of(context).primaryColor,
+                  Theme.of(context).hintColor,
+                ],
+              ),
+            ),
+          ),
           actions: [
             IconButton(
               onPressed: refreshUsers,
@@ -107,8 +124,8 @@ class _AdminState extends State<Admin> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: addUser,
-          child: Icon(Icons.add),
-          backgroundColor: Colors.blue,
+          child: Icon(Icons.add, color: Colors.white),
+          backgroundColor: Theme.of(context).primaryColor,
         ),
       ),
     );
@@ -164,7 +181,6 @@ class _AdminState extends State<Admin> {
                           ListTile(
                             title: Text('Role: Student'),
                           )
-                        
                         else if (users[index]['role'] == 'admin')
                           ListTile(
                             title: Text('Role: Administrator'),
@@ -234,9 +250,13 @@ class _AdminState extends State<Admin> {
                                                   showCourseInfo(courseData);
                                                 },
                                                 trailing: IconButton(
-                                                  icon: Icon(Icons.delete),
+                                                  icon: Icon(
+                                                    Icons.delete,
+                                                    color: Colors.red,
+                                                  ),
                                                   onPressed: () {
-                                                    deleteCourse(courseDoc.id);
+                                                    deleteCourse(
+                                                        context, courseDoc.id);
                                                   },
                                                 ),
                                               );
@@ -417,9 +437,11 @@ class _AdminState extends State<Admin> {
               },
               child: Text(
                 'Add',
-                style: TextStyle(
-                  color: Colors.green,
-                ),
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green,
               ),
             ),
             TextButton(
@@ -428,9 +450,11 @@ class _AdminState extends State<Admin> {
               },
               child: Text(
                 'Cancel',
-                style: TextStyle(
-                  color: Colors.red,
-                ),
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).hintColor,
               ),
             ),
           ],
@@ -601,11 +625,12 @@ class _AdminState extends State<Admin> {
                   Navigator.of(context).pop();
                 },
                 child: Text(
-                  'Save',
-                  style: TextStyle(
-                    color: Colors.green,
-                  ),
-                ),
+                'Save',
+                style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green,
+              ),
               ),
               TextButton(
                 onPressed: () {
@@ -614,8 +639,10 @@ class _AdminState extends State<Admin> {
                 child: Text(
                   'Cancel',
                   style: TextStyle(
-                    color: Colors.red,
-                  ),
+                      fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Theme.of(context).hintColor,
                 ),
               ),
             ],
@@ -654,9 +681,11 @@ class _AdminState extends State<Admin> {
               },
               child: Text(
                 'Cancel',
-                style: TextStyle(
-                  color: Colors.blue,
-                ),
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).hintColor,
               ),
             ),
             TextButton(
@@ -666,9 +695,11 @@ class _AdminState extends State<Admin> {
               },
               child: Text(
                 'Delete',
-                style: TextStyle(
-                  color: Colors.red,
-                ),
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.red,
               ),
             ),
           ],
@@ -736,12 +767,52 @@ class _AdminState extends State<Admin> {
     );
   }
 
-  void deleteCourse(String courseId) {
-    try {
-      FirebaseFirestore.instance.collection('courses').doc(courseId).delete();
-      print('Course deleted successfully');
-    } catch (e) {
-      print('Failed to delete course: $e');
-    }
+  void deleteCourse(BuildContext context, String courseId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Delete'),
+          content: Text('Are you sure you want to delete this course?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text(
+                'Cancel',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).hintColor,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('courses')
+                      .doc(courseId)
+                      .delete();
+                  print('Course deleted successfully');
+                  Navigator.pop(context); // Close the dialog
+                } catch (e) {
+                  print('Failed to delete course: $e');
+                }
+              },
+              child: Text(
+                'Delete',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.red,
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

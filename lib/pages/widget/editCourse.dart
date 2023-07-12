@@ -77,7 +77,10 @@ class _EditCourseState extends State<EditCourse> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Edit Course'),
+      title: Text(
+        'Edit Course',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
       content: Form(
         key: _formKey,
         child: Column(
@@ -129,13 +132,31 @@ class _EditCourseState extends State<EditCourse> {
       actions: [
         ElevatedButton(
           onPressed: _submitForm,
-          child: Text('Save'),
+          child: Text(
+            'Save',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            primary: Colors.green, // Set the button color here
+          ),
         ),
         ElevatedButton(
           onPressed: () {
             Navigator.pop(context);
           },
-          child: Text('Cancel'),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            primary: Theme.of(context).hintColor, // Set the button color here
+          ),
         ),
       ],
     );

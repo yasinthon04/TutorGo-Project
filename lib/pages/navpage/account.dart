@@ -126,7 +126,7 @@ class _AccountPageState extends State<AccountPage> {
           children: [
             ListTile(
               leading: Icon(Icons.mail),
-              title: Text("email"),
+              title: Text("Email"),
               subtitle: Text(email),
             ),
             ListTile(
@@ -167,7 +167,7 @@ class _AccountPageState extends State<AccountPage> {
       child: ElevatedButton(
         onPressed: signOut,
         style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+            primary: Theme.of(context).hintColor,
             side: BorderSide.none,
             shape: const StadiumBorder()),
         child: const Text(

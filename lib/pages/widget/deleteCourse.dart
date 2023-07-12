@@ -82,13 +82,31 @@ class _DeleteCourseState extends State<DeleteCourse> {
       actions: [
         ElevatedButton(
           onPressed: _submitForm,
-          child: Text('Delete'),
+          child: Text(
+            'Delete',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            primary: Colors.red, // Set the button color here
+          ),
         ),
         ElevatedButton(
           onPressed: () {
             Navigator.pop(context);
           },
-          child: Text('Cancel'),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            primary: Theme.of(context).hintColor, // Set the button color here
+          ),
         ),
       ],
     );
