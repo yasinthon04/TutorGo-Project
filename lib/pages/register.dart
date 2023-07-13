@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'login.dart';
 import 'package:tutorgo/common/theme_helper.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
-import 'package:hexcolor/hexcolor.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:path/path.dart' as Path;
 
 class Register extends StatefulWidget {
   @override
@@ -22,7 +23,6 @@ class _RegisterState extends State<Register> {
   final _formkey = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
   final TextEditingController passwordController = new TextEditingController();
-  // final TextEditingController confirmpassController = new TextEditingController();
   final TextEditingController firstname = new TextEditingController();
   final TextEditingController lastname = new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
@@ -38,6 +38,8 @@ class _RegisterState extends State<Register> {
 
   bool checkedValue = false;
   bool checkboxValue = false;
+
+  File? selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +58,7 @@ class _RegisterState extends State<Register> {
               alignment: Alignment.center,
               child: Column(
                 children: [
-                   Text(
+                  Text(
                     'Register', // Replace with your desired text
                     style: TextStyle(
                       fontSize: 60,
@@ -69,6 +71,9 @@ class _RegisterState extends State<Register> {
                     child: Column(
                       children: [
                         GestureDetector(
+                          onTap: () {
+                            selectImage();
+                          },
                           child: Stack(
                             children: [
                               Container(
@@ -86,11 +91,22 @@ class _RegisterState extends State<Register> {
                                     ),
                                   ],
                                 ),
-                                child: Icon(
-                                  Icons.person,
-                                  color: Colors.grey.shade300,
-                                  size: 80.0,
-                                ),
+                                child: selectedImage != null
+                                    ? ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(100),
+                                        child: Image.file(
+                                          selectedImage!,
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.person,
+                                        color: Colors.grey.shade300,
+                                        size: 80.0,
+                                      ),
                               ),
                               Container(
                                 padding: EdgeInsets.fromLTRB(80, 80, 0, 0),
@@ -103,24 +119,21 @@ class _RegisterState extends State<Register> {
                             ],
                           ),
                         ),
-                        
                         SizedBox(
                           height: 20,
                         ),
-                        
                         Container(
-                          
                           child: TextFormField(
                             controller: firstname,
                             decoration: ThemeHelper().textInputDecoration(
                                 'First Name', 'Enter your first name'),
-                            validator: (value) {
-                              if (value!.length == 0) {
-                                return "Firstname cannot be empty";
-                              } else {
-                                return ("Please enter a valid firstname");
-                              }
-                            },
+                            // validator: (value) {
+                            //   if (value!.length == 0) {
+                            //     return "Firstname cannot be empty";
+                            //   } else {
+                            //     return ("Please enter a valid firstname");
+                            //   }
+                            // },
                             onChanged: (value) {},
                             keyboardType: TextInputType.emailAddress,
                           ),
@@ -134,13 +147,13 @@ class _RegisterState extends State<Register> {
                             controller: lastname,
                             decoration: ThemeHelper().textInputDecoration(
                                 'Last Name', 'Enter your last name'),
-                              validator: (value) {
-                              if (value!.length == 0) {
-                                return "Lastname cannot be empty";
-                              } else {
-                                return ("Please enter a valid lastname");
-                              }
-                            },
+                            // validator: (value) {
+                            //   if (value!.length == 0) {
+                            //     return "Lastname cannot be empty";
+                            //   } else {
+                            //     return ("Please enter a valid lastname");
+                            //   }
+                            // },
                             onChanged: (value) {},
                             keyboardType: TextInputType.emailAddress,
                           ),
@@ -176,13 +189,13 @@ class _RegisterState extends State<Register> {
                             decoration: ThemeHelper().textInputDecoration(
                                 "Mobile Number", "Enter your mobile number"),
                             keyboardType: TextInputType.phone,
-                              validator: (value) {
-                              if (value!.length == 0) {
-                                return "Mobile cannot be empty";
-                              } else {
-                                return ("Please enter a valid mobile");
-                              }
-                            },
+                            // validator: (value) {
+                            //   if (value!.length == 0) {
+                            //     return "Mobile cannot be empty";
+                            //   } else {
+                            //     return ("Please enter a valid mobile");
+                            //   }
+                            // },
                             onChanged: (value) {},
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
@@ -336,35 +349,67 @@ class _RegisterState extends State<Register> {
     );
   }
 
-  void signUp(String email, String password, String role) async {
-    CircularProgressIndicator();
-    if (_formkey.currentState!.validate()) {
-      try {
-        await _auth.createUserWithEmailAndPassword(
-            email: email, password: password);
-        await postDetailsToFirestore(email, role);
-      } catch (e) {
-        // Handle the error and return a value
-        print('Error occurred during sign up: $e');
-        setState(() {
-          showProgress = false;
-        });
-        return null; // Or return a specific value
+  void selectImage() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      if (pickedImage != null) {
+        selectedImage = File(pickedImage.path);
       }
-    }
+    });
   }
 
-  postDetailsToFirestore(String email, String role) async {
-    var user = _auth.currentUser;
-    CollectionReference ref = FirebaseFirestore.instance.collection('users');
-    ref.doc(user?.uid).set({
-      'firstname': firstname.text,
-      'lastname': lastname.text,
-      'email': emailController.text,
-      'mobile': mobile.text,
-      'role': role,
-    });
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => LoginPage()));
+  void signUp(String email, String password, String role) async {
+  if (_formkey.currentState!.validate()) {
+    try {
+      setState(() {
+        showProgress = true;
+      });
+      
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      
+      if (selectedImage != null) {
+        String imageName = Path.basename(selectedImage!.path);
+        Reference storageReference = FirebaseStorage.instance
+            .ref()
+            .child('profilePicture')
+            .child(userCredential.user!.uid)
+            .child(imageName);
+        UploadTask uploadTask = storageReference.putFile(selectedImage!);
+        await uploadTask.whenComplete(() async {
+          String imageUrl = await storageReference.getDownloadURL();
+          await postDetailsToFirestore(email, role, imageUrl);
+        });
+      } else {
+        await postDetailsToFirestore(email, role, '');
+      }
+      
+    } catch (e) {
+      // Handle the error and return a value
+      print('Error occurred during sign up: $e');
+      setState(() {
+        showProgress = false;
+      });
+      return null; // Or return a specific value
+    }
   }
+}
+
+
+  postDetailsToFirestore(String email, String role, String imageUrl) async {
+  var user = _auth.currentUser;
+  CollectionReference ref = FirebaseFirestore.instance.collection('users');
+  ref.doc(user?.uid).set({
+    'firstname': firstname.text,
+    'lastname': lastname.text,
+    'email': emailController.text,
+    'mobile': mobile.text,
+    'role': role,
+    'profilePicture': imageUrl, // Add the image URL here
+  });
+  Navigator.pushReplacement(
+      context, MaterialPageRoute(builder: (context) => LoginPage()));
+}
+
 }
