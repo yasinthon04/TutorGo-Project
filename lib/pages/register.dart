@@ -127,15 +127,17 @@ class _RegisterState extends State<Register> {
                             controller: firstname,
                             decoration: ThemeHelper().textInputDecoration(
                                 'First Name', 'Enter your first name'),
-                            // validator: (value) {
-                            //   if (value!.length == 0) {
-                            //     return "Firstname cannot be empty";
-                            //   } else {
-                            //     return ("Please enter a valid firstname");
-                            //   }
-                            // },
                             onChanged: (value) {},
-                            keyboardType: TextInputType.emailAddress,
+                            keyboardType: TextInputType.text,
+                            validator: (value) {
+                              if (value!.trim().isEmpty) {
+                                return "First name cannot be empty";
+                              }
+                              if (value.length > 35) {
+                                return "First name should not exceed 35 characters";
+                              }
+                              return null;
+                            },
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -147,15 +149,17 @@ class _RegisterState extends State<Register> {
                             controller: lastname,
                             decoration: ThemeHelper().textInputDecoration(
                                 'Last Name', 'Enter your last name'),
-                            // validator: (value) {
-                            //   if (value!.length == 0) {
-                            //     return "Lastname cannot be empty";
-                            //   } else {
-                            //     return ("Please enter a valid lastname");
-                            //   }
-                            // },
                             onChanged: (value) {},
-                            keyboardType: TextInputType.emailAddress,
+                            keyboardType: TextInputType.text,
+                            validator: (value) {
+                              if (value!.trim().isEmpty) {
+                                return "Last name cannot be empty";
+                              }
+                              if (value.length > 35) {
+                                return "Last name should not exceed 35 characters";
+                              }
+                              return null;
+                            },
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -189,14 +193,16 @@ class _RegisterState extends State<Register> {
                             decoration: ThemeHelper().textInputDecoration(
                                 "Mobile Number", "Enter your mobile number"),
                             keyboardType: TextInputType.phone,
-                            // validator: (value) {
-                            //   if (value!.length == 0) {
-                            //     return "Mobile cannot be empty";
-                            //   } else {
-                            //     return ("Please enter a valid mobile");
-                            //   }
-                            // },
                             onChanged: (value) {},
+                            validator: (value) {
+                              if (value!.trim().isEmpty) {
+                                return "Mobile number cannot be empty";
+                              }
+                              if (value.length != 10) {
+                                return "Mobile number should be 10 digits";
+                              }
+                              return null;
+                            },
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -207,18 +213,16 @@ class _RegisterState extends State<Register> {
                             controller: passwordController,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Password*", "Enter your password"),
+                            onChanged: (value) {},
                             validator: (value) {
-                              RegExp regex = new RegExp(r'^.{6,}$');
                               if (value!.isEmpty) {
                                 return "Password cannot be empty";
                               }
-                              if (!regex.hasMatch(value)) {
-                                return ("please enter valid password min. 6 character");
-                              } else {
-                                return null;
+                              if (value.length < 6 || value.length > 20) {
+                                return "Password should be between 6 and 20 characters";
                               }
+                              return null;
                             },
-                            onChanged: (value) {},
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -360,56 +364,53 @@ class _RegisterState extends State<Register> {
   }
 
   void signUp(String email, String password, String role) async {
-  if (_formkey.currentState!.validate()) {
-    try {
-      setState(() {
-        showProgress = true;
-      });
-      
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
-      
-      if (selectedImage != null) {
-        String imageName = Path.basename(selectedImage!.path);
-        Reference storageReference = FirebaseStorage.instance
-            .ref()
-            .child('profilePicture')
-            .child(userCredential.user!.uid)
-            .child(imageName);
-        UploadTask uploadTask = storageReference.putFile(selectedImage!);
-        await uploadTask.whenComplete(() async {
-          String imageUrl = await storageReference.getDownloadURL();
-          await postDetailsToFirestore(email, role, imageUrl);
+    if (_formkey.currentState!.validate()) {
+      try {
+        setState(() {
+          showProgress = true;
         });
-      } else {
-        await postDetailsToFirestore(email, role, '');
+
+        UserCredential userCredential = await _auth
+            .createUserWithEmailAndPassword(email: email, password: password);
+
+        if (selectedImage != null) {
+          String imageName = Path.basename(selectedImage!.path);
+          Reference storageReference = FirebaseStorage.instance
+              .ref()
+              .child('profilePicture')
+              .child(userCredential.user!.uid)
+              .child(imageName);
+          UploadTask uploadTask = storageReference.putFile(selectedImage!);
+          await uploadTask.whenComplete(() async {
+            String imageUrl = await storageReference.getDownloadURL();
+            await postDetailsToFirestore(email, role, imageUrl);
+          });
+        } else {
+          await postDetailsToFirestore(email, role, '');
+        }
+      } catch (e) {
+        // Handle the error and return a value
+        print('Error occurred during sign up: $e');
+        setState(() {
+          showProgress = false;
+        });
+        return null; // Or return a specific value
       }
-      
-    } catch (e) {
-      // Handle the error and return a value
-      print('Error occurred during sign up: $e');
-      setState(() {
-        showProgress = false;
-      });
-      return null; // Or return a specific value
     }
   }
-}
-
 
   postDetailsToFirestore(String email, String role, String imageUrl) async {
-  var user = _auth.currentUser;
-  CollectionReference ref = FirebaseFirestore.instance.collection('users');
-  ref.doc(user?.uid).set({
-    'firstname': firstname.text,
-    'lastname': lastname.text,
-    'email': emailController.text,
-    'mobile': mobile.text,
-    'role': role,
-    'profilePicture': imageUrl, // Add the image URL here
-  });
-  Navigator.pushReplacement(
-      context, MaterialPageRoute(builder: (context) => LoginPage()));
-}
-
+    var user = _auth.currentUser;
+    CollectionReference ref = FirebaseFirestore.instance.collection('users');
+    ref.doc(user?.uid).set({
+      'firstname': firstname.text,
+      'lastname': lastname.text,
+      'email': emailController.text,
+      'mobile': mobile.text,
+      'role': role,
+      'profilePicture': imageUrl, // Add the image URL here
+    });
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => LoginPage()));
+  }
 }
