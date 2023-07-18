@@ -67,7 +67,7 @@ class _AdminState extends State<Admin> {
         studentList.add(user);
       } else if (user['role'] == 'admin') {
         adminList.add(user);
-      } else if(user['role'] == 'Tutor'){
+      } else if (user['role'] == 'Tutor') {
         tutorList.add(user);
       }
     }
@@ -132,6 +132,10 @@ class _AdminState extends State<Admin> {
   }
 
   Widget buildUserList(List<Map<String, dynamic>> users) {
+    if (users.isEmpty) {
+      return Center(child: Text('No users found'));
+    }
+
     return ListView.builder(
       itemCount: users.length,
       itemBuilder: (context, index) {
@@ -172,94 +176,81 @@ class _AdminState extends State<Admin> {
                   ],
                 ),
                 children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FutureBuilder<QuerySnapshot>(
-                        future: FirebaseFirestore.instance
-                            .collection('courses')
-                            .where('userId',
-                                isEqualTo: userList[index]['userId'])
-                            .get(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            final courseDocs = snapshot.data!.docs;
-                            String userRole = userList[index]['role'];
-                            if (userRole == 'Student' && userRole != 'Tutor' && userRole != 'admin') {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 16),
-                                  Text('Role: Student',
-                                      style: TextStyle(
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Role: ${users[index]['role']}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        if (users[index]['role'] ==
+                            'Tutor') // Show courses only for tutors
+                          FutureBuilder<QuerySnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('courses')
+                                .where('userId',
+                                    isEqualTo: users[index]['userId'])
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return CircularProgressIndicator();
+                              } else if (snapshot.hasError) {
+                                return Text('Error loading courses');
+                              } else {
+                                final courseDocs = snapshot.data!.docs;
+                                if (courseDocs.isNotEmpty) {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Courses:',
+                                        style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 16)),
-                                  SizedBox(height: 8),
-                                ],
-                              );
-                            }
-                             if (userRole == 'admin') {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 16),
-                                  Text('Role: Administrator',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16)),
-                                  SizedBox(height: 8),
-                                ],
-                              );
-                            } else if (courseDocs.isNotEmpty) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Courses:',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  ...courseDocs.map((courseDoc) {
-                                    final courseData = courseDoc.data()
-                                        as Map<String, dynamic>;
-                                    final courseName =
-                                        courseData['courseName'] ?? '';
-
-                                    return ListTile(
-                                      title: Text(courseName),
-                                      onTap: () {
-                                        showCourseInfo(courseData);
-                                      },
-                                      trailing: IconButton(
-                                        icon: Icon(Icons.delete),
-                                        onPressed: () {
-                                          deleteCourse(context,courseDoc.id);
-                                        },
+                                          fontSize: 16,
+                                        ),
                                       ),
-                                    );
-                                  }).toList(),
-                                ],
-                              );
-                            } else {
-                              return Text('No courses found');
-                            }
-                          } else if (snapshot.hasError) {
-                            return Text('Error loading courses');
-                          } else {
-                            return CircularProgressIndicator();
-                          }
-                        },
-                      ),
-                      SizedBox(height: 16),
-                    ],
+                                      SizedBox(height: 8),
+                                      ...courseDocs.map((courseDoc) {
+                                        final courseData = courseDoc.data()
+                                            as Map<String, dynamic>;
+                                        final courseName =
+                                            courseData['courseName'] ?? '';
+
+                                        return ListTile(
+                                          title: Text(courseName),
+                                          onTap: () {
+                                            showCourseInfo(courseData);
+                                          },
+                                          trailing: IconButton(
+                                            icon: Icon(Icons.delete),
+                                            onPressed: () {
+                                              deleteCourse(
+                                                  context, courseDoc.id);
+                                            },
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ],
+                                  );
+                                } else {
+                                  return Text('No courses found');
+                                }
+                              }
+                            },
+                          ),
+                        SizedBox(height: 16),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
               ),
             ],
           ),
@@ -590,12 +581,13 @@ class _AdminState extends State<Admin> {
                   Navigator.of(context).pop();
                 },
                 child: Text(
-                'Save',
-                style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                primary: Colors.green,
-              ),
+                  'Save',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                ),
               ),
               TextButton(
                 onPressed: () {
