@@ -159,20 +159,26 @@ class _AdminState extends State<Admin> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () {
-                        editUser(users[index], index);
-                      },
-                      color: Colors.blue,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () {
-                        deleteUser(users[index]['userId']);
-                      },
-                      color: Colors.red,
-                    ),
+                    if (users[index]['role'] == 'Student' ||
+                        users[index]['role'] ==
+                            'Tutor') // Show icons only for Student and Tutor roles
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () {
+                          editUser(users[index], index);
+                        },
+                        color: Colors.blue,
+                      ),
+                    if (users[index]['role'] == 'Student' ||
+                        users[index]['role'] ==
+                            'Tutor') // Show icons only for Student and Tutor roles
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          deleteUser(users[index]['userId']);
+                        },
+                        color: Colors.red,
+                      ),
                   ],
                 ),
                 children: [
