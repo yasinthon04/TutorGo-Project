@@ -81,8 +81,11 @@ class _CreateCourseState extends State<CreateCourse> {
               controller: _courseNameController,
               decoration: InputDecoration(labelText: 'Course Name'),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a course name';
+                if (value!.trim().isEmpty) {
+                  return "Course Name cannot be empty";
+                }
+                if (value.length > 35) {
+                  return "Course Name should not exceed 35 characters";
                 }
                 return null;
               },
@@ -91,15 +94,18 @@ class _CreateCourseState extends State<CreateCourse> {
               controller: _addressController,
               decoration: InputDecoration(labelText: 'Address'),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter an address';
+                if (value!.trim().isEmpty) {
+                  return "Address cannot be empty";
+                }
+                if (value.length > 35) {
+                  return "Address should not exceed 35 characters";
                 }
                 return null;
               },
             ),
             TextFormField(
               controller: _priceController,
-              decoration: InputDecoration(labelText: 'Price'),
+              decoration: InputDecoration(labelText: 'Price/Month'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a price';
@@ -111,8 +117,11 @@ class _CreateCourseState extends State<CreateCourse> {
               controller: _contactInfoController,
               decoration: InputDecoration(labelText: 'Contact Information'),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter contact information';
+                if (value!.trim().isEmpty) {
+                  return "Contact Information cannot be empty";
+                }
+                if (value.length != 10) {
+                  return "Contact Information should be 10 digits";
                 }
                 return null;
               },

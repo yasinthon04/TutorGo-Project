@@ -136,7 +136,7 @@ class _AccountPageState extends State<AccountPage> {
             ),
             ListTile(
               leading: Icon(Icons.phone),
-              title: Text("Phone"),
+              title: Text("Mobile"),
               subtitle: Text(phone),
             ),
             ListTile(

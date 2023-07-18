@@ -83,23 +83,68 @@ class _updateProfilePageState extends State<updateProfilePage> {
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                    labelText: 'Email', prefixIcon: Icon(Icons.email)),
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                ),
+                validator: (value) {
+                  if (value!.length == 0) {
+                    return "Email cannot be empty";
+                  }
+                  if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]")
+                      .hasMatch(value)) {
+                    return ("Please enter a valid email");
+                  } else {
+                    return null;
+                  }
+                },
               ),
               TextFormField(
                 controller: _firstnameController,
                 decoration: const InputDecoration(
-                    labelText: 'Firstname',
-                    prefixIcon: Icon(Icons.text_format)),
+                  labelText: 'Firstname',
+                  prefixIcon: Icon(Icons.text_format),
+                ),
+                validator: (value) {
+                  if (value!.trim().isEmpty) {
+                    return "First name cannot be empty";
+                  }
+                  if (value.length > 35) {
+                    return "First name should not exceed 35 characters";
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _lastnameController,
                 decoration: const InputDecoration(
-                    labelText: 'Lastname', prefixIcon: Icon(Icons.text_format)),
+                  labelText: 'Lastname',
+                  prefixIcon: Icon(Icons.text_format),
+                ),
+                validator: (value) {
+                  if (value!.trim().isEmpty) {
+                    return "Last name cannot be empty";
+                  }
+                  if (value.length > 35) {
+                    return "Last name should not exceed 35 characters";
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _phoneController,
                 decoration: const InputDecoration(
-                    labelText: 'Phone', prefixIcon: Icon(Icons.phone)),
+                  labelText: 'Mobile',
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                validator: (value) {
+                  if (value!.trim().isEmpty) {
+                    return "Mobile number cannot be empty";
+                  }
+                  if (value.length != 10) {
+                    return "Mobile number should be 10 digits";
+                  }
+                  return null;
+                },
               ),
             ],
           );
@@ -226,8 +271,8 @@ class _updateProfilePageState extends State<updateProfilePage> {
                                                   fit: BoxFit.cover);
                                             }
 
-                                            var userData = snapshot.data!
-                                                .data() as Map<String, dynamic>;
+                                            var userData = snapshot.data!.data()
+                                                as Map<String, dynamic>;
 
                                             String? profilePicture =
                                                 userData['profilePicture'];
