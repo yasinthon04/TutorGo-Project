@@ -39,7 +39,7 @@ class _CreateCourseState extends State<CreateCourse> {
       if (_imageFile != null) {
         String imageName = DateTime.now().microsecondsSinceEpoch.toString();
         firebase_storage.Reference storageRef =
-            firebase_storage.FirebaseStorage.instance.ref().child(imageName);
+            firebase_storage.FirebaseStorage.instance.ref().child('coursePicture').child(imageName);
         await storageRef.putFile(_imageFile!);
         String imageUrl = await storageRef.getDownloadURL();
 
