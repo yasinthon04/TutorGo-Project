@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'courseInfoPage.dart';
 
 class SearchPage extends StatefulWidget {
@@ -42,97 +43,126 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildSearchResults() {
-    if (_searchStream == null) {
-      return Center(
-        child: Text('Enter a course name to search.'),
-      );
-    }
+  if (_searchStream == null) {
+    return Center(
+      child: Text('Enter a course name to search.'),
+    );
+  }
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: _searchStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Text('Error: ${snapshot.error}'),
-          );
-        }
-
-        if (snapshot.data!.docs.isEmpty) {
-          return Center(
-            child: Text('No results found.'),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: snapshot.data!.docs.length,
-          itemBuilder: (context, index) {
-            final courseData =
-                snapshot.data!.docs[index].data() as Map<String, dynamic>;
-            final courseName = courseData['courseName'];
-            final address = courseData['address'];
-            final imageUrl = courseData['imageName'];
-
-            return ListTile(
-              leading: imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      height: 100,
-                      width: 50,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.asset(
-                      'assets/profile-icon.png',
-                      height: 100,
-                      width: 50,
-                      fit: BoxFit.cover,
-                    ),
-              title: Text(courseName),
-              subtitle: Text(address),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        CourseInfoPage(courseData: courseData),
-                  ),
-                );
-              },
-            );
-          },
+  return StreamBuilder<QuerySnapshot>(
+    stream: _searchStream,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return Center(
+          child: CircularProgressIndicator(),
         );
-      },
-    );
-  }
+      }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Course Search'),
+      if (snapshot.hasError) {
+        return Center(
+          child: Text('Error: ${snapshot.error}'),
+        );
+      }
+
+      final searchQuery = _searchController.text.trim().toLowerCase();
+
+      final filteredDocs = snapshot.data!.docs.where((doc) {
+        final courseData = doc.data() as Map<String, dynamic>;
+        final courseName = courseData['courseName'].toString().toLowerCase();
+        return courseName.contains(searchQuery);
+      }).toList();
+
+      if (filteredDocs.isEmpty) {
+        return Center(
+          child: Text('No results found.'),
+        );
+      }
+
+      return ListView.builder(
+        itemCount: filteredDocs.length,
+        itemBuilder: (context, index) {
+          final courseData = filteredDocs[index].data() as Map<String, dynamic>;
+          final courseName = courseData['courseName'];
+          final address = courseData['address'];
+          final imageUrl = courseData['imageName'];
+
+          return ListTile(
+            leading: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    height: 100,
+                    width: 50,
+                    fit: BoxFit.cover,
+                  )
+                : Image.asset(
+                    'assets/profile-icon.png',
+                    height: 100,
+                    width: 50,
+                    fit: BoxFit.cover,
+                  ),
+            title: Text(courseName),
+            subtitle: Text(address),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CourseInfoPage(courseData: courseData),
+                ),
+              );
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('Course Search',
+        style: TextStyle(color: Colors.white),),
+      elevation: 0.5,
+      iconTheme: IconThemeData(color: Colors.white),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[
+              Theme.of(context).primaryColor,
+              Theme.of(context).hintColor,
+            ],
+          ),
+        ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search for a course...',
-                border: OutlineInputBorder(),
-              ),
+    ),
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Container(
+          height: 75,
+          child: HeaderWidget(75, false, Icons.house_rounded),
+        ),
+        Padding(
+          padding: EdgeInsets.all(10),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search for a course...',
+              border: OutlineInputBorder(),
             ),
+            onChanged: (_) => _onSearchChanged(),
           ),
-          Expanded(
-            child: _buildSearchResults(),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        Expanded(
+          child: _buildSearchResults(),
+        ),
+      ],
+    ),
+  );
+}
+
 }

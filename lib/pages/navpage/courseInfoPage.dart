@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorgo/pages/widget/header_widget.dart';
 
 class CourseInfoPage extends StatelessWidget {
   final Map<String, dynamic> courseData;
@@ -72,12 +73,33 @@ class CourseInfoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Course Information'),
+        title: Text('Course Information',
+        style: TextStyle(color: Colors.white),),
+        elevation: 0.5,
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                Theme.of(context).primaryColor,
+                Theme.of(context).hintColor,
+              ],
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              height: 75,
+              child: HeaderWidget(75, false, Icons.house_rounded),
+            ),
+          
             if (courseData['imageName'].isNotEmpty)
               Image.network(
                 courseData['imageName'],
