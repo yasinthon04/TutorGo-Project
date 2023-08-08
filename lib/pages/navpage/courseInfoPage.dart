@@ -4,6 +4,18 @@ import 'package:tutorgo/pages/widget/header_widget.dart';
 
 class CourseInfoPage extends StatelessWidget {
   final Map<String, dynamic> courseData;
+  String _formatTime(int hour, int minute) {
+    final period = hour < 12 ? 'AM' : 'PM';
+    final hourOfDay = hour == 0
+        ? 12
+        : hour > 12
+            ? hour - 12
+            : hour;
+
+    final formattedTime =
+        '$hourOfDay:${minute.toString().padLeft(2, '0')} $period';
+    return formattedTime;
+  }
 
   CourseInfoPage({required this.courseData});
 
@@ -73,8 +85,10 @@ class CourseInfoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Course Information',
-        style: TextStyle(color: Colors.white),),
+        title: Text(
+          'Course Information',
+          style: TextStyle(color: Colors.white),
+        ),
         elevation: 0.5,
         iconTheme: IconThemeData(color: Colors.white),
         flexibleSpace: Container(
@@ -99,7 +113,7 @@ class CourseInfoPage extends StatelessWidget {
               height: 75,
               child: HeaderWidget(75, false, Icons.house_rounded),
             ),
-          
+
             if (courseData['imageName'].isNotEmpty)
               Image.network(
                 courseData['imageName'],
@@ -126,6 +140,48 @@ class CourseInfoPage extends StatelessWidget {
             SizedBox(height: 10),
             Text('Contact Information: ${courseData['contactInfo']}'),
             SizedBox(height: 20),
+            // Display Days of the Week
+            SizedBox(height: 20),
+            Text(
+              'Days of the Week:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List<Widget>.generate(
+                courseData['date'].length,
+                (index) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                  child: Chip(
+                    label: Text(courseData['date'][index]),
+                  ),
+                ),
+              ),
+            ),
+            // Display Time Slots
+            SizedBox(height: 20),
+            Text(
+              'Time:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            SizedBox(height: 10),
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5.0),
+                  child: Text(
+                    'Start: ${_formatTime(courseData['time'][0]['hour'], courseData['time'][0]['minute'])}',
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5.0),
+                  child: Text(
+                    'End: ${_formatTime(courseData['time'][1]['hour'], courseData['time'][1]['minute'])}',
+                  ),
+                ),
+              ],
+            ),
             TextButton(
               onPressed: () => _viewTutorInformation(context),
               child: Text(

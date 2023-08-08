@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
                     radius: 40,
                     backgroundImage: NetworkImage(tutorImage),
                   ),
-                  SizedBox(height: 10),
+                SizedBox(height: 10),
                 RichText(
                   text: TextSpan(
                     style: DefaultTextStyle.of(context).style,
@@ -393,11 +393,9 @@ class _HomePageState extends State<HomePage> {
                 if (userRole == 'Tutor') {
                   return IconButton(
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return CreateCourse();
-                        },
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CreateCourse()),
                       );
                     },
                     icon: Icon(Icons.add),
