@@ -1,8 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorgo/pages/widget/deleteCourse.dart';
+import 'package:tutorgo/pages/widget/editCourse.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 
+import '../../auth.dart';
+
 class CourseInfoPage extends StatelessWidget {
+  final User? user = Auth().currentUser;
   final Map<String, dynamic> courseData;
   String _formatTime(int hour, int minute) {
     final period = hour < 12 ? 'AM' : 'PM';
@@ -83,6 +89,15 @@ class CourseInfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String courseId = courseData['courseId'] ?? '';
+    final String courseName = courseData['courseName'] ?? '';
+    final String address = courseData['address'] ?? '';
+    final String price = courseData['price'] ?? '';
+    final String contactInfo = courseData['contactInfo'] ?? '';
+
+    final String userId = courseData['userId'] ?? '';
+    final User? user = Auth().currentUser;
+    final bool isCurrentUserCourseCreator = userId == user?.uid;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -103,6 +118,33 @@ class CourseInfoPage extends StatelessWidget {
             ),
           ),
         ),
+        actions: <Widget>[
+          if (isCurrentUserCourseCreator)
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                _showEditCourseDialog(
+                  context,
+                  courseId,
+                  courseName,
+                  address,
+                  price,
+                  contactInfo,
+                );
+              },
+            ),
+          if (isCurrentUserCourseCreator)
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                _showDeleteCourseDialog(
+                  context,
+                  courseId, 
+                  courseName,
+                );
+              },
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -195,6 +237,42 @@ class CourseInfoPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showEditCourseDialog(
+    BuildContext context,
+    String courseId,
+    String courseName,
+    String address,
+    String price,
+    String contactInfo,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return EditCourse(
+          courseId: courseId,
+          CourseName: courseName,
+          Address: address,
+          Price: price,
+          ContactInfo: contactInfo,
+        );
+      },
+    );
+  }
+
+  void _showDeleteCourseDialog(
+      BuildContext context, String courseId, String courseName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return DeleteCourse(
+          courseId: courseId,
+          courseName: courseName,
+          userId: user?.uid ?? '',
+        );
+      },
     );
   }
 }

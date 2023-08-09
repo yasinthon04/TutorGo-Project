@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tutorgo/auth.dart';
 import 'package:tutorgo/pages/login.dart';
+import 'package:tutorgo/pages/navpage/courseInfoPage.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import '../widget/createCourse.dart';
 import '../widget/editCourse.dart';
@@ -324,10 +325,10 @@ class _HomePageState extends State<HomePage> {
       builder: (BuildContext context) {
         return EditCourse(
           courseId: courseId,
-          courseName: courseName,
-          address: address,
-          price: price,
-          contactInfo: contactInfo,
+          CourseName: courseName,
+          Address: address,
+          Price: price,
+          ContactInfo: contactInfo,
         );
       },
     );
@@ -473,14 +474,12 @@ class _HomePageState extends State<HomePage> {
 
                               return GestureDetector(
                                 onTap: () {
-                                  _showCourseInfoDialog(
-                                    courseName,
-                                    address,
-                                    price,
-                                    contactInfo,
-                                    userId,
-                                    courseId,
-                                    isCurrentUserCourseCreator,
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CourseInfoPage(
+                                          courseData: courseData),
+                                    ),
                                   );
                                 },
                                 child: Padding(

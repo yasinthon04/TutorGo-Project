@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:image_picker/image_picker.dart';
+import 'package:tutorgo/pages/widget/header_widget.dart';
 
 class CreateCourse extends StatefulWidget {
   @override
@@ -16,12 +17,13 @@ class _CreateCourseState extends State<CreateCourse> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _courseNameController = TextEditingController();
   final TextEditingController _contactInfoController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
   String _selectedCategory = 'Math'; // Default category
   List<String> _selectedDays = []; // Store selected days of the week
   List<TimeOfDay> _selectedTimes = []; // Store selected time slots
   List<DropdownMenuItem<String>> _provinceItems = []; // List of province items
   String _selectedProvince = ''; // Selected province
-  int _selectedPrice = 0; // Selected price
   File? _imageFile;
 
   @override
@@ -34,6 +36,8 @@ class _CreateCourseState extends State<CreateCourse> {
   void dispose() {
     _courseNameController.dispose();
     _contactInfoController.dispose();
+    addressController.dispose();
+    priceController.dispose();
     super.dispose();
   }
 
@@ -42,6 +46,8 @@ class _CreateCourseState extends State<CreateCourse> {
       // Get the form field values
       String courseName = _courseNameController.text;
       String contactInfo = _contactInfoController.text;
+      String address = addressController.text;
+      String price = priceController.text;
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
@@ -61,9 +67,10 @@ class _CreateCourseState extends State<CreateCourse> {
         await FirebaseFirestore.instance.collection('courses').add({
           'courseName': courseName,
           'contactInfo': contactInfo,
+          'address' : address,
           'category': _selectedCategory,
           'province': _selectedProvince,
-          'price': _selectedPrice,
+          'price': price,
           'date': _selectedDays,
           'time': timeData,
           'imageName': imageUrl,
@@ -86,23 +93,24 @@ class _CreateCourseState extends State<CreateCourse> {
   }
 
   Future<void> _loadProvinces() async {
-    try {
-      String data = await rootBundle.loadString('assets/provinces.json');
-      List<dynamic> provincesData = json.decode(data);
-      print("Loaded province data: $provincesData"); // Debug print
-      setState(() {
-        _provinceItems =
-            provincesData.map<DropdownMenuItem<String>>((province) {
-          return DropdownMenuItem<String>(
-            value: province['name'],
-            child: Text(province['name']),
-          );
-        }).toList();
-      });
-    } catch (error) {
-      print("Error loading provinces: $error"); // Debug print
-    }
+  try {
+    String data = await rootBundle.loadString('/lib/assets/provinces.json');
+    List<dynamic> provincesData = json.decode(data);
+    print("Loaded province data: $provincesData"); // Debug print
+    setState(() {
+      _provinceItems =
+          provincesData.map<DropdownMenuItem<String>>((province) {
+        return DropdownMenuItem<String>(
+          value: province['name'],
+          child: Text(province['name']),
+        );
+      }).toList();
+    });
+  } catch (error) {
+    print("Error loading provinces: $error"); // Debug print
   }
+}
+
 
   Widget _buildDayCheckBox(String day) {
     return Row(
@@ -184,10 +192,35 @@ class _CreateCourseState extends State<CreateCourse> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Course'),
+        title: Text(
+          'Create Course ',
+          style: TextStyle(color: Colors.white),
+        ),
+        elevation: 0.5,
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                Theme.of(context).primaryColor,
+                Theme.of(context).hintColor,
+              ],
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        child: Form(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              height: 75,
+              child: HeaderWidget(75, false, Icons.house_rounded),
+            ),
+        Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -219,6 +252,19 @@ class _CreateCourseState extends State<CreateCourse> {
                 },
               ),
               SizedBox(height: 10),
+              TextFormField(
+              controller: addressController,
+              decoration: InputDecoration(labelText: 'Address'),
+              validator: (value) {
+                if (value!.trim().isEmpty) {
+                  return "Address cannot be empty";
+                }
+                if (value.length > 35) {
+                  return "Address should not exceed 35 characters";
+                }
+                return null;
+              },
+            ),
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 onChanged: (newValue) {
@@ -248,32 +294,17 @@ class _CreateCourseState extends State<CreateCourse> {
                 decoration: InputDecoration(labelText: 'Select Province'),
               ),
               SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('0 ฿'),
-                  Text('9,999 ฿'),
-                ],
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  // Customize the appearance of the slider
-                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12.0),
-                  overlayShape: RoundSliderOverlayShape(overlayRadius: 20.0),
-                ),
-                child: Slider(
-                  value: _selectedPrice.toDouble(),
-                  min: 0,
-                  max: 9999,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedPrice = value.toInt();
-                    });
-                  },
-                  divisions: 9999,
-                  label: 'Price: $_selectedPrice baht',
-                ),
-              ),
+              TextFormField(
+              controller: priceController,
+              decoration: InputDecoration(labelText: 'Price'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a price';
+                }
+                return null;
+              },
+            ),
+             
               SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () => _pickImage(
@@ -336,6 +367,8 @@ class _CreateCourseState extends State<CreateCourse> {
               ),
             ],
           ),
+        ),
+        ],
         ),
       ),
     );
