@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -97,6 +99,10 @@ class CourseInfoPage extends StatelessWidget {
     final String province = courseData['province'] ?? '';
     final String userId = courseData['userId'] ?? '';
     final String courseImage = courseData['imageName'] ?? '';
+    final String category = courseData['category'] ?? '';
+    final List<String> days = List<String>.from(courseData['date'] ?? []);
+    final List<Map<String, dynamic>> times =
+        List<Map<String, dynamic>>.from(courseData['time'] ?? []);
     final User? user = Auth().currentUser;
     final bool isCurrentUserCourseCreator = userId == user?.uid;
     return Scaffold(
@@ -124,8 +130,19 @@ class CourseInfoPage extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.edit),
               onPressed: () {
-                _showEditCourseDialog(context, courseId, courseName, address,
-                    price, contactInfo, province, courseImage);
+                _showEditCourseDialog(
+                  context,
+                  courseId,
+                  courseName,
+                  address,
+                  price,
+                  contactInfo,
+                  province,
+                  courseImage,
+                  category,
+                  days,
+                  times,
+                );
               },
             ),
           if (isCurrentUserCourseCreator)
@@ -246,6 +263,9 @@ class CourseInfoPage extends StatelessWidget {
     String contactInfo,
     String province,
     String courseImage,
+    String category,
+    List<String> days, 
+    List<Map<String, dynamic>> times, 
   ) {
     showDialog(
       context: context,
@@ -258,6 +278,9 @@ class CourseInfoPage extends StatelessWidget {
           ContactInfo: contactInfo,
           Province: province,
           CourseImage: courseImage,
+          Category: category,
+         Days: days, 
+          Times: times,
         );
       },
     );
