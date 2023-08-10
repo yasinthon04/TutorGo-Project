@@ -149,6 +149,7 @@ class _HomePageState extends State<HomePage> {
     String address,
     String price,
     String contactInfo,
+    String province,
     String userId,
     String courseId,
     bool isCurrentUserCourseCreator,
@@ -227,121 +228,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          actions: [
-            if (isCurrentUserCourseCreator)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showEditCourseDialog(
-                    courseId,
-                    courseName,
-                    address,
-                    price,
-                    contactInfo,
-                  );
-                },
-                child: Text(
-                  'Edit',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.green, // Set the button color here
-                ),
-              ),
-            if (isCurrentUserCourseCreator)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showDeleteCourseDialog(courseId, courseName);
-                },
-                child: Text(
-                  'Delete',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.red, // Set the button color here
-                ),
-              ),
-            if (!isCurrentUserCourseCreator)
-              FutureBuilder<String>(
-                future: getUserRole(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final userRole = snapshot.data!;
-                    if (userRole == 'Student') {
-                      return ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _viewTutorInformation(userId);
-                        },
-                        child: Text(
-                          'View Tutor Information',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.blue, // Set the button color here
-                        ),
-                      );
-                    }
-                  }
-                  return SizedBox.shrink();
-                },
-              ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Close',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                primary:
-                    Theme.of(context).hintColor, // Set the button color here
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showEditCourseDialog(String courseId, String courseName, String address,
-      String price, String contactInfo) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return EditCourse(
-          courseId: courseId,
-          CourseName: courseName,
-          Address: address,
-          Price: price,
-          ContactInfo: contactInfo,
-        );
-      },
-    );
-  }
-
-  void _showDeleteCourseDialog(String courseId, String courseName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return DeleteCourse(
-          courseId: courseId,
-          courseName: courseName,
-          userId: user?.uid ?? '',
+          
         );
       },
     );
@@ -358,13 +245,13 @@ class _HomePageState extends State<HomePage> {
     return Text(user?.email ?? 'User email');
   }
 
-  Future<void> _signOutButton() async {
-    await signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-    );
-  }
+  // Future<void> _signOutButton() async {
+  //   await signOut();
+  //   Navigator.pushReplacement(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => LoginPage()),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {

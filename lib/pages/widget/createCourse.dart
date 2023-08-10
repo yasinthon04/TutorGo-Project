@@ -23,14 +23,16 @@ class _CreateCourseState extends State<CreateCourse> {
   List<String> _selectedDays = []; // Store selected days of the week
   List<TimeOfDay> _selectedTimes = []; // Store selected time slots
   List<DropdownMenuItem<String>> _provinceItems = []; // List of province items
-  String _selectedProvince = ''; // Selected province
+  String? _selectedProvince = ''; // Selected province
   File? _imageFile;
 
   @override
-  void initState() {
-    super.initState();
-    _loadProvinces(); // Load provinces when initializing the widget
-  }
+void initState() {
+  super.initState();
+  _loadProvinces();
+  _selectedProvince = _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
+}
+
 
   @override
   void dispose() {
@@ -67,7 +69,7 @@ class _CreateCourseState extends State<CreateCourse> {
         await FirebaseFirestore.instance.collection('courses').add({
           'courseName': courseName,
           'contactInfo': contactInfo,
-          'address' : address,
+          'address': address,
           'category': _selectedCategory,
           'province': _selectedProvince,
           'price': price,
@@ -94,22 +96,24 @@ class _CreateCourseState extends State<CreateCourse> {
 
   Future<void> _loadProvinces() async {
   try {
-    String data = await rootBundle.loadString('/lib/assets/provinces.json');
+    String data = await rootBundle.loadString('lib/assets/provinces.json');
     List<dynamic> provincesData = json.decode(data);
     print("Loaded province data: $provincesData"); // Debug print
     setState(() {
       _provinceItems =
           provincesData.map<DropdownMenuItem<String>>((province) {
         return DropdownMenuItem<String>(
-          value: province['name'],
-          child: Text(province['name']),
+          value: province as String, // Ensure province is treated as a String
+          child: Text(province),
         );
       }).toList();
+      _selectedProvince = _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
     });
   } catch (error) {
     print("Error loading provinces: $error"); // Debug print
   }
 }
+
 
 
   Widget _buildDayCheckBox(String day) {
@@ -220,155 +224,157 @@ class _CreateCourseState extends State<CreateCourse> {
               height: 75,
               child: HeaderWidget(75, false, Icons.house_rounded),
             ),
-        Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _courseNameController,
-                decoration: InputDecoration(labelText: 'Course Name'),
-                validator: (value) {
-                  if (value!.trim().isEmpty) {
-                    return "Course Name cannot be empty";
-                  }
-                  if (value.length > 35) {
-                    return "Course Name should not exceed 35 characters";
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _contactInfoController,
-                decoration: InputDecoration(labelText: 'Contact Information'),
-                validator: (value) {
-                  if (value!.trim().isEmpty) {
-                    return "Contact Information cannot be empty";
-                  }
-                  if (value.length != 10) {
-                    return "Contact Information should be 10 digits";
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-              controller: addressController,
-              decoration: InputDecoration(labelText: 'Address'),
-              validator: (value) {
-                if (value!.trim().isEmpty) {
-                  return "Address cannot be empty";
-                }
-                if (value.length > 35) {
-                  return "Address should not exceed 35 characters";
-                }
-                return null;
-              },
-            ),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
-                },
-                items: ['Math', 'Science', 'English', 'Social', 'Thai', 'Art']
-                    .map<DropdownMenuItem<String>>(
-                      (category) => DropdownMenuItem<String>(
-                        value: category,
-                        child: Text(category),
-                      ),
-                    )
-                    .toList(),
-                decoration: InputDecoration(labelText: 'Select Category'),
-              ),
-              SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: _selectedProvince,
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedProvince = newValue!;
-                  });
-                },
-                items: _provinceItems,
-                decoration: InputDecoration(labelText: 'Select Province'),
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-              controller: priceController,
-              decoration: InputDecoration(labelText: 'Price'),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a price';
-                }
-                return null;
-              },
-            ),
-             
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () => _pickImage(
-                    ImageSource.gallery), // Opens image picker from gallery
-                child: Text('Select Image'),
-                style: ElevatedButton.styleFrom(
-                  primary: Theme.of(context).hintColor,
-                ),
-              ),
-              SizedBox(height: 10),
-              Text('Select Days of the Week:'),
-              Column(
+            Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildDayCheckBox('Sunday'),
-                  _buildDayCheckBox('Monday'),
-                  _buildDayCheckBox('Tuesday'),
-                  _buildDayCheckBox('Wednesday'),
-                  _buildDayCheckBox('Thursday'),
-                  _buildDayCheckBox('Friday'),
-                  _buildDayCheckBox('Saturday'),
-                ],
-              ),
-              SizedBox(height: 10),
-              Text('Select Time Slots:'),
-              for (int i = 0; i < 2; i++) _buildTimePicker(i),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text(
-                      'Save',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.green,
-                    ),
-                  ),
-                  SizedBox(width: 10), // Add spacing between buttons
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
+                  TextFormField(
+                    controller: _courseNameController,
+                    decoration: InputDecoration(labelText: 'Course Name'),
+                    validator: (value) {
+                      if (value!.trim().isEmpty) {
+                        return "Course Name cannot be empty";
+                      }
+                      if (value.length > 35) {
+                        return "Course Name should not exceed 35 characters";
+                      }
+                      return null;
                     },
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                  ),
+                  TextFormField(
+                    controller: _contactInfoController,
+                    decoration:
+                        InputDecoration(labelText: 'Contact Information'),
+                    validator: (value) {
+                      if (value!.trim().isEmpty) {
+                        return "Contact Information cannot be empty";
+                      }
+                      if (value.length != 10) {
+                        return "Contact Information should be 10 digits";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: addressController,
+                    decoration: InputDecoration(labelText: 'Address'),
+                    validator: (value) {
+                      if (value!.trim().isEmpty) {
+                        return "Address cannot be empty";
+                      }
+                      if (value.length > 35) {
+                        return "Address should not exceed 35 characters";
+                      }
+                      return null;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedCategory = newValue!;
+                      });
+                    },
+                    items:
+                        ['Math', 'Science', 'English', 'Social', 'Thai', 'Art']
+                            .map<DropdownMenuItem<String>>(
+                              (category) => DropdownMenuItem<String>(
+                                value: category,
+                                child: Text(category),
+                              ),
+                            )
+                            .toList(),
+                    decoration: InputDecoration(labelText: 'Select Category'),
+                  ),
+                  SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _selectedProvince,
+                    onChanged: (newValue) {
+                      print("Selected province: $newValue"); // Debug print
+                      setState(() {
+                        _selectedProvince = newValue!;
+                      });
+                    },
+                    items: _provinceItems,
+                    decoration: InputDecoration(labelText: 'Select Province'),
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: priceController,
+                    decoration: InputDecoration(labelText: 'Price'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a price';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () => _pickImage(
+                        ImageSource.gallery), // Opens image picker from gallery
+                    child: Text('Select Image'),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.red,
+                      primary: Theme.of(context).hintColor,
                     ),
+                  ),
+                  SizedBox(height: 10),
+                  Text('Select Days of the Week:'),
+                  Column(
+                    children: [
+                      _buildDayCheckBox('Sunday'),
+                      _buildDayCheckBox('Monday'),
+                      _buildDayCheckBox('Tuesday'),
+                      _buildDayCheckBox('Wednesday'),
+                      _buildDayCheckBox('Thursday'),
+                      _buildDayCheckBox('Friday'),
+                      _buildDayCheckBox('Saturday'),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Text('Select Time Slots:'),
+                  for (int i = 0; i < 2; i++) _buildTimePicker(i),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _submitForm,
+                        child: Text(
+                          'Save',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.green,
+                        ),
+                      ),
+                      SizedBox(width: 10), // Add spacing between buttons
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.red,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        ],
+            ),
+          ],
         ),
       ),
     );

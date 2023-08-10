@@ -94,8 +94,9 @@ class CourseInfoPage extends StatelessWidget {
     final String address = courseData['address'] ?? '';
     final String price = courseData['price'] ?? '';
     final String contactInfo = courseData['contactInfo'] ?? '';
-
+    final String province = courseData['province'] ?? '';
     final String userId = courseData['userId'] ?? '';
+    final String courseImage = courseData['imageName'] ?? '';
     final User? user = Auth().currentUser;
     final bool isCurrentUserCourseCreator = userId == user?.uid;
     return Scaffold(
@@ -123,14 +124,8 @@ class CourseInfoPage extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.edit),
               onPressed: () {
-                _showEditCourseDialog(
-                  context,
-                  courseId,
-                  courseName,
-                  address,
-                  price,
-                  contactInfo,
-                );
+                _showEditCourseDialog(context, courseId, courseName, address,
+                    price, contactInfo, province, courseImage);
               },
             ),
           if (isCurrentUserCourseCreator)
@@ -139,7 +134,7 @@ class CourseInfoPage extends StatelessWidget {
               onPressed: () {
                 _showDeleteCourseDialog(
                   context,
-                  courseId, 
+                  courseId,
                   courseName,
                 );
               },
@@ -177,6 +172,8 @@ class CourseInfoPage extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text('Address: ${courseData['address']}'),
+            SizedBox(height: 10),
+            Text('Province: ${courseData['province']}'),
             SizedBox(height: 10),
             Text('Price/Month: ${courseData['price']}'),
             SizedBox(height: 10),
@@ -247,6 +244,8 @@ class CourseInfoPage extends StatelessWidget {
     String address,
     String price,
     String contactInfo,
+    String province,
+    String courseImage,
   ) {
     showDialog(
       context: context,
@@ -257,6 +256,8 @@ class CourseInfoPage extends StatelessWidget {
           Address: address,
           Price: price,
           ContactInfo: contactInfo,
+          Province: province,
+          CourseImage: courseImage,
         );
       },
     );
