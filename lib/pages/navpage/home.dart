@@ -365,7 +365,9 @@ class _HomePageState extends State<HomePage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => CourseInfoPage(
-                                          courseData: courseData),
+                                          courseData: courseData,
+                                          courseId: courseId,
+                                          ),
                                     ),
                                   );
                                 },

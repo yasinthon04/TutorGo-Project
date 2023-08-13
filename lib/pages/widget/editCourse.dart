@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 
 class EditCourse extends StatefulWidget {
-  final String courseId;
+  final String CourseId;
   final String CourseName;
   final String Address;
   final String Price;
@@ -21,7 +21,7 @@ class EditCourse extends StatefulWidget {
   final List<Map<String, dynamic>> Times;
 
   EditCourse({
-    required this.courseId,
+    required this.CourseId,
     required this.CourseName,
     required this.Address,
     required this.Price,
@@ -52,7 +52,7 @@ class _EditCourseState extends State<EditCourse> {
 
   @override
   void initState() {
-    print('Received courseId: ${widget.courseId}');
+    _loadCourseData();
     _courseNameController = TextEditingController(text: widget.CourseName);
     _addressController = TextEditingController(text: widget.Address);
     _priceController = TextEditingController(text: widget.Price);
@@ -81,11 +81,38 @@ class _EditCourseState extends State<EditCourse> {
     _addressController.dispose();
     _priceController.dispose();
     _contactInfoController.dispose();
+  
     super.dispose();
   }
 
+  Future<void> _loadCourseData() async {
+    
+    // Fetch necessary data from Firestore
+    // For example, fetch course data based on widget.courseId
+    DocumentSnapshot courseSnapshot = await FirebaseFirestore.instance
+        .collection('courses')
+        .doc(widget.CourseId)
+        .get();
+
+    Map<String, dynamic> courseData = courseSnapshot.data() as Map<String, dynamic>;
+
+    setState(() {
+      _courseNameController = TextEditingController(text: courseData['courseName']);
+      _addressController = TextEditingController(text: courseData['address']);
+      _priceController = TextEditingController(text: courseData['price']);
+      _contactInfoController = TextEditingController(text: courseData['contactInfo']);
+      _selectedProvince = courseData['province'];
+      _imageFile = File(courseData['imageName']);
+      _selectedCategory = courseData['category'];
+      _selectedDays = List<String>.from(courseData['date']);
+      _selectedTimes = _convertTimeMapListToTimeOfDayList(courseData['time']);
+      // _dataLoaded = true;
+    });
+  }
+
   void _submitForm() async {
-    print('Using courseId in _submitForm: ${widget.courseId}');
+    print('Using courseId in _submitForm: ${widget.CourseId}');
+
     if (_formKey.currentState!.validate()) {
       // Get the form field values
       String courseName = _courseNameController.text;
@@ -98,7 +125,7 @@ class _EditCourseState extends State<EditCourse> {
 
       // Update image if selected
       String imageUrl = widget.CourseImage; // Get the existing image URL
-      if (_imageFile != null) {
+      if (_imageFile != null && _imageFile!.absolute.existsSync()) {
         String imageName = DateTime.now().microsecondsSinceEpoch.toString();
         firebase_storage.Reference storageRef = firebase_storage
             .FirebaseStorage.instance
@@ -107,17 +134,17 @@ class _EditCourseState extends State<EditCourse> {
             .child(imageName);
         await storageRef.putFile(_imageFile!);
         imageUrl = await storageRef.getDownloadURL();
+      } else {
+        print("Image file does not exist or is null.");
       }
-      String currentCourseId = widget.courseId;
+      String currentCourseId = widget.CourseId;
       if (_selectedProvince != null && _selectedProvince!.isNotEmpty) {
-        print('courseId: ${widget.courseId}');
-        print('imageUrl: $imageUrl');
-        print('selectedProvince: $_selectedProvince');
         // Update the course data in Firestore
         try {
+          
           await FirebaseFirestore.instance
               .collection('courses')
-              .doc(currentCourseId)
+              .doc(widget.CourseId)
               .update({
             'courseName': courseName,
             'contactInfo': contactInfo,
@@ -128,6 +155,7 @@ class _EditCourseState extends State<EditCourse> {
             'date': _selectedDays,
             'time': timeData,
             'imageName': imageUrl,
+            'userId': FirebaseAuth.instance.currentUser?.uid,
           });
         } catch (error) {
           print('Firestore Update Error: $error');
@@ -142,11 +170,18 @@ class _EditCourseState extends State<EditCourse> {
   }
 
   List<TimeOfDay> _convertTimeMapListToTimeOfDayList(
-      List<Map<String, dynamic>> times) {
-    return times.map((timeMap) {
+    List<dynamic> times) { // Change the parameter type to List<dynamic>
+  return times.map((timeMap) {
+    if (timeMap is Map<String, dynamic>) { // Check if timeMap is a valid map
       return TimeOfDay(hour: timeMap['hour'], minute: timeMap['minute']);
-    }).toList();
-  }
+    } else {
+      // Handle the case when the timeMap is not in the expected format
+      // For example, return a default TimeOfDay or log an error
+      return TimeOfDay(hour: 0, minute: 0);
+    }
+  }).toList();
+}
+
 
   List<TimeOfDay> _convertTimeDataToList(String times) {
     List<String> timeStrings =
@@ -173,7 +208,7 @@ class _EditCourseState extends State<EditCourse> {
     try {
       String data = await rootBundle.loadString('lib/assets/provinces.json');
       List<dynamic> provincesData = json.decode(data);
-      print("Loaded province data: $provincesData"); // Debug print
+      // print("Loaded province data: $provincesData"); // Debug print
       setState(() {
         _provinceItems =
             provincesData.map<DropdownMenuItem<String>>((province) {
@@ -268,6 +303,7 @@ class _EditCourseState extends State<EditCourse> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(

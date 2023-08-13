@@ -12,6 +12,7 @@ import '../../auth.dart';
 class CourseInfoPage extends StatelessWidget {
   final User? user = Auth().currentUser;
   final Map<String, dynamic> courseData;
+  final String courseId;
   String _formatTime(int hour, int minute) {
     final period = hour < 12 ? 'AM' : 'PM';
     final hourOfDay = hour == 0
@@ -25,7 +26,8 @@ class CourseInfoPage extends StatelessWidget {
     return formattedTime;
   }
 
-  CourseInfoPage({required this.courseData});
+  CourseInfoPage({required this.courseData,required this.courseId});
+  
 
   void _viewTutorInformation(BuildContext context) async {
     final String userId = courseData['userId'];
@@ -91,7 +93,7 @@ class CourseInfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String courseId = courseData['courseId'] ?? '';
+    
     final String courseName = courseData['courseName'] ?? '';
     final String address = courseData['address'] ?? '';
     final String price = courseData['price'] ?? '';
@@ -105,7 +107,9 @@ class CourseInfoPage extends StatelessWidget {
         List<Map<String, dynamic>>.from(courseData['time'] ?? []);
     final User? user = Auth().currentUser;
     final bool isCurrentUserCourseCreator = userId == user?.uid;
+    print('courseId: $courseId');
     return Scaffold(
+      
       appBar: AppBar(
         title: Text(
           'Course Information',
@@ -195,9 +199,9 @@ class CourseInfoPage extends StatelessWidget {
             Text('Price/Month: ${courseData['price']}'),
             SizedBox(height: 10),
             Text('Contact Information: ${courseData['contactInfo']}'),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             // Display Days of the Week
-            SizedBox(height: 20),
+
             Text(
               'Days of the Week:',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -216,7 +220,7 @@ class CourseInfoPage extends StatelessWidget {
               ),
             ),
             // Display Time Slots
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             Text(
               'Time:',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -248,10 +252,49 @@ class CourseInfoPage extends StatelessWidget {
                 ),
               ),
             ),
+            ElevatedButton(
+              onPressed: () => _enrollInCourse(context, courseId),
+              child: Text(
+                'Enroll',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context)
+                    .primaryColor, // Use the desired button color.
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  void _enrollInCourse(BuildContext context, String courseId) async {
+    if (user != null) {
+      final studentId = user!.uid;
+
+      print('courseId: $courseId');
+      print('studentId: $studentId');
+
+      try {
+        final courseRef =
+            FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+        await courseRef.update({
+          'enrolledStudents': FieldValue.arrayUnion([studentId]),
+        });
+
+        // Show success message or navigate to a different screen.
+      } catch (error) {
+        print('Error enrolling student: $error');
+      }
+    } else {
+      // Handle the case when the user is not authenticated.
+      // You might want to show a login prompt or navigate to the login screen.
+    }
   }
 
   void _showEditCourseDialog(
@@ -264,14 +307,14 @@ class CourseInfoPage extends StatelessWidget {
     String province,
     String courseImage,
     String category,
-    List<String> days, 
-    List<Map<String, dynamic>> times, 
+    List<String> days,
+    List<Map<String, dynamic>> times,
   ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return EditCourse(
-          courseId: courseId,
+          CourseId: courseId,
           CourseName: courseName,
           Address: address,
           Price: price,
@@ -279,7 +322,7 @@ class CourseInfoPage extends StatelessWidget {
           Province: province,
           CourseImage: courseImage,
           Category: category,
-         Days: days, 
+          Days: days,
           Times: times,
         );
       },
