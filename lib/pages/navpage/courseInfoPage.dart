@@ -26,8 +26,7 @@ class CourseInfoPage extends StatelessWidget {
     return formattedTime;
   }
 
-  CourseInfoPage({required this.courseData,required this.courseId});
-  
+  CourseInfoPage({required this.courseData, required this.courseId});
 
   void _viewTutorInformation(BuildContext context) async {
     final String userId = courseData['userId'];
@@ -93,7 +92,6 @@ class CourseInfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final String courseName = courseData['courseName'] ?? '';
     final String address = courseData['address'] ?? '';
     final String price = courseData['price'] ?? '';
@@ -109,7 +107,6 @@ class CourseInfoPage extends StatelessWidget {
     final bool isCurrentUserCourseCreator = userId == user?.uid;
     print('courseId: $courseId');
     return Scaffold(
-      
       appBar: AppBar(
         title: Text(
           'Course Information',
@@ -266,6 +263,26 @@ class CourseInfoPage extends StatelessWidget {
                     .primaryColor, // Use the desired button color.
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                if (user != null) {
+                  _cancelEnrollment(context, courseId);
+                } else {
+                  // Handle the case when the user is not authenticated.
+                  // You might want to show a login prompt or navigate to the login screen.
+                }
+              },
+              child: Text(
+                'Cancel Enrollment',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.red, // Use the desired button color.
+              ),
+            ),
           ],
         ),
       ),
@@ -280,8 +297,15 @@ class CourseInfoPage extends StatelessWidget {
       print('studentId: $studentId');
 
       try {
+        final studentRef =
+            FirebaseFirestore.instance.collection('users').doc(studentId);
+
         final courseRef =
             FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+        await studentRef.update({
+          'enrolledCourses': FieldValue.arrayUnion([courseId]),
+        });
 
         await courseRef.update({
           'enrolledStudents': FieldValue.arrayUnion([studentId]),
@@ -294,6 +318,32 @@ class CourseInfoPage extends StatelessWidget {
     } else {
       // Handle the case when the user is not authenticated.
       // You might want to show a login prompt or navigate to the login screen.
+    }
+  }
+
+  void _cancelEnrollment(BuildContext context, String courseId) async {
+    if (user != null) {
+      final studentId = user!.uid;
+
+      try {
+        final studentRef =
+            FirebaseFirestore.instance.collection('users').doc(studentId);
+
+        final courseRef =
+            FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+        await studentRef.update({
+          'enrolledCourses': FieldValue.arrayRemove([courseId]),
+        });
+
+        await courseRef.update({
+          'enrolledStudents': FieldValue.arrayRemove([studentId]),
+        });
+
+        // Show success message or navigate to a different screen.
+      } catch (error) {
+        print('Error canceling enrollment: $error');
+      }
     }
   }
 
