@@ -306,6 +306,35 @@ class CourseInfoPage extends StatelessWidget {
                     isEnrolled ? Colors.red : Theme.of(context).hintColor,
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _commentController,
+                    decoration: InputDecoration(
+                      hintText: 'Write a comment...',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (value) {
+                      _addComment(context, value);
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_commentController.text.isNotEmpty) {
+                        _addComment(context, _commentController.text);
+                        _commentController.clear();
+                      }
+                    },
+                    child: Text('Submit Comment'),
+                  ),
+                  CommentSection(comments: courseComments),
+                  CommentStream(courseId: courseId),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -352,35 +381,7 @@ class CourseInfoPage extends StatelessWidget {
                     Theme.of(context).hintColor, // Set the button color here
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: 'Write a comment...',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: (value) {
-                      _addComment(context, value);
-                    },
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_commentController.text.isNotEmpty) {
-                        _addComment(context, _commentController.text);
-                        _commentController.clear();
-                      }
-                    },
-                    child: Text('Submit Comment'),
-                  ),
-                  CommentSection(comments: courseComments),
-                  CommentStream(courseId: courseId),
-                ],
-              ),
-            ),
+            
           ],
         );
       },
