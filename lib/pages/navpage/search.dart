@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
@@ -11,17 +12,34 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   TextEditingController _searchController = TextEditingController();
   Stream<QuerySnapshot>? _searchStream;
+  late FocusNode _searchFocusNode;
+  bool _showCategories = true;
+  List<String> _provinces = []; // List to store provinces
+  String _selectedProvince = 'Bangkok'; // Currently selected province
 
   @override
   void initState() {
     super.initState();
+    _searchFocusNode = FocusNode();
     _searchController.addListener(_onSearchChanged);
+    _searchFocusNode.addListener(_onSearchFocusChanged);
+    _loadProvinces();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onSearchFocusChanged() {
+    setState(() {
+      _showCategories = !_searchFocusNode.hasFocus;
+      if (!_showCategories) {
+        _searchStream = null;
+      }
+    });
   }
 
   void _onSearchChanged() {
@@ -40,6 +58,17 @@ class _SearchPageState extends State<SearchPage> {
         _searchStream = null;
       });
     }
+  }
+
+  Future<void> _loadProvinces() async {
+    // Load provinces from provinces.json
+    final String data = await DefaultAssetBundle.of(context)
+        .loadString('lib/assets/provinces.json');
+    final List<dynamic> jsonList = json.decode(data);
+
+    setState(() {
+      _provinces = jsonList.cast<String>();
+    });
   }
 
   Widget _buildSearchResults() {
@@ -122,6 +151,52 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  Widget _buildCategoryCard(BuildContext context, String category) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _searchStream = FirebaseFirestore.instance
+              .collection('courses')
+              .where('category', isEqualTo: category)
+              .snapshots();
+        });
+      },
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text(
+            category,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProvinceCard(BuildContext context, String province) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _searchStream = FirebaseFirestore.instance
+              .collection('courses')
+              .where('province', isEqualTo: province)
+              .snapshots();
+        });
+      },
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text(
+            province,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,6 +231,7 @@ class _SearchPageState extends State<SearchPage> {
             padding: EdgeInsets.all(10),
             child: TextField(
               controller: _searchController,
+              focusNode: _searchFocusNode,
               decoration: InputDecoration(
                 hintText: 'Search for a course...',
                 border: OutlineInputBorder(),
@@ -163,6 +239,62 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (_) => _onSearchChanged(),
             ),
           ),
+          if (_showCategories)
+            Column(
+              children: [
+                SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildCategoryCard(context, 'Math'),
+                    _buildCategoryCard(context, 'Science'),
+                    _buildCategoryCard(context, 'English'),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildCategoryCard(context, 'Social'),
+                    _buildCategoryCard(context, 'Thai'),
+                    _buildCategoryCard(context, 'Art'),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: DropdownButton<String>(
+                    value: _selectedProvince,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedProvince = newValue!;
+                        _searchStream = FirebaseFirestore.instance
+                            .collection('courses')
+                            .where('province', isEqualTo: _selectedProvince)
+                            .snapshots();
+                      });
+                    },
+                    items: _provinces
+                        .map<DropdownMenuItem<String>>(
+                          (String province) => DropdownMenuItem<String>(
+                            value: province,
+                            child: Text(province),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
           Expanded(
             child: _buildSearchResults(),
           ),
