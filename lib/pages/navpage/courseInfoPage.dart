@@ -8,11 +8,16 @@ import 'package:tutorgo/pages/widget/editCourse.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 
 import '../../auth.dart';
+import '../widget/comment.dart';
+import '../widget/commentStream.dart';
 
 class CourseInfoPage extends StatelessWidget {
   final User? user = Auth().currentUser;
   final Map<String, dynamic> courseData;
   final String courseId;
+  final TextEditingController _commentController = TextEditingController();
+  List<Comment> courseComments = [];
+
   String _formatTime(int hour, int minute) {
     final period = hour < 12 ? 'AM' : 'PM';
     final hourOfDay = hour == 0
@@ -310,6 +315,35 @@ class CourseInfoPage extends StatelessWidget {
                 primary: Colors.red, // Use the desired button color.
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _commentController,
+                    decoration: InputDecoration(
+                      hintText: 'Write a comment...',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (value) {
+                      _addComment(context, value);
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_commentController.text.isNotEmpty) {
+                        _addComment(context, _commentController.text);
+                        _commentController.clear();
+                      }
+                    },
+                    child: Text('Submit Comment'),
+                  ),
+                  CommentSection(comments: courseComments),
+                  CommentStream(courseId: courseId),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -418,5 +452,50 @@ class CourseInfoPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _addComment(BuildContext context, String commentContent) async {
+    if (user != null) {
+      final String studentId = user!.uid;
+
+      try {
+        // Fetch the user's first name
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(studentId)
+            .get();
+        final firstName = userDoc['firstname'] as String?;
+
+        if (firstName != null) {
+          final Comment comment = Comment(
+            content: commentContent,
+            studentId: studentId,
+            firstName: firstName,
+            timestamp: DateTime.now(),
+          );
+
+          // Add the comment to Firebase
+          final courseRef =
+              FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+          final commentDoc = courseRef.collection('comments').doc();
+          await commentDoc.set({
+            'content': comment.content,
+            'studentId': comment.studentId,
+            'firstName': comment.firstName,
+            'timestamp': comment.timestamp,
+          });
+
+          // Clear the comment input field and update the UI
+          _commentController.clear();
+          courseComments.add(comment);
+        }
+      } catch (error) {
+        print('Error adding comment: $error');
+      }
+    } else {
+      // Handle the case when the user is not authenticated.
+      // You might want to show a login prompt or navigate to the login screen.
+    }
   }
 }
