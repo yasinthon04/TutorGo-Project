@@ -149,12 +149,39 @@ class CourseInfoPage extends StatelessWidget {
           if (isCurrentUserCourseCreator)
             IconButton(
               icon: Icon(Icons.delete),
-              onPressed: () {
-                _showDeleteCourseDialog(
-                  context,
-                  courseId,
-                  courseName,
-                );
+              onPressed: () async {
+                final courseSnapshot = await FirebaseFirestore.instance
+                    .collection('courses')
+                    .doc(courseId)
+                    .get();
+
+                final courseData =
+                    courseSnapshot.data() as Map<String, dynamic>;
+                final enrolledStudents =
+                    (courseData['enrolledStudents'] ?? []) as List;
+
+                if (enrolledStudents.isNotEmpty) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Cannot Delete Course'),
+                        content: Text(
+                            'There are students currently enrolled in this course.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                } else {
+                  _showDeleteCourseDialog(context, courseId, courseName);
+                }
               },
             ),
         ],
@@ -385,8 +412,8 @@ class CourseInfoPage extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return DeleteCourse(
-          courseId: courseId,
-          courseName: courseName,
+          CourseId: courseId,
+          CourseName: courseName,
           userId: user?.uid ?? '',
         );
       },

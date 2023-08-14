@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../navpage/home.dart';
+
 class DeleteCourse extends StatefulWidget {
-  final String courseId;
-  final String courseName;
+  final String CourseId;
+  final String CourseName;
   final String userId;
 
-  DeleteCourse({required this.courseId, required this.courseName, required this.userId});
+  DeleteCourse({required this.CourseId, required this.CourseName, required this.userId});
 
   @override
   _DeleteCourseState createState() => _DeleteCourseState();
@@ -29,12 +31,12 @@ class _DeleteCourseState extends State<DeleteCourse> {
       final enteredCourseName = _courseNameController.text;
 
       // Check if the entered course name matches the actual course name and the user ID matches
-      if (enteredCourseName == widget.courseName && widget.userId == FirebaseAuth.instance.currentUser?.uid) {
+      if (enteredCourseName == widget.CourseName && widget.userId == FirebaseAuth.instance.currentUser?.uid) {
         try {
           // Delete the course document from Firestore
           await FirebaseFirestore.instance
               .collection('courses')
-              .doc(widget.courseId)
+              .doc(widget.CourseId)
               .delete();
 
           // Close the dialog
@@ -46,6 +48,7 @@ class _DeleteCourseState extends State<DeleteCourse> {
             SnackBar(content: Text('Failed to delete the course')),
           );
         }
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
       } else {
         // Show an error message for incorrect course name or unauthorized user
         ScaffoldMessenger.of(context).showSnackBar(
