@@ -110,7 +110,11 @@ class CourseInfoPage extends StatelessWidget {
         List<Map<String, dynamic>>.from(courseData['time'] ?? []);
     final User? user = Auth().currentUser;
     final bool isCurrentUserCourseCreator = userId == user?.uid;
+    final bool isStudent = user != null && !isCurrentUserCourseCreator;
+    final bool isEnrolled =
+        isStudent && (courseData['enrolledStudents'] ?? []).contains(user!.uid);
     print('courseId: $courseId');
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -217,17 +221,17 @@ class CourseInfoPage extends StatelessWidget {
               ),
             SizedBox(height: 20),
             Text(
-              'Course Name: ${courseData['courseName']}',
+              'Course Name: $courseName',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             SizedBox(height: 10),
-            Text('Address: ${courseData['address']}'),
+            Text('Address: $address'),
             SizedBox(height: 10),
-            Text('Province: ${courseData['province']}'),
+            Text('Province: $province'),
             SizedBox(height: 10),
-            Text('Price/Month: ${courseData['price']}'),
+            Text('Price/Month: $price'),
             SizedBox(height: 10),
-            Text('Contact Information: ${courseData['contactInfo']}'),
+            Text('Contact Information: $contactInfo'),
             SizedBox(height: 10),
             // Display Days of the Week
 
@@ -239,11 +243,11 @@ class CourseInfoPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List<Widget>.generate(
-                courseData['date'].length,
+                days.length,
                 (index) => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 5.0),
                   child: Chip(
-                    label: Text(courseData['date'][index]),
+                    label: Text(days[index]),
                   ),
                 ),
               ),
@@ -260,13 +264,13 @@ class CourseInfoPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5.0),
                   child: Text(
-                    'Start: ${_formatTime(courseData['time'][0]['hour'], courseData['time'][0]['minute'])}',
+                    'Start: ${_formatTime(times[0]['hour'], times[0]['minute'])}',
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5.0),
                   child: Text(
-                    'End: ${_formatTime(courseData['time'][1]['hour'], courseData['time'][1]['minute'])}',
+                    'End: ${_formatTime(times[1]['hour'], times[1]['minute'])}',
                   ),
                 ),
               ],
@@ -281,8 +285,46 @@ class CourseInfoPage extends StatelessWidget {
                 ),
               ),
             ),
+
             ElevatedButton(
-              onPressed: () => _enrollInCourse(context, courseId),
+              onPressed: () {
+                if (isStudent && !isEnrolled) {
+                  _showEnrollConfirmation(context, courseId);
+                } else if (isEnrolled) {
+                  _showCancelConfirmation(context, courseId);
+                }
+              },
+              child: Text(
+                isEnrolled ? 'Cancel Enrollment' : 'Enroll',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary:
+                    isEnrolled ? Colors.red : Theme.of(context).hintColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEnrollConfirmation(BuildContext context, String courseId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enroll in Course'),
+          content: Text('Are you sure you want to enroll in this course?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _enrollInCourse(context, courseId);
+              },
               child: Text(
                 'Enroll',
                 style: TextStyle(
@@ -291,28 +333,23 @@ class CourseInfoPage extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                primary: Theme.of(context)
-                    .primaryColor, // Use the desired button color.
+                primary: Colors.green,
               ),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () {
-                if (user != null) {
-                  _cancelEnrollment(context, courseId);
-                } else {
-                  // Handle the case when the user is not authenticated.
-                  // You might want to show a login prompt or navigate to the login screen.
-                }
+                Navigator.pop(context);
               },
               child: Text(
-                'Cancel Enrollment',
+                'Cancel',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                primary: Colors.red, // Use the desired button color.
+                primary:
+                    Theme.of(context).hintColor, // Set the button color here
               ),
             ),
             Padding(
@@ -345,8 +382,54 @@ class CourseInfoPage extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
+    );
+  }
+
+  void _showCancelConfirmation(BuildContext context, String courseId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Cancel Enrollment'),
+          content: Text('Are you sure you want to cancel your enrollment?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _cancelEnrollment(context, courseId);
+              },
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.red,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary:
+                    Theme.of(context).hintColor, // Set the button color here
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
