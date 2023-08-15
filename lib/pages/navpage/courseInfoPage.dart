@@ -214,7 +214,7 @@ class CourseInfoPage extends StatelessWidget {
               )
             else
               Image.asset(
-                'assets/default_image.png',
+                'assets/images/logo.png',
                 height: 200,
                 width: 200,
                 fit: BoxFit.cover,
@@ -285,56 +285,65 @@ class CourseInfoPage extends StatelessWidget {
                 ),
               ),
             ),
-
-            ElevatedButton(
-              onPressed: () {
-                if (isStudent && !isEnrolled) {
-                  _showEnrollConfirmation(context, courseId);
-                } else if (isEnrolled) {
-                  _showCancelConfirmation(context, courseId);
-                }
-              },
-              child: Text(
-                isEnrolled ? 'Cancel Enrollment' : 'Enroll',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+            if (!isCurrentUserCourseCreator) // Hide enroll button for tutors
+              ElevatedButton(
+                onPressed: () {
+                  if (isStudent && !isEnrolled) {
+                    _showEnrollConfirmation(context, courseId);
+                  } else if (isEnrolled) {
+                    _showCancelConfirmation(context, courseId);
+                  }
+                },
+                child: Text(
+                  isEnrolled ? 'Cancel Enrollment' : 'Enroll',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary:
+                      isEnrolled ? Colors.red : Theme.of(context).hintColor,
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                primary:
-                    isEnrolled ? Colors.red : Theme.of(context).hintColor,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: 'Write a comment...',
-                      border: OutlineInputBorder(),
+            if (isStudent && isEnrolled)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _commentController,
+                      decoration: InputDecoration(
+                        hintText: 'Write a comment...',
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (value) {
+                        _addComment(context, value);
+                      },
                     ),
-                    onSubmitted: (value) {
-                      _addComment(context, value);
-                    },
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_commentController.text.isNotEmpty) {
-                        _addComment(context, _commentController.text);
-                        _commentController.clear();
-                      }
-                    },
-                    child: Text('Submit Comment'),
-                  ),
-                  CommentSection(comments: courseComments),
-                  CommentStream(courseId: courseId),
-                ],
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_commentController.text.isNotEmpty) {
+                          _addComment(context, _commentController.text);
+                          _commentController.clear();
+                        }
+                      },
+                      child: Text('Submit Comment'),
+                    ),
+                  ],
+                ),
+              ),
+            SizedBox(height: 20),
+            Text(
+              'Comments',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
+            SizedBox(height: 10),
+            CommentStream(courseId: courseId),
           ],
         ),
       ),
@@ -381,7 +390,6 @@ class CourseInfoPage extends StatelessWidget {
                     Theme.of(context).hintColor, // Set the button color here
               ),
             ),
-            
           ],
         );
       },
