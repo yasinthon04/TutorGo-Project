@@ -193,6 +193,13 @@ class CourseInfoPage extends StatelessWidget {
                 }
               },
             ),
+          if (isCurrentUserCourseCreator)
+            IconButton(
+              icon: Icon(Icons.view_list),
+              onPressed: () {
+                _viewRequestedStudents(context, courseId);
+              },
+            ),
         ],
       ),
       body: SingleChildScrollView(
@@ -285,27 +292,64 @@ class CourseInfoPage extends StatelessWidget {
                 ),
               ),
             ),
-            if (!isCurrentUserCourseCreator) // Hide enroll button for tutors
-              ElevatedButton(
-                onPressed: () {
-                  if (isStudent && !isEnrolled) {
+            ElevatedButton(
+              onPressed: () {
+                if (isEnrolled) {
+                  _showCancelConfirmation(
+                      context, courseId); // Show cancel confirmation dialog
+                } else if (isStudent &&
+                    !(courseData['requestedStudents'] ?? [])
+                        .contains(user!.uid)) {
+                  // Check if the student has already requested enrollment
+                  if ((courseData['requestedStudents'] ?? [])
+                      .contains(user!.uid)) {
+                    // Show a "Waiting..." dialog or message
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Waiting for Confirmation'),
+                          content: Text(
+                              'Your enrollment request is pending confirmation.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    // Show the enroll confirmation dialog
                     _showEnrollConfirmation(context, courseId);
-                  } else if (isEnrolled) {
-                    _showCancelConfirmation(context, courseId);
                   }
-                },
-                child: Text(
-                  isEnrolled ? 'Cancel Enrollment' : 'Enroll',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  primary:
-                      isEnrolled ? Colors.red : Theme.of(context).hintColor,
+                }
+              },
+              child: Text(
+                // Update the button text based on whether a request is pending
+                (courseData['requestedStudents'] ?? []).contains(user!.uid)
+                    ? 'Waiting...'
+                    : isEnrolled
+                        ? 'Cancel Enrollment'
+                        : 'Request Enroll',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
+              style: ElevatedButton.styleFrom(
+                primary: (courseData['requestedStudents'] ?? [])
+                        .contains(user!.uid)
+                    ? Colors
+                        .grey // Show a different color for the "Waiting..." state
+                    : isEnrolled
+                        ? Colors.red
+                        : Theme.of(context).hintColor,
+              ),
+            ),
             if (isStudent && isEnrolled)
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -361,7 +405,7 @@ class CourseInfoPage extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                _enrollInCourse(context, courseId);
+                _requestEnrollInCourse(context, courseId);
               },
               child: Text(
                 'Enroll',
@@ -406,8 +450,9 @@ class CourseInfoPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
                 _cancelEnrollment(context, courseId);
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
               child: Text(
                 'Delete',
@@ -446,22 +491,12 @@ class CourseInfoPage extends StatelessWidget {
     if (user != null) {
       final studentId = user!.uid;
 
-      print('courseId: $courseId');
-      print('studentId: $studentId');
-
       try {
         final studentRef =
             FirebaseFirestore.instance.collection('users').doc(studentId);
 
-        final courseRef =
-            FirebaseFirestore.instance.collection('courses').doc(courseId);
-
         await studentRef.update({
           'enrolledCourses': FieldValue.arrayUnion([courseId]),
-        });
-
-        await courseRef.update({
-          'enrolledStudents': FieldValue.arrayUnion([studentId]),
         });
 
         // Show success message or navigate to a different screen.
@@ -588,6 +623,165 @@ class CourseInfoPage extends StatelessWidget {
     } else {
       // Handle the case when the user is not authenticated.
       // You might want to show a login prompt or navigate to the login screen.
+    }
+  }
+
+  void _requestEnrollInCourse(
+      BuildContext parentContext, String courseId) async {
+    if (user != null) {
+      final studentId = user!.uid;
+
+      try {
+        final studentRef =
+            FirebaseFirestore.instance.collection('users').doc(studentId);
+
+        final courseRef =
+            FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+        // Add the student's ID to the list of requested students
+        await courseRef.update({
+          'requestedStudents': FieldValue.arrayUnion([studentId]),
+        });
+
+        // Show the "Waiting for Confirmation" dialog
+        showDialog(
+          context: parentContext, // Use the provided parentContext here
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Waiting for Confirmation'),
+              content: Text('Your enrollment request is pending confirmation.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+
+        // You can also consider refreshing the UI to reflect the pending status
+        // or showing a message on the UI.
+      } catch (error) {
+        print('Error requesting enrollment: $error');
+      }
+    } else {
+      // Handle the case when the user is not authenticated.
+      // You might want to show a login prompt or navigate to the login screen.
+    }
+  }
+
+  void _viewRequestedStudents(BuildContext context, String courseId) async {
+    final courseRef =
+        FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+    final courseSnapshot = await courseRef.get();
+
+    if (courseSnapshot.exists) {
+      final requestedStudents = courseSnapshot['requestedStudents'] ?? [];
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Requested Students'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (String studentId in requestedStudents)
+                  FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(studentId)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      }
+                      if (snapshot.hasError) {
+                        return Text('Error loading student data');
+                      }
+                      final studentData =
+                          snapshot.data?.data() as Map<String, dynamic>? ?? {};
+                      final studentName =
+                          '${studentData['firstname']} ${studentData['lastname']}';
+
+                      return ListTile(
+                        title: Text(studentName),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                _confirmStudentRequest(courseId, studentId);
+                                _enrollInCourse(context, courseId);
+                                Navigator.pop(context); // Close the dialog
+                              },
+                              child: Text('Confirm'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                _removeStudentRequest(courseId, studentId);
+                                Navigator.pop(context); // Close the dialog
+                              },
+                              child: Text('Remove'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void _confirmStudentRequest(String courseId, String studentId) async {
+  final courseRef = FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+  try {
+    // Remove the student from requestedStudents and add to enrolledStudents
+    await courseRef.update({
+      'requestedStudents': FieldValue.arrayRemove([studentId]),
+      'enrolledStudents': FieldValue.arrayUnion([studentId]),
+    });
+
+    // Store courseId in student's data
+    final studentRef = FirebaseFirestore.instance.collection('users').doc(studentId);
+
+    await studentRef.update({
+      'enrolledCourses': FieldValue.arrayUnion([courseId]),
+    });
+  } catch (error) {
+    print('Error confirming student request: $error');
+  }
+}
+
+
+  void _removeStudentRequest(String courseId, String studentId) async {
+    final courseRef =
+        FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+    try {
+      // Remove the student from requestedStudents
+      await courseRef.update({
+        'requestedStudents': FieldValue.arrayRemove([studentId]),
+      });
+    } catch (error) {
+      print('Error removing student request: $error');
     }
   }
 }
