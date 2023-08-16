@@ -163,11 +163,32 @@ class _SearchPageState extends State<SearchPage> {
       },
       child: Card(
         elevation: 4,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            category,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).hintColor,
+              ], // Adjust gradient colors as needed
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          height: 40,
+          width: 100,
+          child: Center(
+            child: Text(
+              category,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
       ),
@@ -186,11 +207,21 @@ class _SearchPageState extends State<SearchPage> {
       },
       child: Card(
         elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        color: Colors.green,
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            province,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Text(
+              province,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
       ),
@@ -241,6 +272,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
           if (_showCategories)
             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 16),
                 Padding(
@@ -254,43 +286,87 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildCategoryCard(context, 'Math'),
-                    _buildCategoryCard(context, 'Science'),
-                    _buildCategoryCard(context, 'English'),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: _buildCategoryCard(context, 'Math'),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: _buildCategoryCard(context, 'Science'),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: _buildCategoryCard(context, 'English'),
+                      ),
+                    ),
                   ],
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildCategoryCard(context, 'Social'),
-                    _buildCategoryCard(context, 'Thai'),
-                    _buildCategoryCard(context, 'Art'),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: _buildCategoryCard(context, 'Social'),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: _buildCategoryCard(context, 'Thai'),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: _buildCategoryCard(context, 'Art'),
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: DropdownButton<String>(
-                    value: _selectedProvince,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedProvince = newValue!;
-                        _searchStream = FirebaseFirestore.instance
-                            .collection('courses')
-                            .where('province', isEqualTo: _selectedProvince)
-                            .snapshots();
-                      });
-                    },
-                    items: _provinces
-                        .map<DropdownMenuItem<String>>(
-                          (String province) => DropdownMenuItem<String>(
-                            value: province,
-                            child: Text(province),
-                          ),
-                        )
-                        .toList(),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Province',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Spacer(), // Adds flexible space to push the dropdown to the right
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: DropdownButton<String>(
+                          value: _selectedProvince,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedProvince = newValue!;
+                              _searchStream = FirebaseFirestore.instance
+                                  .collection('courses')
+                                  .where('province',
+                                      isEqualTo: _selectedProvince)
+                                  .snapshots();
+                            });
+                          },
+                          items: _provinces
+                              .map<DropdownMenuItem<String>>(
+                                (String province) => DropdownMenuItem<String>(
+                                  value: province,
+                                  child: Text(province),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
