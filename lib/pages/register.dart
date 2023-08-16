@@ -364,42 +364,54 @@ class _RegisterState extends State<Register> {
   }
 
   void signUp(String email, String password, String role) async {
-    if (_formkey.currentState!.validate()) {
-      try {
-        setState(() {
-          showProgress = true;
-        });
+  if (_formkey.currentState!.validate()) {
+    try {
+      setState(() {
+        showProgress = true;
+      });
 
-        UserCredential userCredential = await _auth
-            .createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-        if (selectedImage != null) {
-          String imageName = Path.basename(selectedImage!.path);
-          Reference storageReference = FirebaseStorage.instance
-              .ref()
-              .child('profilePicture')
-              .child(userCredential.user!.uid)
-              .child(imageName);
-          UploadTask uploadTask = storageReference.putFile(selectedImage!);
-          await uploadTask.whenComplete(() async {
-            String imageUrl = await storageReference.getDownloadURL();
-            await postDetailsToFirestore(email, role, imageUrl);
-          });
-        } else {
-          await postDetailsToFirestore(email, role, '');
-        }
-      } catch (e) {
-        // Handle the error and return a value
-        print('Error occurred during sign up: $e');
-        setState(() {
-          showProgress = false;
+      String imageUrl = '';
+      if (selectedImage != null) {
+        String imageName = Path.basename(selectedImage!.path);
+        Reference storageReference = FirebaseStorage.instance
+            .ref()
+            .child('profilePicture')
+            .child(userCredential.user!.uid)
+            .child(imageName);
+        UploadTask uploadTask = storageReference.putFile(selectedImage!);
+        await uploadTask.whenComplete(() async {
+          imageUrl = await storageReference.getDownloadURL();
         });
-        return null; // Or return a specific value
       }
+
+      List<String> enrolledCourses = [];
+       // Initialize with the user's enrolled courses
+      await postDetailsToFirestore(email, role, imageUrl, enrolledCourses);
+
+      setState(() {
+        showProgress = false;
+      });
+
+      // Here you can call a function to enroll the user in specific courses
+      // For example:
+      // await enrollUserInCourses(userCredential.user!.uid, enrolledCourses);
+
+    } catch (e) {
+      // Handle the error and return a value
+      print('Error occurred during sign up: $e');
+      setState(() {
+        showProgress = false;
+      });
+      return null; // Or return a specific value
     }
   }
+}
 
-  postDetailsToFirestore(String email, String role, String imageUrl) async {
+
+  postDetailsToFirestore(String email, String role, String imageUrl, List<String> enrolledCourses) async {
     var user = _auth.currentUser;
     CollectionReference ref = FirebaseFirestore.instance.collection('users');
     ref.doc(user?.uid).set({
@@ -408,7 +420,8 @@ class _RegisterState extends State<Register> {
       'email': emailController.text,
       'mobile': mobile.text,
       'role': role,
-      'profilePicture': imageUrl, // Add the image URL here
+      'profilePicture': imageUrl,
+      'enrolledCourses': enrolledCourses, 
     });
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => LoginPage()));

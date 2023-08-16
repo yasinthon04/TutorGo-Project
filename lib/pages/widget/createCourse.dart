@@ -57,6 +57,8 @@ class _CreateCourseState extends State<CreateCourse> {
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
+      List<String> enrolledStudents = [];
+      List<String> requestedStudents = [];
 
       // Upload image to Firebase Storage
       if (_imageFile != null) {
@@ -82,6 +84,8 @@ class _CreateCourseState extends State<CreateCourse> {
           'imageName': imageUrl,
           'googleMapsLink': googleMapsLink,
           'userId': FirebaseAuth.instance.currentUser?.uid,
+          'enrolledStudents': enrolledStudents,
+          'requestedStudents': requestedStudents,
         });
       }
 

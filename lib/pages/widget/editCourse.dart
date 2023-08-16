@@ -124,6 +124,8 @@ class _EditCourseState extends State<EditCourse> {
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
+      List<String> enrolledStudents = [];
+      List<String> requestedStudents = [];
 
       // Update image if selected
       String imageUrl = widget.CourseImage; // Get the existing image URL
@@ -157,6 +159,8 @@ class _EditCourseState extends State<EditCourse> {
             'time': timeData,
             'imageName': imageUrl,
             'userId': FirebaseAuth.instance.currentUser?.uid,
+            'enrolledStudents': enrolledStudents,
+            'requestedStudents': requestedStudents,
           });
         } catch (error) {
           print('Firestore Update Error: $error');
