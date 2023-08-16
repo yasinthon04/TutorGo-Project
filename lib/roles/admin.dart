@@ -241,6 +241,7 @@ class _AdminState extends State<Admin> {
                                               deleteCourse(
                                                   context, courseDoc.id);
                                             },
+                                            color: Colors.red,
                                           ),
                                         );
                                       }).toList(),

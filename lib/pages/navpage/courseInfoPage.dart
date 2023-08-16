@@ -197,7 +197,7 @@ class CourseInfoPage extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.view_list),
               onPressed: () {
-                _viewRequestedStudents(context, courseId);
+                _viewListAndRequestOfStudents(context, courseId);
               },
             ),
         ],
@@ -331,10 +331,10 @@ class CourseInfoPage extends StatelessWidget {
               child: Text(
                 // Update the button text based on whether a request is pending
                 (courseData['requestedStudents'] ?? []).contains(user!.uid)
-                    ? 'Waiting...'
+                    ? 'Waiting for Tutor confirm...'
                     : isEnrolled
                         ? 'Cancel Enrollment'
-                        : 'Request Enroll',
+                        : 'Enroll',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -455,7 +455,7 @@ class CourseInfoPage extends StatelessWidget {
                 Navigator.pop(context);
               },
               child: Text(
-                'Delete',
+                'Cancel',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -470,7 +470,7 @@ class CourseInfoPage extends StatelessWidget {
                 Navigator.pop(context);
               },
               child: Text(
-                'Cancel',
+                'Close',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -673,66 +673,153 @@ class CourseInfoPage extends StatelessWidget {
     }
   }
 
-  void _viewRequestedStudents(BuildContext context, String courseId) async {
+  void _viewListAndRequestOfStudents(
+      BuildContext context, String courseId) async {
     final courseRef =
         FirebaseFirestore.instance.collection('courses').doc(courseId);
 
     final courseSnapshot = await courseRef.get();
 
     if (courseSnapshot.exists) {
+      final enrolledStudents = courseSnapshot['enrolledStudents'] ?? [];
       final requestedStudents = courseSnapshot['requestedStudents'] ?? [];
 
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Requested Students'),
+            title: Text('List of students',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            contentPadding: EdgeInsets.fromLTRB(20, 16, 20, 0),
             content: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (String studentId in requestedStudents)
-                  FutureBuilder<DocumentSnapshot>(
-                    future: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(studentId)
-                        .get(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      }
-                      if (snapshot.hasError) {
-                        return Text('Error loading student data');
-                      }
-                      final studentData =
-                          snapshot.data?.data() as Map<String, dynamic>? ?? {};
-                      final studentName =
-                          '${studentData['firstname']} ${studentData['lastname']}';
+                Divider(),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      bottom: 8.0, left: 4.0), // Adjust padding
+                  child: Text(
+                    'Requested Students',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+                if (requestedStudents.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('No students have requested to join.'),
+                  )
+                else
+                  for (String studentId in requestedStudents)
+                    FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(studentId)
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        }
+                        if (snapshot.hasError) {
+                          return Text('Error loading student data');
+                        }
+                        final studentData =
+                            snapshot.data?.data() as Map<String, dynamic>? ??
+                                {};
+                        final studentName =
+                            '${studentData['firstname']} ${studentData['lastname']}';
 
-                      return ListTile(
-                        title: Text(studentName),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextButton(
-                              onPressed: () {
-                                _confirmStudentRequest(courseId, studentId);
-                                _enrollInCourse(context, courseId);
-                                Navigator.pop(context); // Close the dialog
-                              },
-                              child: Text('Confirm'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                _removeStudentRequest(courseId, studentId);
-                                Navigator.pop(context); // Close the dialog
-                              },
-                              child: Text('Remove'),
+                            ListTile(
+                              title: Text(studentName),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      _confirmStudentRequest(
+                                          courseId, studentId);
+                                      _enrollInCourse(context, courseId);
+                                      Navigator.pop(context);
+                                    },
+                                    icon: Icon(Icons.check),
+                                    color: Colors.green,
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      _removeStudentRequest(
+                                          courseId, studentId);
+                                      Navigator.pop(context);
+                                    },
+                                    icon: Icon(Icons.close),
+                                    color: Colors.red,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
+                SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: 8.0, left: 4.0), // Adjust padding
+                  child: Text(
+                    'Enrolled Students',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.left,
                   ),
+                ),
+                if (enrolledStudents.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('No students are currently enrolled.'),
+                  )
+                else
+                  for (String studentId in enrolledStudents)
+                    FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(studentId)
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        }
+                        if (snapshot.hasError) {
+                          return Text('Error loading student data');
+                        }
+                        final studentData =
+                            snapshot.data?.data() as Map<String, dynamic>? ??
+                                {};
+                        final studentName =
+                            '${studentData['firstname']} ${studentData['lastname']}';
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ListTile(
+                              title: Text(studentName),
+                              trailing: IconButton(
+                                onPressed: () {
+                                  _deleteStudent(courseId,
+                                      studentId); // Add your delete function here
+                                  Navigator.pop(context);
+                                },
+                                icon: Icon(Icons.delete),
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
               ],
             ),
             actions: [
@@ -740,7 +827,16 @@ class CourseInfoPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Text('Close'),
+                child: Text(
+                  'Close',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Theme.of(context).hintColor,
+                ),
               ),
             ],
           );
@@ -749,27 +845,43 @@ class CourseInfoPage extends StatelessWidget {
     }
   }
 
-  void _confirmStudentRequest(String courseId, String studentId) async {
-  final courseRef = FirebaseFirestore.instance.collection('courses').doc(courseId);
-
-  try {
-    // Remove the student from requestedStudents and add to enrolledStudents
-    await courseRef.update({
-      'requestedStudents': FieldValue.arrayRemove([studentId]),
-      'enrolledStudents': FieldValue.arrayUnion([studentId]),
+  void _deleteStudent(String courseId, String studentId) async {
+    // Remove the student from the enrolled students list in the course document
+    await FirebaseFirestore.instance
+        .collection('courses')
+        .doc(courseId)
+        .update({
+      'enrolledStudents': FieldValue.arrayRemove([studentId]),
     });
 
-    // Store courseId in student's data
-    final studentRef = FirebaseFirestore.instance.collection('users').doc(studentId);
-
-    await studentRef.update({
-      'enrolledCourses': FieldValue.arrayUnion([courseId]),
+    // Remove the enrolled course from the user's data
+    await FirebaseFirestore.instance.collection('users').doc(studentId).update({
+      'enrolledCourses': FieldValue.arrayRemove([courseId]),
     });
-  } catch (error) {
-    print('Error confirming student request: $error');
   }
-}
 
+  void _confirmStudentRequest(String courseId, String studentId) async {
+    final courseRef =
+        FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+    try {
+      // Remove the student from requestedStudents and add to enrolledStudents
+      await courseRef.update({
+        'requestedStudents': FieldValue.arrayRemove([studentId]),
+        'enrolledStudents': FieldValue.arrayUnion([studentId]),
+      });
+
+      // Store courseId in student's data
+      final studentRef =
+          FirebaseFirestore.instance.collection('users').doc(studentId);
+
+      await studentRef.update({
+        'enrolledCourses': FieldValue.arrayUnion([courseId]),
+      });
+    } catch (error) {
+      print('Error confirming student request: $error');
+    }
+  }
 
   void _removeStudentRequest(String courseId, String studentId) async {
     final courseRef =

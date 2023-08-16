@@ -27,12 +27,12 @@ class _CreateCourseState extends State<CreateCourse> {
   File? _imageFile;
 
   @override
-void initState() {
-  super.initState();
-  _loadProvinces();
-  _selectedProvince = _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
-}
-
+  void initState() {
+    super.initState();
+    _loadProvinces();
+    _selectedProvince =
+        _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
+  }
 
   @override
   void dispose() {
@@ -53,6 +53,8 @@ void initState() {
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
+      List<String> enrolledStudents = [];
+      List<String> requestedStudents = [];
 
       // Upload image to Firebase Storage
       if (_imageFile != null) {
@@ -77,6 +79,8 @@ void initState() {
           'time': timeData,
           'imageName': imageUrl,
           'userId': FirebaseAuth.instance.currentUser?.uid,
+          'enrolledStudents': enrolledStudents,
+          'requestedStudents': requestedStudents,
         });
       }
 
@@ -95,26 +99,25 @@ void initState() {
   }
 
   Future<void> _loadProvinces() async {
-  try {
-    String data = await rootBundle.loadString('lib/assets/provinces.json');
-    List<dynamic> provincesData = json.decode(data);
-    print("Loaded province data: $provincesData"); // Debug print
-    setState(() {
-      _provinceItems =
-          provincesData.map<DropdownMenuItem<String>>((province) {
-        return DropdownMenuItem<String>(
-          value: province as String, // Ensure province is treated as a String
-          child: Text(province),
-        );
-      }).toList();
-      _selectedProvince = _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
-    });
-  } catch (error) {
-    print("Error loading provinces: $error"); // Debug print
+    try {
+      String data = await rootBundle.loadString('lib/assets/provinces.json');
+      List<dynamic> provincesData = json.decode(data);
+      print("Loaded province data: $provincesData"); // Debug print
+      setState(() {
+        _provinceItems =
+            provincesData.map<DropdownMenuItem<String>>((province) {
+          return DropdownMenuItem<String>(
+            value: province as String, // Ensure province is treated as a String
+            child: Text(province),
+          );
+        }).toList();
+        _selectedProvince =
+            _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
+      });
+    } catch (error) {
+      print("Error loading provinces: $error"); // Debug print
+    }
   }
-}
-
-
 
   Widget _buildDayCheckBox(String day) {
     return Row(
