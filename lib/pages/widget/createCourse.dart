@@ -19,6 +19,9 @@ class _CreateCourseState extends State<CreateCourse> {
   final TextEditingController _contactInfoController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
+  final TextEditingController _googleMapsLinkController =
+      TextEditingController();
+
   String _selectedCategory = 'Math'; // Default category
   List<String> _selectedDays = []; // Store selected days of the week
   List<TimeOfDay> _selectedTimes = []; // Store selected time slots
@@ -27,12 +30,12 @@ class _CreateCourseState extends State<CreateCourse> {
   File? _imageFile;
 
   @override
-void initState() {
-  super.initState();
-  _loadProvinces();
-  _selectedProvince = _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
-}
-
+  void initState() {
+    super.initState();
+    _loadProvinces();
+    _selectedProvince =
+        _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
+  }
 
   @override
   void dispose() {
@@ -50,6 +53,7 @@ void initState() {
       String contactInfo = _contactInfoController.text;
       String address = addressController.text;
       String price = priceController.text;
+      String googleMapsLink = _googleMapsLinkController.text;
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
@@ -76,6 +80,7 @@ void initState() {
           'date': _selectedDays,
           'time': timeData,
           'imageName': imageUrl,
+          'googleMapsLink': googleMapsLink,
           'userId': FirebaseAuth.instance.currentUser?.uid,
         });
       }
@@ -95,26 +100,25 @@ void initState() {
   }
 
   Future<void> _loadProvinces() async {
-  try {
-    String data = await rootBundle.loadString('lib/assets/provinces.json');
-    List<dynamic> provincesData = json.decode(data);
-    print("Loaded province data: $provincesData"); // Debug print
-    setState(() {
-      _provinceItems =
-          provincesData.map<DropdownMenuItem<String>>((province) {
-        return DropdownMenuItem<String>(
-          value: province as String, // Ensure province is treated as a String
-          child: Text(province),
-        );
-      }).toList();
-      _selectedProvince = _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
-    });
-  } catch (error) {
-    print("Error loading provinces: $error"); // Debug print
+    try {
+      String data = await rootBundle.loadString('lib/assets/provinces.json');
+      List<dynamic> provincesData = json.decode(data);
+      print("Loaded province data: $provincesData"); // Debug print
+      setState(() {
+        _provinceItems =
+            provincesData.map<DropdownMenuItem<String>>((province) {
+          return DropdownMenuItem<String>(
+            value: province as String, // Ensure province is treated as a String
+            child: Text(province),
+          );
+        }).toList();
+        _selectedProvince =
+            _provinceItems.isNotEmpty ? _provinceItems[0].value : '';
+      });
+    } catch (error) {
+      print("Error loading provinces: $error"); // Debug print
+    }
   }
-}
-
-
 
   Widget _buildDayCheckBox(String day) {
     return Row(
@@ -270,6 +274,20 @@ void initState() {
                       return null;
                     },
                   ),
+                  TextFormField(
+                    controller:
+                        _googleMapsLinkController, // Add a TextEditingController
+                    decoration: InputDecoration(
+                        labelText:
+                            'Google Maps Link(Example: https://goo.gl/maps/KiYNop6sMFmdZeM38)'),
+                    validator: (value) {
+                      if (value!.trim().isEmpty) {
+                        return "Google Maps Link cannot be empty";
+                      }
+                      // You can add more validation logic here if needed
+                      return null;
+                    },
+                  ),
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
                     onChanged: (newValue) {
@@ -315,7 +333,13 @@ void initState() {
                   ElevatedButton(
                     onPressed: () => _pickImage(
                         ImageSource.gallery), // Opens image picker from gallery
-                    child: Text('Select Image'),
+                    child: Text(
+                      'Select Image',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       primary: Theme.of(context).hintColor,
                     ),

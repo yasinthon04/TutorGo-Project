@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:maps_launcher/maps_launcher.dart';
 import 'package:tutorgo/pages/widget/deleteCourse.dart';
 import 'package:tutorgo/pages/widget/editCourse.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
@@ -232,7 +234,23 @@ class CourseInfoPage extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             SizedBox(height: 10),
-            Text('Address: $address'),
+            GestureDetector(
+              onTap: () {
+                if (courseData['googleMapsLink'] != null &&
+                    courseData['googleMapsLink'].isNotEmpty) {
+                  print('Google Maps Link: ${courseData['googleMapsLink']}');
+                  launch(courseData['googleMapsLink']);
+                }
+              },
+              child: Text(
+                'Address: $address (Go to Map)',
+                style: TextStyle(
+                  color: Colors
+                      .blue, // Change the color to make it look like a hyperlink
+                ),
+              ),
+            ),
+
             SizedBox(height: 10),
             Text('Province: $province'),
             SizedBox(height: 10),
@@ -750,26 +768,27 @@ class CourseInfoPage extends StatelessWidget {
   }
 
   void _confirmStudentRequest(String courseId, String studentId) async {
-  final courseRef = FirebaseFirestore.instance.collection('courses').doc(courseId);
+    final courseRef =
+        FirebaseFirestore.instance.collection('courses').doc(courseId);
 
-  try {
-    // Remove the student from requestedStudents and add to enrolledStudents
-    await courseRef.update({
-      'requestedStudents': FieldValue.arrayRemove([studentId]),
-      'enrolledStudents': FieldValue.arrayUnion([studentId]),
-    });
+    try {
+      // Remove the student from requestedStudents and add to enrolledStudents
+      await courseRef.update({
+        'requestedStudents': FieldValue.arrayRemove([studentId]),
+        'enrolledStudents': FieldValue.arrayUnion([studentId]),
+      });
 
-    // Store courseId in student's data
-    final studentRef = FirebaseFirestore.instance.collection('users').doc(studentId);
+      // Store courseId in student's data
+      final studentRef =
+          FirebaseFirestore.instance.collection('users').doc(studentId);
 
-    await studentRef.update({
-      'enrolledCourses': FieldValue.arrayUnion([courseId]),
-    });
-  } catch (error) {
-    print('Error confirming student request: $error');
+      await studentRef.update({
+        'enrolledCourses': FieldValue.arrayUnion([courseId]),
+      });
+    } catch (error) {
+      print('Error confirming student request: $error');
+    }
   }
-}
-
 
   void _removeStudentRequest(String courseId, String studentId) async {
     final courseRef =
@@ -782,6 +801,18 @@ class CourseInfoPage extends StatelessWidget {
       });
     } catch (error) {
       print('Error removing student request: $error');
+    }
+  }
+
+  void _launchGoogleMaps(String googleMapsLink) async {
+    try {
+      if (await canLaunch(googleMapsLink)) {
+        await launch(googleMapsLink);
+      } else {
+        print('Could not launch $googleMapsLink');
+      }
+    } catch (e) {
+      print('Error launching Google Maps: $e');
     }
   }
 }

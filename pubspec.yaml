@@ -43,6 +43,8 @@ dependencies:
   hexcolor: ^3.0.1
   font_awesome_flutter: ^10.4.0
   intl: ^0.18.1
+  url_launcher: ^6.1.12
+  maps_launcher: ^2.2.0
 
 
 dev_dependencies:
