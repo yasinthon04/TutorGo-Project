@@ -28,6 +28,7 @@ class _CreateCourseState extends State<CreateCourse> {
   List<DropdownMenuItem<String>> _provinceItems = []; // List of province items
   String? _selectedProvince = ''; // Selected province
   File? _imageFile;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -107,7 +108,7 @@ class _CreateCourseState extends State<CreateCourse> {
     try {
       String data = await rootBundle.loadString('lib/assets/provinces.json');
       List<dynamic> provincesData = json.decode(data);
-      print("Loaded province data: $provincesData"); // Debug print
+      // print("Loaded province data: $provincesData"); // Debug print
       setState(() {
         _provinceItems =
             provincesData.map<DropdownMenuItem<String>>((province) {
@@ -192,6 +193,7 @@ class _CreateCourseState extends State<CreateCourse> {
       if (pickedImage != null) {
         setState(() {
           _imageFile = File(pickedImage.path);
+          _selectedImage = File(pickedImage.path);
         });
         print("Image picked: ${_imageFile?.path}"); // Debug print
       }
@@ -232,174 +234,191 @@ class _CreateCourseState extends State<CreateCourse> {
               height: 75,
               child: HeaderWidget(75, false, Icons.house_rounded),
             ),
-            Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: _courseNameController,
-                    decoration: InputDecoration(labelText: 'Course Name'),
-                    validator: (value) {
-                      if (value!.trim().isEmpty) {
-                        return "Course Name cannot be empty";
-                      }
-                      if (value.length > 35) {
-                        return "Course Name should not exceed 35 characters";
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _contactInfoController,
-                    decoration:
-                        InputDecoration(labelText: 'Contact Information'),
-                    validator: (value) {
-                      if (value!.trim().isEmpty) {
-                        return "Contact Information cannot be empty";
-                      }
-                      if (value.length != 10) {
-                        return "Contact Information should be 10 digits";
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: addressController,
-                    decoration: InputDecoration(labelText: 'Address'),
-                    validator: (value) {
-                      if (value!.trim().isEmpty) {
-                        return "Address cannot be empty";
-                      }
-                      if (value.length > 35) {
-                        return "Address should not exceed 35 characters";
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller:
-                        _googleMapsLinkController, // Add a TextEditingController
-                    decoration: InputDecoration(
-                        labelText:
-                            'Google Maps Link(Example: https://goo.gl/maps/KiYNop6sMFmdZeM38)'),
-                    validator: (value) {
-                      if (value!.trim().isEmpty) {
-                        return "Google Maps Link cannot be empty";
-                      }
-                      // You can add more validation logic here if needed
-                      return null;
-                    },
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedCategory = newValue!;
-                      });
-                    },
-                    items:
-                        ['Math', 'Science', 'English', 'Social', 'Thai', 'Art']
-                            .map<DropdownMenuItem<String>>(
-                              (category) => DropdownMenuItem<String>(
-                                value: category,
-                                child: Text(category),
-                              ),
-                            )
-                            .toList(),
-                    decoration: InputDecoration(labelText: 'Select Category'),
-                  ),
-                  SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    value: _selectedProvince,
-                    onChanged: (newValue) {
-                      print("Selected province: $newValue"); // Debug print
-                      setState(() {
-                        _selectedProvince = newValue!;
-                      });
-                    },
-                    items: _provinceItems,
-                    decoration: InputDecoration(labelText: 'Select Province'),
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: priceController,
-                    decoration: InputDecoration(labelText: 'Price'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a price';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () => _pickImage(
-                        ImageSource.gallery), // Opens image picker from gallery
-                    child: Text(
-                      'Select Image',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: 50), // Add horizontal padding
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _courseNameController,
+                      decoration: InputDecoration(labelText: 'Course Name'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Course Name cannot be empty";
+                        }
+                        if (value.length > 35) {
+                          return "Course Name should not exceed 35 characters";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: _contactInfoController,
+                      decoration:
+                          InputDecoration(labelText: 'Contact Information'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Contact Information cannot be empty";
+                        }
+                        if (value.length != 10) {
+                          return "Contact Information should be 10 digits";
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: addressController,
+                      decoration: InputDecoration(labelText: 'Address'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Address cannot be empty";
+                        }
+                        if (value.length > 35) {
+                          return "Address should not exceed 35 characters";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller:
+                          _googleMapsLinkController, // Add a TextEditingController
+                      decoration: InputDecoration(
+                          labelText:
+                              'Google Maps Link(Example: https://goo.gl/maps/KiYNop6sMFmdZeM38)'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Google Maps Link cannot be empty";
+                        }
+                        // You can add more validation logic here if needed
+                        return null;
+                      },
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedCategory = newValue!;
+                        });
+                      },
+                      items: [
+                        'Math',
+                        'Science',
+                        'English',
+                        'Social',
+                        'Thai',
+                        'Art'
+                      ]
+                          .map<DropdownMenuItem<String>>(
+                            (category) => DropdownMenuItem<String>(
+                              value: category,
+                              child: Text(category),
+                            ),
+                          )
+                          .toList(),
+                      decoration: InputDecoration(labelText: 'Select Category'),
+                    ),
+                    SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      value: _selectedProvince,
+                      onChanged: (newValue) {
+                        print("Selected province: $newValue"); // Debug print
+                        setState(() {
+                          _selectedProvince = newValue!;
+                        });
+                      },
+                      items: _provinceItems,
+                      decoration: InputDecoration(labelText: 'Select Province'),
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: priceController,
+                      decoration: InputDecoration(labelText: 'Price'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a price';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    if (_selectedImage != null)
+                      Image.file(
+                        _selectedImage!,
+                        width: 200, // Adjust the width as needed
+                        height: 200, // Adjust the height as needed
+                      ),
+                    ElevatedButton(
+                      onPressed: () => _pickImage(ImageSource
+                          .gallery), // Opens image picker from gallery
+                      child: Text(
+                        'Select Image',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        primary: Theme.of(context).hintColor,
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      primary: Theme.of(context).hintColor,
+                    
+                    SizedBox(height: 10),
+                    Text('Select Days of the Week:'),
+                    Column(
+                      children: [
+                        _buildDayCheckBox('Sunday'),
+                        _buildDayCheckBox('Monday'),
+                        _buildDayCheckBox('Tuesday'),
+                        _buildDayCheckBox('Wednesday'),
+                        _buildDayCheckBox('Thursday'),
+                        _buildDayCheckBox('Friday'),
+                        _buildDayCheckBox('Saturday'),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  Text('Select Days of the Week:'),
-                  Column(
-                    children: [
-                      _buildDayCheckBox('Sunday'),
-                      _buildDayCheckBox('Monday'),
-                      _buildDayCheckBox('Tuesday'),
-                      _buildDayCheckBox('Wednesday'),
-                      _buildDayCheckBox('Thursday'),
-                      _buildDayCheckBox('Friday'),
-                      _buildDayCheckBox('Saturday'),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Text('Select Time Slots:'),
-                  for (int i = 0; i < 2; i++) _buildTimePicker(i),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton(
-                        onPressed: _submitForm,
-                        child: Text(
-                          'Save',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                    SizedBox(height: 10),
+                    Text('Select Time Slots:'),
+                    for (int i = 0; i < 2; i++) _buildTimePicker(i),
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _submitForm,
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.green,
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.green,
-                        ),
-                      ),
-                      SizedBox(width: 10), // Add spacing between buttons
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        SizedBox(width: 10), // Add spacing between buttons
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.red,
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

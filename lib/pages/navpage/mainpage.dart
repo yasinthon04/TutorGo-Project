@@ -4,6 +4,7 @@ import 'package:tutorgo/pages/navpage/account.dart';
 import 'package:tutorgo/pages/navpage/home.dart';
 import 'package:tutorgo/pages/navpage/schedule.dart';
 import 'package:tutorgo/pages/navpage/search.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -13,7 +14,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  List pages = [
+  List<Widget> pages = [
     HomePage(),
     SearchPage(),
     SchedulePage(),
@@ -21,29 +22,56 @@ class _MainPageState extends State<MainPage> {
   ];
   int currentIndex = 0;
 
-  void onTap(int index) {
-    setState(() {
-      currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: pages[currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        onTap: onTap,
-        currentIndex: currentIndex,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey.withOpacity(0.5),
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: "Schedule"),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "My Account"),
-        ],
-      ),
+      bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).hintColor,
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 6),
+            child: GNav(
+                backgroundColor: Colors.transparent, // Set this to transparent
+                color: Colors.white,
+                activeColor: Colors.white,
+                tabBackgroundColor:
+                    Theme.of(context).primaryColor, // Set this to transparent
+                gap: 8,
+                selectedIndex: currentIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    currentIndex = index;
+                  });
+                },
+                padding: EdgeInsets.all(12),
+                tabs: const [
+                  GButton(
+                    icon: Icons.home,
+                    text: 'Home',
+                  ),
+                  GButton(
+                    icon: Icons.search,
+                    text: 'Search',
+                  ),
+                  GButton(
+                    icon: Icons.calendar_today,
+                    text: 'Schedule',
+                  ),
+                  GButton(
+                    icon: Icons.person,
+                    text: 'Profile',
+                  ),
+                ]),
+          )),
     );
   }
 }
