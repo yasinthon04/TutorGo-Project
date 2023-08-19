@@ -213,19 +213,22 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 10),
-            StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance.collection('courses').snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final courseDocs = snapshot.data!.docs;
-                  return _buildAllCoursesGrid(courseDocs);
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  return CircularProgressIndicator(); // Display loading indicator
-                }
-              },
+            SingleChildScrollView(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('courses')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final courseDocs = snapshot.data!.docs;
+                    return _buildAllCoursesGrid(courseDocs);
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    return CircularProgressIndicator(); // Display loading indicator
+                  }
+                },
+              ),
             ),
             SizedBox(height: 20), // Add some extra space at the bottom
           ],
@@ -282,8 +285,15 @@ class _HomePageState extends State<HomePage> {
                   if (courseDocs.isNotEmpty) {
                     return CarouselSlider(
                       options: CarouselOptions(
-                        aspectRatio: 5 / 4, // Adjust as needed
-                        viewportFraction: 0.8, // Adjust as needed
+                        aspectRatio: 4 / 3,
+                        viewportFraction: 0.8,
+                        enlargeCenterPage: true,
+                        scrollDirection: Axis.horizontal,
+                        autoPlay: true,
+                        autoPlayInterval: Duration(seconds: 3),
+                        autoPlayAnimationDuration: Duration(milliseconds: 800),
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        enableInfiniteScroll: true,
                       ),
                       items: courseDocs.map((courseDoc) {
                         final courseData =
@@ -307,31 +317,42 @@ class _HomePageState extends State<HomePage> {
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(10.0),
-                            child: Card(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
                               child: Column(
                                 children: [
                                   Expanded(
-                                    child: Container(
-                                      height: 150,
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                        child: imageName.isNotEmpty
-                                            ? Image.network(
-                                                imageName,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Image.asset(
-                                                'assets/default_image.png',
-                                                fit: BoxFit.cover,
-                                              ),
-                                      ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10.0),
+                                      child: imageName.isNotEmpty
+                                          ? Image.network(
+                                              imageName,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.asset(
+                                              'assets/default_image.png',
+                                              fit: BoxFit.cover,
+                                            ),
                                     ),
                                   ),
                                   ListTile(
                                     title: Text(
                                       courseName,
                                       textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     subtitle: Text(
                                       'Price: $price',
@@ -453,70 +474,82 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAllCoursesGrid(List<QueryDocumentSnapshot> courseDocs) {
-    return SizedBox(
-      child: GridView.count(
-        crossAxisCount: 2, // Adjust as needed
-        childAspectRatio: 0.72, // Adjust as needed
-        shrinkWrap: true,
-        children: courseDocs.map((courseDoc) {
-          final courseData = courseDoc.data() as Map<String, dynamic>;
-          final courseName = courseData['courseName'] ?? '';
-          final imageName = courseData['imageName'] ?? '';
-          final price = courseData['price'] ?? '';
-          final userId = courseData['userId'] ?? '';
-          final courseId = courseDoc.id;
+    return GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.72,
+      ),
+      itemCount: courseDocs.length,
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(), // Disable GridView scrolling
+      itemBuilder: (context, index) {
+        final courseData = courseDocs[index].data() as Map<String, dynamic>;
+        final courseName = courseData['courseName'] ?? '';
+        final imageName = courseData['imageName'] ?? '';
+        final price = courseData['price'] ?? '';
+        final courseId = courseDocs[index].id;
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CourseInfoPage(
-                    courseData: courseData,
-                    courseId: courseId,
-                  ),
-                ),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Card(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 170,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10.0),
-                          child: imageName.isNotEmpty
-                              ? Image.network(
-                                  imageName,
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.asset(
-                                  'assets/default_image.png',
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                      ),
-                    ),
-                    ListTile(
-                      title: Text(
-                        courseName,
-                        textAlign: TextAlign.center,
-                      ),
-                      subtitle: Text(
-                        'Price: $price',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CourseInfoPage(
+                  courseData: courseData,
+                  courseId: courseId,
                 ),
               ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.0),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: Offset(0, 3), // changes position of shadow
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(10.0),
+                      ),
+                      child: imageName.isNotEmpty
+                          ? Image.network(
+                              imageName,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              'assets/default_image.png',
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                  ),
+                  ListTile(
+                    title: Text(
+                      courseName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text('Price: $price'),
+                  ),
+                ],
+              ),
             ),
-          );
-        }).toList(),
-      ),
+          ),
+        );
+      },
     );
   }
 }

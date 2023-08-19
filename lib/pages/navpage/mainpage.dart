@@ -40,37 +40,38 @@ class _MainPageState extends State<MainPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 6),
             child: GNav(
-                backgroundColor: Colors.transparent, // Set this to transparent
-                color: Colors.white,
-                activeColor: Colors.white,
-                tabBackgroundColor:
-                    Theme.of(context).primaryColor, // Set this to transparent
-                gap: 8,
-                selectedIndex: currentIndex,
-                onTabChange: (index) {
-                  setState(() {
-                    currentIndex = index;
-                  });
-                },
-                padding: EdgeInsets.all(12),
-                tabs: const [
-                  GButton(
-                    icon: Icons.home,
-                    text: 'Home',
-                  ),
-                  GButton(
-                    icon: Icons.search,
-                    text: 'Search',
-                  ),
-                  GButton(
-                    icon: Icons.calendar_today,
-                    text: 'Schedule',
-                  ),
-                  GButton(
-                    icon: Icons.person,
-                    text: 'Profile',
-                  ),
-                ]),
+              backgroundColor: Colors.transparent, // Set this to transparent
+              color: Colors.white,
+              activeColor: Colors.white, // Change active button color here
+              tabBackgroundColor:
+                  Theme.of(context).highlightColor, // Set this to transparent
+              gap: 8,
+              selectedIndex: currentIndex,
+              onTabChange: (index) {
+                setState(() {
+                  currentIndex = index;
+                });
+              },
+              padding: EdgeInsets.all(12),
+              tabs: const [
+                GButton(
+                  icon: Icons.home,
+                  text: 'Home',
+                ),
+                GButton(
+                  icon: Icons.search,
+                  text: 'Search',
+                ),
+                GButton(
+                  icon: Icons.calendar_today,
+                  text: 'Schedule',
+                ),
+                GButton(
+                  icon: Icons.person,
+                  text: 'Profile',
+                ),
+              ],
+            ),
           )),
     );
   }
