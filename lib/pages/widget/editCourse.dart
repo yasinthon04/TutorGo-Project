@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:flutter/widgets.dart' show NetworkImage;
 
@@ -43,7 +44,6 @@ class _EditCourseState extends State<EditCourse> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _courseNameController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
-  TextEditingController _priceController = TextEditingController();
   TextEditingController _contactInfoController = TextEditingController();
   String _selectedCategory = ''; // Default category
   List<String> _selectedDays = []; // Store selected days of the week
@@ -51,13 +51,14 @@ class _EditCourseState extends State<EditCourse> {
   List<DropdownMenuItem<String>> _provinceItems = []; // List of province items
   String? _selectedProvince = ''; // Set an initial value
   File? _imageFile;
+  double _selectedPrice = 0;
 
   @override
   void initState() {
     _loadCourseData();
     _courseNameController = TextEditingController(text: widget.CourseName);
     _addressController = TextEditingController(text: widget.Address);
-    _priceController = TextEditingController(text: widget.Price);
+    _selectedPrice = double.tryParse(widget.Price) ?? 0;
     _contactInfoController = TextEditingController(text: widget.ContactInfo);
     _imageFile = File(widget.CourseImage);
     _selectedCategory = widget.Category;
@@ -81,7 +82,6 @@ class _EditCourseState extends State<EditCourse> {
   void dispose() {
     _courseNameController.dispose();
     _addressController.dispose();
-    _priceController.dispose();
     _contactInfoController.dispose();
 
     super.dispose();
@@ -114,7 +114,7 @@ class _EditCourseState extends State<EditCourse> {
       _courseNameController =
           TextEditingController(text: courseData['courseName']);
       _addressController = TextEditingController(text: courseData['address']);
-      _priceController = TextEditingController(text: courseData['price']);
+      _selectedPrice = double.tryParse(courseData['price']) ?? 0;
       _contactInfoController =
           TextEditingController(text: courseData['contactInfo']);
       _selectedProvince = courseData['province'];
@@ -133,7 +133,10 @@ class _EditCourseState extends State<EditCourse> {
       String courseName = _courseNameController.text;
       String contactInfo = _contactInfoController.text;
       String address = _addressController.text;
-      String price = _priceController.text;
+      String selectedPriceText = NumberFormat.currency(
+        locale: 'en_US', // Change locale as needed
+        symbol: '฿',
+      ).format(_selectedPrice);
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
@@ -167,7 +170,7 @@ class _EditCourseState extends State<EditCourse> {
             'address': address,
             'category': _selectedCategory,
             'province': _selectedProvince,
-            'price': price,
+            'price': selectedPriceText,
             'date': _selectedDays,
             'time': timeData,
             'imageName': imageUrl,
@@ -244,32 +247,33 @@ class _EditCourseState extends State<EditCourse> {
   }
 
   Widget _buildDayCheckBox(String day) {
-  final isSelected = _selectedDays.contains(day);
-  return Row(
-    children: [
-      Checkbox(
-        value: isSelected,
-        onChanged: (value) {
-          setState(() {
-            if (value!) {
-              _selectedDays.add(day);
-            } else {
-              _selectedDays.remove(day);
-            }
-          });
-        },
-        activeColor: isSelected ? Colors.green : Colors.grey, // Change color here
-      ),
-      Text(
-        day,
-        style: TextStyle(
-          color: isSelected ? Colors.green : Colors.black, // Change color here
+    final isSelected = _selectedDays.contains(day);
+    return Row(
+      children: [
+        Checkbox(
+          value: isSelected,
+          onChanged: (value) {
+            setState(() {
+              if (value!) {
+                _selectedDays.add(day);
+              } else {
+                _selectedDays.remove(day);
+              }
+            });
+          },
+          activeColor:
+              isSelected ? Colors.green : Colors.grey, // Change color here
         ),
-      ),
-    ],
-  );
-}
-
+        Text(
+          day,
+          style: TextStyle(
+            color:
+                isSelected ? Colors.green : Colors.black, // Change color here
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildTimePicker(int index) {
     return Row(
@@ -445,15 +449,32 @@ class _EditCourseState extends State<EditCourse> {
                       decoration: InputDecoration(labelText: 'Select Province'),
                     ),
                     SizedBox(height: 10),
-                    TextFormField(
-                      controller: _priceController,
-                      decoration: InputDecoration(labelText: 'Price'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a price';
-                        }
-                        return null;
+                    Slider(
+                      value: _selectedPrice,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedPrice = newValue;
+                        });
                       },
+                      min: 0,
+                      max: 9999,
+                      divisions: 9999,
+                      label: NumberFormat.currency(
+                        locale: 'en_US', // Change locale as needed
+                        symbol: '฿',
+                      ).format(_selectedPrice),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      _selectedPrice != null
+                          ? NumberFormat.currency(
+                              locale: 'en_US', // Change locale as needed
+                              symbol: '฿',
+                              decimalDigits: 0, // Display 0 decimal digits
+                            ).format(_selectedPrice)
+                          : '0 ฿',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 10),
                     Container(
