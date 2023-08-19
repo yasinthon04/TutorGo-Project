@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -279,11 +280,12 @@ class _HomePageState extends State<HomePage> {
 
                   final courseDocs = snapshot.data?.docs ?? [];
                   if (courseDocs.isNotEmpty) {
-                    return GridView.count(
-                      crossAxisCount: 2, // Adjust as needed
-                      childAspectRatio: 0.72, // Adjust as needed
-                      shrinkWrap: true,
-                      children: courseDocs.map((courseDoc) {
+                    return CarouselSlider(
+                      options: CarouselOptions(
+                        aspectRatio: 5 / 4, // Adjust as needed
+                        viewportFraction: 0.8, // Adjust as needed
+                      ),
+                      items: courseDocs.map((courseDoc) {
                         final courseData =
                             courseDoc.data() as Map<String, dynamic>;
                         final courseName = courseData['courseName'] ?? '';
@@ -310,7 +312,7 @@ class _HomePageState extends State<HomePage> {
                                 children: [
                                   Expanded(
                                     child: Container(
-                                      height: 170,
+                                      height: 150,
                                       child: ClipRRect(
                                         borderRadius:
                                             BorderRadius.circular(10.0),

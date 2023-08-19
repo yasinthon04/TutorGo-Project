@@ -16,6 +16,7 @@ class _SearchPageState extends State<SearchPage> {
   bool _showCategories = true;
   List<String> _provinces = []; // List to store provinces
   String _selectedProvince = 'Bangkok'; // Currently selected province
+  String _selectedCategory = '';
 
   @override
   void initState() {
@@ -152,9 +153,13 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildCategoryCard(BuildContext context, String category) {
+    final isSelected =
+        category == _selectedCategory; // Check if the category is selected
+
     return GestureDetector(
       onTap: () {
         setState(() {
+          _selectedCategory = category; // Update the selected category
           _searchStream = FirebaseFirestore.instance
               .collection('courses')
               .where('category', isEqualTo: category)
@@ -170,10 +175,15 @@ class _SearchPageState extends State<SearchPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).hintColor,
-              ], // Adjust gradient colors as needed
+              colors: isSelected
+                  ? [
+                      Colors.blue, // Change to the desired selected colors
+                      Colors.green,
+                    ]
+                  : [
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).hintColor,
+                    ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
