@@ -310,64 +310,65 @@ class CourseInfoPage extends StatelessWidget {
                 ),
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (isEnrolled) {
-                  _showCancelConfirmation(
-                      context, courseId); // Show cancel confirmation dialog
-                } else if (isStudent &&
-                    !(courseData['requestedStudents'] ?? [])
+            if (!isCurrentUserCourseCreator)
+              ElevatedButton(
+                onPressed: () {
+                  if (isEnrolled) {
+                    _showCancelConfirmation(
+                        context, courseId); // Show cancel confirmation dialog
+                  } else if (isStudent &&
+                      !(courseData['requestedStudents'] ?? [])
+                          .contains(user!.uid)) {
+                    // Check if the student has already requested enrollment
+                    if ((courseData['requestedStudents'] ?? [])
                         .contains(user!.uid)) {
-                  // Check if the student has already requested enrollment
-                  if ((courseData['requestedStudents'] ?? [])
-                      .contains(user!.uid)) {
-                    // Show a "Waiting..." dialog or message
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('Waiting for Confirmation'),
-                          content: Text(
-                              'Your enrollment request is pending confirmation.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text('OK'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  } else {
-                    // Show the enroll confirmation dialog
-                    _showEnrollConfirmation(context, courseId);
+                      // Show a "Waiting..." dialog or message
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Waiting for Confirmation'),
+                            content: Text(
+                                'Your enrollment request is pending confirmation.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Text('OK'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    } else {
+                      // Show the enroll confirmation dialog
+                      _showEnrollConfirmation(context, courseId);
+                    }
                   }
-                }
-              },
-              child: Text(
-                // Update the button text based on whether a request is pending
-                (courseData['requestedStudents'] ?? []).contains(user!.uid)
-                    ? 'Waiting for Tutor confirm...'
-                    : isEnrolled
-                        ? 'Cancel Enrollment'
-                        : 'Enroll',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                },
+                child: Text(
+                  // Update the button text based on whether a request is pending
+                  (courseData['requestedStudents'] ?? []).contains(user!.uid)
+                      ? 'Waiting for Tutor confirm...'
+                      : isEnrolled
+                          ? 'Cancel Enrollment'
+                          : 'Enroll',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: (courseData['requestedStudents'] ?? [])
+                          .contains(user!.uid)
+                      ? Colors
+                          .grey // Show a different color for the "Waiting..." state
+                      : isEnrolled
+                          ? Colors.red
+                          : Theme.of(context).hintColor,
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                primary: (courseData['requestedStudents'] ?? [])
-                        .contains(user!.uid)
-                    ? Colors
-                        .grey // Show a different color for the "Waiting..." state
-                    : isEnrolled
-                        ? Colors.red
-                        : Theme.of(context).hintColor,
-              ),
-            ),
             if (isStudent && isEnrolled)
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -826,7 +827,8 @@ class CourseInfoPage extends StatelessWidget {
                               title: Text(studentName),
                               trailing: IconButton(
                                 onPressed: () {
-                                  _confirmDeleteStudent(context, courseId, studentId);
+                                  _confirmDeleteStudent(
+                                      context, courseId, studentId);
                                 },
                                 icon: Icon(Icons.delete),
                                 color: Colors.red,
@@ -860,74 +862,69 @@ class CourseInfoPage extends StatelessWidget {
       );
     }
   }
-  void _confirmDeleteStudent(BuildContext context, String courseId, String studentId) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete this student?'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-            },
-            child: Text(
-                  'Cancel',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+
+  void _confirmDeleteStudent(
+      BuildContext context, String courseId, String studentId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Delete'),
+          content: Text('Are you sure you want to delete this student?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-                style: ElevatedButton.styleFrom(
-                  primary: Theme.of(context).hintColor,
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).hintColor,
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                await _deleteStudent(courseId, studentId, () {});
+              },
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop(); // Close the dialog
-              await _deleteStudent(courseId, studentId, () {
-                
-              });
-            },
-            child: Text(
-                  'Delete',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.red
-                ),
-          ),
-        ],
-      );
-    },
-  );
-}
+              ),
+              style: ElevatedButton.styleFrom(primary: Colors.red),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
+  Future<void> _deleteStudent(
+      String courseId, String studentId, VoidCallback refreshCallback) async {
+    // Remove the student from the enrolled students list in the course document
+    await FirebaseFirestore.instance
+        .collection('courses')
+        .doc(courseId)
+        .update({
+      'enrolledStudents': FieldValue.arrayRemove([studentId]),
+    });
 
+    // Remove the enrolled course from the user's data
+    await FirebaseFirestore.instance.collection('users').doc(studentId).update({
+      'enrolledCourses': FieldValue.arrayRemove([courseId]),
+    });
 
-  Future<void> _deleteStudent(String courseId, String studentId, VoidCallback refreshCallback) async {
-  // Remove the student from the enrolled students list in the course document
-  await FirebaseFirestore.instance
-      .collection('courses')
-      .doc(courseId)
-      .update({
-    'enrolledStudents': FieldValue.arrayRemove([studentId]),
-  });
-
-  // Remove the enrolled course from the user's data
-  await FirebaseFirestore.instance.collection('users').doc(studentId).update({
-    'enrolledCourses': FieldValue.arrayRemove([courseId]),
-  });
-
-  // Call the refresh callback to update the UI
-  refreshCallback();
-}
-
-  
+    // Call the refresh callback to update the UI
+    refreshCallback();
+  }
 
   void _confirmStudentRequest(String courseId, String studentId) async {
     final courseRef =
