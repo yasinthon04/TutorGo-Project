@@ -17,9 +17,10 @@ class EditCourse extends StatefulWidget {
   final String CourseId;
   final String CourseName;
   final String Address;
-  final String Price;
+  final double Price;
   final String ContactInfo;
   final String Province;
+  final int MaxStudents;
   final String CourseImage;
   final String Category;
   final List<String> Days;
@@ -32,6 +33,7 @@ class EditCourse extends StatefulWidget {
     required this.Price,
     required this.ContactInfo,
     required this.Province,
+    required this.MaxStudents,
     required this.CourseImage,
     required this.Category,
     required this.Days,
@@ -47,6 +49,7 @@ class _EditCourseState extends State<EditCourse> {
   TextEditingController _courseNameController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
   TextEditingController _contactInfoController = TextEditingController();
+  TextEditingController _maxStudentsController = TextEditingController();
   String _selectedCategory = ''; // Default category
   List<String> _selectedDays = []; // Store selected days of the week
   List<TimeOfDay> _selectedTimes = []; // Store selected time slots
@@ -54,14 +57,18 @@ class _EditCourseState extends State<EditCourse> {
   String? _selectedProvince = ''; // Set an initial value
   File? _imageFile;
   double _selectedPrice = 0;
+  List<String> _enrolledStudents = [];
 
   @override
   void initState() {
     _loadCourseData();
     _courseNameController = TextEditingController(text: widget.CourseName);
     _addressController = TextEditingController(text: widget.Address);
-    _selectedPrice = double.tryParse(widget.Price) ?? 0;
+    _selectedPrice = widget.Price;
     _contactInfoController = TextEditingController(text: widget.ContactInfo);
+    _maxStudentsController =
+        TextEditingController(text: widget.MaxStudents.toString());
+
     _imageFile = File(widget.CourseImage);
     _selectedCategory = widget.Category;
     _selectedDays = List<String>.from(widget.Days); // No need for split
@@ -99,6 +106,7 @@ class _EditCourseState extends State<EditCourse> {
 
     Map<String, dynamic> courseData =
         courseSnapshot.data() as Map<String, dynamic>;
+        _enrolledStudents = List<String>.from(courseData['enrolledStudents']);
     String imageUrl = courseData['imageName']; // Get the existing image URL
 
     // Create a temporary File object to hold the image
@@ -116,7 +124,11 @@ class _EditCourseState extends State<EditCourse> {
       _courseNameController =
           TextEditingController(text: courseData['courseName']);
       _addressController = TextEditingController(text: courseData['address']);
-      _selectedPrice = double.tryParse(courseData['price']) ?? 0;
+      String priceString = courseData['price'];
+      priceString = priceString.replaceAll(RegExp(r'[^\d.]'),
+          ''); // Remove all non-numeric characters except decimal point
+      _selectedPrice = double.tryParse(priceString) ?? 0;
+
       _contactInfoController =
           TextEditingController(text: courseData['contactInfo']);
       _selectedProvince = courseData['province'];
@@ -124,6 +136,9 @@ class _EditCourseState extends State<EditCourse> {
       _selectedCategory = courseData['category'];
       _selectedDays = List<String>.from(courseData['date']);
       _selectedTimes = _convertTimeMapListToTimeOfDayList(courseData['time']);
+      _maxStudentsController =
+          TextEditingController(text: courseData['maxStudents'].toString());
+      
     });
   }
 
@@ -142,8 +157,9 @@ class _EditCourseState extends State<EditCourse> {
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
-      List<String> enrolledStudents = [];
+      List<String> enrolledStudents = List<String>.from(_enrolledStudents);
       List<String> requestedStudents = [];
+      int maxStudents = int.tryParse(_maxStudentsController.text ?? '0') ?? 0;
 
       // Update image if selected
       String imageUrl = widget.CourseImage; // Get the existing image URL
@@ -159,7 +175,6 @@ class _EditCourseState extends State<EditCourse> {
       } else {
         print("Image file does not exist or is null.");
       }
-      String currentCourseId = widget.CourseId;
       if (_selectedProvince != null && _selectedProvince!.isNotEmpty) {
         // Update the course data in Firestore
         try {
@@ -179,6 +194,7 @@ class _EditCourseState extends State<EditCourse> {
             'userId': FirebaseAuth.instance.currentUser?.uid,
             'enrolledStudents': enrolledStudents,
             'requestedStudents': requestedStudents,
+            'maxStudents': maxStudents
           });
         } catch (error) {
           print('Firestore Update Error: $error');
@@ -465,6 +481,25 @@ class _EditCourseState extends State<EditCourse> {
                       },
                       items: _provinceItems, // Use the populated list here
                       decoration: InputDecoration(labelText: 'Select Province'),
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: _maxStudentsController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Maximum number of students in course',
+                      ),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Maximum Number of Students cannot be empty";
+                        }
+                        int maxStudents = int.tryParse(value ?? '0') ?? 0;
+
+                        if (maxStudents == null || maxStudents <= 0) {
+                          return "Please enter a valid maximum number";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 10),
                     Slider(
