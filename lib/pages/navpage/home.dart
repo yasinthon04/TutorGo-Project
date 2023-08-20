@@ -110,45 +110,6 @@ class _HomePageState extends State<HomePage> {
                   final userRole = userData['role'];
                   final enrolledCourseIds =
                       List<String>.from(userData['enrolledCourses'] ?? []);
-
-                  // if (userRole == 'Tutor') {
-                  //   return Column(
-                  //     crossAxisAlignment: CrossAxisAlignment.start,
-                  //     children: [
-                  //       Align(
-                  //         alignment: Alignment.centerLeft,
-                  //         child: Padding(
-                  //           padding: const EdgeInsets.only(left: 15.0),
-                  //           child: Text(
-                  //             'My Courses',
-                  //             style: TextStyle(
-                  //               color: Colors.black,
-                  //               fontSize: 22,
-                  //               fontWeight: FontWeight.bold,
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //       SizedBox(height: 10),
-                  //       if (enrolledCourseIds.isNotEmpty)
-                  //         _buildEnrolledCoursesGrid(
-                  //             user!.uid, enrolledCourseIds)
-                  //       else
-                  //         Padding(
-                  //           padding: const EdgeInsets.all(15.0),
-                  //           child: Text(
-                  //             "You don't have your own course",
-                  //             style: TextStyle(
-                  //               color: Colors.black,
-                  //               fontSize: 16,
-                  //             ),
-                  //             textAlign: TextAlign.left,
-                  //           ),
-                  //         ),
-                  //     ],
-                  //   );
-                  // }
-
                   if (userRole == 'Student') {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +247,7 @@ class _HomePageState extends State<HomePage> {
                     return CarouselSlider(
                       options: CarouselOptions(
                         aspectRatio: 4 / 3,
-                        viewportFraction: 0.8,
+                        viewportFraction: 0.6,
                         enlargeCenterPage: true,
                         scrollDirection: Axis.horizontal,
                         autoPlay: true,
@@ -402,11 +363,19 @@ class _HomePageState extends State<HomePage> {
             return enrolledCourseIds.contains(courseId);
           }).toList();
 
-          return GridView.count(
-            crossAxisCount: 2,
-            childAspectRatio: 0.72,
-            shrinkWrap: true,
-            children: enrolledCourses.map((courseDoc) {
+          return CarouselSlider(
+            options: CarouselOptions(
+              aspectRatio: 4 / 3,
+              viewportFraction: 0.6,
+              enlargeCenterPage: true,
+              scrollDirection: Axis.horizontal,
+              autoPlay: true,
+              autoPlayInterval: Duration(seconds: 3),
+              autoPlayAnimationDuration: Duration(milliseconds: 800),
+              autoPlayCurve: Curves.fastOutSlowIn,
+              enableInfiniteScroll: true,
+            ),
+            items: enrolledCourses.map((courseDoc) {
               final courseData = courseDoc.data() as Map<String, dynamic>;
               final courseName = courseData['courseName'] ?? '';
               final imageName = courseData['imageName'] ?? '';
@@ -427,30 +396,42 @@ class _HomePageState extends State<HomePage> {
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child: Card(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.5),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       children: [
                         Expanded(
-                          child: Container(
-                            height: 170,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10.0),
-                              child: imageName.isNotEmpty
-                                  ? Image.network(
-                                      imageName,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.asset(
-                                      'assets/default_image.png',
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10.0),
+                            child: imageName.isNotEmpty
+                                ? Image.network(
+                                    imageName,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.asset(
+                                    'assets/default_image.png',
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                         ListTile(
                           title: Text(
                             courseName,
                             textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           subtitle: Text(
                             'Price: $price',
