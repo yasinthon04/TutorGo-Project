@@ -11,6 +11,8 @@ import 'package:intl/intl.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:flutter/widgets.dart' show NetworkImage;
 
+import '../navpage/courseInfoPage.dart';
+
 class EditCourse extends StatefulWidget {
   final String CourseId;
   final String CourseName;
@@ -185,8 +187,24 @@ class _EditCourseState extends State<EditCourse> {
         print("Selected province is null or empty.");
       }
 
-      // Close the dialog
-      Navigator.pop(context);
+      DocumentSnapshot courseSnapshot = await FirebaseFirestore.instance
+          .collection('courses')
+          .doc(widget.CourseId)
+          .get();
+      Map<String, dynamic> updatedCourseData =
+          courseSnapshot.data() as Map<String, dynamic>;
+
+      // Close the dialog and reload the CourseInfoPage
+      Navigator.pop(context); // Close the edit form dialog
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CourseInfoPage(
+            courseId: widget.CourseId,
+            courseData: updatedCourseData, // Pass the updated courseData
+          ),
+        ),
+      );
     }
   }
 

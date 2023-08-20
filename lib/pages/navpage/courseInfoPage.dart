@@ -13,10 +13,18 @@ import '../../auth.dart';
 import '../widget/comment.dart';
 import '../widget/commentStream.dart';
 
-class CourseInfoPage extends StatelessWidget {
+class CourseInfoPage extends StatefulWidget {
   final User? user = Auth().currentUser;
   final Map<String, dynamic> courseData;
   final String courseId;
+  CourseInfoPage({required this.courseData, required this.courseId});
+
+  @override
+  _CourseInfoPageState createState() => _CourseInfoPageState();
+}
+
+class _CourseInfoPageState extends State<CourseInfoPage> {
+  bool isWaitingForConfirmation = false;
   final TextEditingController _commentController = TextEditingController();
   List<Comment> courseComments = [];
 
@@ -33,10 +41,8 @@ class CourseInfoPage extends StatelessWidget {
     return formattedTime;
   }
 
-  CourseInfoPage({required this.courseData, required this.courseId});
-
   void _viewTutorInformation(BuildContext context) async {
-    final String userId = courseData['userId'];
+    final String userId = widget.courseData['userId'];
 
     final tutorSnapshot =
         await FirebaseFirestore.instance.collection('users').doc(userId).get();
@@ -99,23 +105,25 @@ class CourseInfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String courseName = courseData['courseName'] ?? '';
-    final String address = courseData['address'] ?? '';
-    final String price = courseData['price'] ?? '';
-    final String contactInfo = courseData['contactInfo'] ?? '';
-    final String province = courseData['province'] ?? '';
-    final String userId = courseData['userId'] ?? '';
-    final String courseImage = courseData['imageName'] ?? '';
-    final String category = courseData['category'] ?? '';
-    final List<String> days = List<String>.from(courseData['date'] ?? []);
+    final String courseName = widget.courseData['courseName'] ?? '';
+    final String address = widget.courseData['address'] ?? '';
+    final String price = widget.courseData['price'] ?? '';
+    final String contactInfo = widget.courseData['contactInfo'] ?? '';
+    final String province = widget.courseData['province'] ?? '';
+    final String userId = widget.courseData['userId'] ?? '';
+    final String courseImage = widget.courseData['imageName'] ?? '';
+    final String category = widget.courseData['category'] ?? '';
+    final List<String> days =
+        List<String>.from(widget.courseData['date'] ?? []);
     final List<Map<String, dynamic>> times =
-        List<Map<String, dynamic>>.from(courseData['time'] ?? []);
+        List<Map<String, dynamic>>.from(widget.courseData['time'] ?? []);
     final User? user = Auth().currentUser;
     final bool isCurrentUserCourseCreator = userId == user?.uid;
     final bool isStudent = user != null && !isCurrentUserCourseCreator;
-    final bool isEnrolled =
-        isStudent && (courseData['enrolledStudents'] ?? []).contains(user!.uid);
-    print('courseId: $courseId');
+    final bool isEnrolled = isStudent &&
+        (widget.courseData['enrolledStudents'] ?? []).contains(user!.uid);
+    int requestedStudentsCount =
+        widget.courseData['requestedStudents']?.length ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -144,7 +152,7 @@ class CourseInfoPage extends StatelessWidget {
               onPressed: () {
                 _showEditCourseDialog(
                   context,
-                  courseId,
+                  widget.courseId,
                   courseName,
                   address,
                   price,
@@ -163,7 +171,7 @@ class CourseInfoPage extends StatelessWidget {
               onPressed: () async {
                 final courseSnapshot = await FirebaseFirestore.instance
                     .collection('courses')
-                    .doc(courseId)
+                    .doc(widget.courseId)
                     .get();
 
                 final courseData =
@@ -191,15 +199,39 @@ class CourseInfoPage extends StatelessWidget {
                     },
                   );
                 } else {
-                  _showDeleteCourseDialog(context, courseId, courseName);
+                  _showDeleteCourseDialog(context, widget.courseId, courseName);
                 }
               },
             ),
           if (isCurrentUserCourseCreator)
             IconButton(
-              icon: Icon(Icons.view_list),
+              icon: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(Icons.view_list),
+                  if (requestedStudentsCount > 0)
+                    Positioned(
+                      top: -2,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.red, // Customize the color
+                        ),
+                        child: Text(
+                          requestedStudentsCount.toString(),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               onPressed: () {
-                _viewListAndRequestOfStudents(context, courseId);
+                _viewListAndRequestOfStudents(context, widget.courseId);
               },
             ),
         ],
@@ -214,9 +246,9 @@ class CourseInfoPage extends StatelessWidget {
               child: HeaderWidget(75, false, Icons.house_rounded),
             ),
 
-            if (courseData['imageName'].isNotEmpty)
+            if (widget.courseData['imageName'].isNotEmpty)
               Image.network(
-                courseData['imageName'],
+                widget.courseData['imageName'],
                 height: 200,
                 width: 200,
                 fit: BoxFit.cover,
@@ -236,10 +268,11 @@ class CourseInfoPage extends StatelessWidget {
             SizedBox(height: 10),
             GestureDetector(
               onTap: () {
-                if (courseData['googleMapsLink'] != null &&
-                    courseData['googleMapsLink'].isNotEmpty) {
-                  print('Google Maps Link: ${courseData['googleMapsLink']}');
-                  launch(courseData['googleMapsLink']);
+                if (widget.courseData['googleMapsLink'] != null &&
+                    widget.courseData['googleMapsLink'].isNotEmpty) {
+                  print(
+                      'Google Maps Link: ${widget.courseData['googleMapsLink']}');
+                  launch(widget.courseData['googleMapsLink']);
                 }
               },
               child: Text(
@@ -312,15 +345,13 @@ class CourseInfoPage extends StatelessWidget {
             ),
             if (!isCurrentUserCourseCreator)
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (isEnrolled) {
-                    _showCancelConfirmation(
-                        context, courseId); // Show cancel confirmation dialog
+                    _showCancelConfirmation(context, widget.courseId);
                   } else if (isStudent &&
-                      !(courseData['requestedStudents'] ?? [])
+                      !(widget.courseData['requestedStudents'] ?? [])
                           .contains(user!.uid)) {
-                    // Check if the student has already requested enrollment
-                    if ((courseData['requestedStudents'] ?? [])
+                    if ((widget.courseData['requestedStudents'] ?? [])
                         .contains(user!.uid)) {
                       // Show a "Waiting..." dialog or message
                       showDialog(
@@ -329,7 +360,8 @@ class CourseInfoPage extends StatelessWidget {
                           return AlertDialog(
                             title: Text('Waiting for Confirmation'),
                             content: Text(
-                                'Your enrollment request is pending confirmation.'),
+                              'Your enrollment request is pending confirmation.',
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () {
@@ -343,13 +375,23 @@ class CourseInfoPage extends StatelessWidget {
                       );
                     } else {
                       // Show the enroll confirmation dialog
-                      _showEnrollConfirmation(context, courseId);
+                      bool shouldEnroll = await _showEnrollConfirmation(
+                          context, widget.courseId);
+
+                      if (shouldEnroll) {
+                        setState(() {
+                          widget.courseData['requestedStudents'] ??= [];
+                          widget.courseData['requestedStudents']!
+                              .add(user!.uid);
+                        });
+                      }
                     }
                   }
                 },
                 child: Text(
                   // Update the button text based on whether a request is pending
-                  (courseData['requestedStudents'] ?? []).contains(user!.uid)
+                  (widget.courseData['requestedStudents'] ?? [])
+                          .contains(user!.uid)
                       ? 'Waiting for Tutor confirm...'
                       : isEnrolled
                           ? 'Cancel Enrollment'
@@ -360,15 +402,15 @@ class CourseInfoPage extends StatelessWidget {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  primary: (courseData['requestedStudents'] ?? [])
+                  primary: (widget.courseData['requestedStudents'] ?? [])
                           .contains(user!.uid)
-                      ? Colors
-                          .grey // Show a different color for the "Waiting..." state
+                      ? Colors.grey
                       : isEnrolled
                           ? Colors.red
                           : Theme.of(context).hintColor,
                 ),
               ),
+
             if (isStudent && isEnrolled)
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -406,15 +448,16 @@ class CourseInfoPage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 10),
-            CommentStream(courseId: courseId),
+            CommentStream(courseId: widget.courseId),
           ],
         ),
       ),
     );
   }
 
-  void _showEnrollConfirmation(BuildContext context, String courseId) {
-    showDialog(
+  Future<bool> _showEnrollConfirmation(
+      BuildContext context, String courseId) async {
+    return await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -423,8 +466,8 @@ class CourseInfoPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                _requestEnrollInCourse(context, courseId);
+                Navigator.pop(
+                    context, true); // Return true when Enroll is pressed
               },
               child: Text(
                 'Enroll',
@@ -439,7 +482,8 @@ class CourseInfoPage extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(
+                    context, false); // Return false when Cancel is pressed
               },
               child: Text(
                 'Cancel',
@@ -449,8 +493,7 @@ class CourseInfoPage extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                primary:
-                    Theme.of(context).hintColor, // Set the button color here
+                primary: Theme.of(context).hintColor,
               ),
             ),
           ],
@@ -507,8 +550,8 @@ class CourseInfoPage extends StatelessWidget {
   }
 
   void _enrollInCourse(BuildContext context, String courseId) async {
-    if (user != null) {
-      final studentId = user!.uid;
+    if (widget.user != null) {
+      final studentId = widget.user!.uid;
 
       try {
         final studentRef =
@@ -529,8 +572,8 @@ class CourseInfoPage extends StatelessWidget {
   }
 
   void _cancelEnrollment(BuildContext context, String courseId) async {
-    if (user != null) {
-      final studentId = user!.uid;
+    if (widget.user != null) {
+      final studentId = widget.user!.uid;
 
       try {
         final studentRef =
@@ -594,15 +637,15 @@ class CourseInfoPage extends StatelessWidget {
         return DeleteCourse(
           CourseId: courseId,
           CourseName: courseName,
-          userId: user?.uid ?? '',
+          userId: widget.user?.uid ?? '',
         );
       },
     );
   }
 
   void _addComment(BuildContext context, String commentContent) async {
-    if (user != null) {
-      final String studentId = user!.uid;
+    if (widget.user != null) {
+      final String studentId = widget.user!.uid;
 
       try {
         // Fetch the user's first name
@@ -621,8 +664,9 @@ class CourseInfoPage extends StatelessWidget {
           );
 
           // Add the comment to Firebase
-          final courseRef =
-              FirebaseFirestore.instance.collection('courses').doc(courseId);
+          final courseRef = FirebaseFirestore.instance
+              .collection('courses')
+              .doc(widget.courseId);
 
           final commentDoc = courseRef.collection('comments').doc();
           await commentDoc.set({
@@ -647,8 +691,8 @@ class CourseInfoPage extends StatelessWidget {
 
   void _requestEnrollInCourse(
       BuildContext parentContext, String courseId) async {
-    if (user != null) {
-      final studentId = user!.uid;
+    if (widget.user != null) {
+      final studentId = widget.user!.uid;
 
       try {
         final studentRef =
