@@ -19,8 +19,8 @@ class _CreateCourseState extends State<CreateCourse> {
   final TextEditingController _courseNameController = TextEditingController();
   final TextEditingController _contactInfoController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
-  final TextEditingController _googleMapsLinkController =
-      TextEditingController();
+  final TextEditingController _googleMapsLinkController = TextEditingController();
+  final TextEditingController _maxStudentsController = TextEditingController();
 
   String _selectedCategory = 'Math'; // Default category
   List<String> _selectedDays = []; // Store selected days of the week
@@ -63,6 +63,7 @@ class _CreateCourseState extends State<CreateCourse> {
           _convertTimeOfDayList(_selectedTimes);
       List<String> enrolledStudents = [];
       List<String> requestedStudents = [];
+      int maxStudents = int.tryParse(_maxStudentsController.text ?? '0') ?? 0;
       String selectedPriceText = NumberFormat.currency(
         locale: 'en_US', // Change locale as needed
         symbol: '฿',
@@ -94,6 +95,7 @@ class _CreateCourseState extends State<CreateCourse> {
           'userId': FirebaseAuth.instance.currentUser?.uid,
           'enrolledStudents': enrolledStudents,
           'requestedStudents': requestedStudents,
+          'maxStudents': maxStudents
         });
       }
 
@@ -339,6 +341,25 @@ class _CreateCourseState extends State<CreateCourse> {
                       },
                       items: _provinceItems,
                       decoration: InputDecoration(labelText: 'Select Province'),
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: _maxStudentsController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Maximum number of students in course',
+                      ),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Maximum Number of Students cannot be empty";
+                        }
+                        int maxStudents = int.tryParse(value ?? '0') ?? 0;
+
+                        if (maxStudents == null || maxStudents <= 0) {
+                          return "Please enter a valid maximum number";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 10),
                     Slider(

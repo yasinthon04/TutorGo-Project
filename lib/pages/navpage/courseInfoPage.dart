@@ -107,7 +107,10 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
   Widget build(BuildContext context) {
     final String courseName = widget.courseData['courseName'] ?? '';
     final String address = widget.courseData['address'] ?? '';
-    final String price = widget.courseData['price'] ?? '';
+    final String priceString = widget.courseData['price'] ?? '';
+    final String cleanPriceString =
+        priceString.replaceAll('฿', '').replaceAll(',', '');
+    final double price = double.tryParse(cleanPriceString) ?? 0.0;
     final String contactInfo = widget.courseData['contactInfo'] ?? '';
     final String province = widget.courseData['province'] ?? '';
     final String userId = widget.courseData['userId'] ?? '';
@@ -120,10 +123,13 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     final User? user = Auth().currentUser;
     final bool isCurrentUserCourseCreator = userId == user?.uid;
     final bool isStudent = user != null && !isCurrentUserCourseCreator;
-    final bool isEnrolled = isStudent &&
+    bool isEnrolled = isStudent &&
         (widget.courseData['enrolledStudents'] ?? []).contains(user!.uid);
     int requestedStudentsCount =
         widget.courseData['requestedStudents']?.length ?? 0;
+    int totalStudents =
+        getNumberOfStudents(widget.courseData['enrolledStudents'] ?? []);
+    int maxStudents = widget.courseData['maxStudents'] ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -158,6 +164,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                   price,
                   contactInfo,
                   province,
+                  maxStudents,
                   courseImage,
                   category,
                   days,
@@ -263,9 +270,9 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
             SizedBox(height: 20),
             Text(
               'Course Name: $courseName',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             GestureDetector(
               onTap: () {
                 if (widget.courseData['googleMapsLink'] != null &&
@@ -284,20 +291,20 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
               ),
             ),
 
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             Text('Province: $province'),
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             Text('Price/Month: $price'),
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             Text('Contact Information: $contactInfo'),
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             // Display Days of the Week
 
             Text(
               'Days of the Week:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List<Widget>.generate(
@@ -311,12 +318,12 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
               ),
             ),
             // Display Time Slots
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             Text(
               'Time:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             Column(
               children: [
                 Padding(
@@ -343,31 +350,82 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                 ),
               ),
             ),
-            if (!isCurrentUserCourseCreator)
+            // Inside the Column widget
+            SizedBox(height: 5),
+            Text(
+              'Total Students: $totalStudents/$maxStudents',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+
+            if (!isCurrentUserCourseCreator && isStudent)
               ElevatedButton(
                 onPressed: () async {
-                  if (isEnrolled) {
+                  if ((widget.courseData['requestedStudents'] ?? [])
+                      .contains(user!.uid)) {
+                    // Show a "Waiting..." dialog or message
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Waiting for Confirmation'),
+                          content: Text(
+                            'Your enrollment request is pending confirmation.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                'OK',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.green,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else if (isEnrolled) {
                     _showCancelConfirmation(context, widget.courseId);
-                  } else if (isStudent &&
-                      !(widget.courseData['requestedStudents'] ?? [])
-                          .contains(user!.uid)) {
-                    if ((widget.courseData['requestedStudents'] ?? [])
-                        .contains(user!.uid)) {
-                      // Show a "Waiting..." dialog or message
+                  } else if (isStudent) {
+                    int maxStudents = widget.courseData['maxStudents'] ?? 0;
+                    int enrolledStudentsCount =
+                        (widget.courseData['enrolledStudents'] as List).length;
+
+                    if (enrolledStudentsCount >= maxStudents) {
+                      // Show a warning message that enrollment is full
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            title: Text('Waiting for Confirmation'),
+                            title: Text('Enrollment Full'),
                             content: Text(
-                              'Your enrollment request is pending confirmation.',
+                              'Sorry, this course is already fully enrolled.',
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
-                                child: Text('OK'),
+                                child: Text(
+                                  'OK',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors.green,
+                                ),
                               ),
                             ],
                           );
@@ -379,11 +437,21 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                           context, widget.courseId);
 
                       if (shouldEnroll) {
-                        setState(() {
-                          widget.courseData['requestedStudents'] ??= [];
-                          widget.courseData['requestedStudents']!
-                              .add(user!.uid);
+                        await FirebaseFirestore.instance
+                            .collection('courses')
+                            .doc(widget.courseId)
+                            .update({
+                          'requestedStudents':
+                              FieldValue.arrayUnion([user!.uid]),
                         });
+
+                        // Update the button text and style after successful enrollment
+                        setState(() {
+                          isEnrolled = true;
+                        });
+
+                        // Close the dialog
+                        Navigator.pop(context);
                       }
                     }
                   }
@@ -392,7 +460,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                   // Update the button text based on whether a request is pending
                   (widget.courseData['requestedStudents'] ?? [])
                           .contains(user!.uid)
-                      ? 'Waiting for Tutor confirm...'
+                      ? 'Waiting...'
                       : isEnrolled
                           ? 'Cancel Enrollment'
                           : 'Enroll',
@@ -453,6 +521,10 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
         ),
       ),
     );
+  }
+
+  int getNumberOfStudents(List<dynamic> requestedStudents) {
+    return requestedStudents.length;
   }
 
   Future<bool> _showEnrollConfirmation(
@@ -602,9 +674,10 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     String courseId,
     String courseName,
     String address,
-    String price,
+    double price,
     String contactInfo,
     String province,
+    int maxStudents,
     String courseImage,
     String category,
     List<String> days,
@@ -624,6 +697,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
           Category: category,
           Days: days,
           Times: times,
+          MaxStudents: maxStudents,
         );
       },
     );
@@ -760,8 +834,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
               children: [
                 Divider(),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      bottom: 8.0, left: 4.0), // Adjust padding
+                  padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
                   child: Text(
                     'Requested Students',
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -830,8 +903,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                     ),
                 SizedBox(height: 4),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      top: 8.0, left: 4.0), // Adjust padding
+                  padding: const EdgeInsets.only(top: 8.0, left: 4.0),
                   child: Text(
                     'Enrolled Students',
                     style: TextStyle(fontWeight: FontWeight.bold),
