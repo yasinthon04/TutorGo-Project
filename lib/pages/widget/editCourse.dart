@@ -17,10 +17,11 @@ class EditCourse extends StatefulWidget {
   final String CourseId;
   final String CourseName;
   final String Address;
-  final double Price;
+  final String MapUrl;
+  final int Price;
   final String ContactInfo;
-  final String Province;
   final int MaxStudents;
+  final String Province;
   final String CourseImage;
   final String Category;
   final List<String> Days;
@@ -30,6 +31,7 @@ class EditCourse extends StatefulWidget {
     required this.CourseId,
     required this.CourseName,
     required this.Address,
+    required this.MapUrl,
     required this.Price,
     required this.ContactInfo,
     required this.Province,
@@ -48,15 +50,17 @@ class _EditCourseState extends State<EditCourse> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _courseNameController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
+  TextEditingController _googleMapsLinkController =
+      TextEditingController();
   TextEditingController _contactInfoController = TextEditingController();
   TextEditingController _maxStudentsController = TextEditingController();
+  TextEditingController _selectedPrice = TextEditingController();
   String _selectedCategory = ''; // Default category
   List<String> _selectedDays = []; // Store selected days of the week
   List<TimeOfDay> _selectedTimes = []; // Store selected time slots
   List<DropdownMenuItem<String>> _provinceItems = []; // List of province items
   String? _selectedProvince = ''; // Set an initial value
   File? _imageFile;
-  double _selectedPrice = 0;
   List<String> _enrolledStudents = [];
 
   @override
@@ -64,11 +68,10 @@ class _EditCourseState extends State<EditCourse> {
     _loadCourseData();
     _courseNameController = TextEditingController(text: widget.CourseName);
     _addressController = TextEditingController(text: widget.Address);
-    _selectedPrice = widget.Price;
+    _googleMapsLinkController = TextEditingController(text: widget.MapUrl);
+    _selectedPrice = TextEditingController(text: widget.Price.toString());
     _contactInfoController = TextEditingController(text: widget.ContactInfo);
-    _maxStudentsController =
-        TextEditingController(text: widget.MaxStudents.toString());
-
+    _maxStudentsController = TextEditingController(text: widget.MaxStudents.toString());
     _imageFile = File(widget.CourseImage);
     _selectedCategory = widget.Category;
     _selectedDays = List<String>.from(widget.Days); // No need for split
@@ -124,11 +127,7 @@ class _EditCourseState extends State<EditCourse> {
       _courseNameController =
           TextEditingController(text: courseData['courseName']);
       _addressController = TextEditingController(text: courseData['address']);
-      String priceString = courseData['price'];
-      priceString = priceString.replaceAll(RegExp(r'[^\d.]'),
-          ''); // Remove all non-numeric characters except decimal point
-      _selectedPrice = double.tryParse(priceString) ?? 0;
-
+      _selectedPrice = TextEditingController(text: courseData['price'].toString());
       _contactInfoController =
           TextEditingController(text: courseData['contactInfo']);
       _selectedProvince = courseData['province'];
@@ -148,12 +147,10 @@ class _EditCourseState extends State<EditCourse> {
     if (_formKey.currentState!.validate()) {
       // Get the form field values
       String courseName = _courseNameController.text;
-      String contactInfo = _contactInfoController.text;
+      String contactInfo =_contactInfoController.text;
       String address = _addressController.text;
-      String selectedPriceText = NumberFormat.currency(
-        locale: 'en_US', // Change locale as needed
-        symbol: '฿',
-      ).format(_selectedPrice);
+      String googleMapsLink = _googleMapsLinkController.text;
+      int price = int.tryParse(_selectedPrice.text ?? '0') ?? 0;
 
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
@@ -187,10 +184,11 @@ class _EditCourseState extends State<EditCourse> {
             'address': address,
             'category': _selectedCategory,
             'province': _selectedProvince,
-            'price': selectedPriceText,
+            'price': price,
             'date': _selectedDays,
             'time': timeData,
             'imageName': imageUrl,
+            'googleMapsLink': googleMapsLink,
             'userId': FirebaseAuth.instance.currentUser?.uid,
             'enrolledStudents': enrolledStudents,
             'requestedStudents': requestedStudents,
@@ -420,6 +418,7 @@ class _EditCourseState extends State<EditCourse> {
                     ),
                     TextFormField(
                       controller: _contactInfoController,
+                      keyboardType: TextInputType.number,
                       decoration:
                           InputDecoration(labelText: 'Contact Information'),
                       validator: (value) {
@@ -443,6 +442,20 @@ class _EditCourseState extends State<EditCourse> {
                         if (value.length > 35) {
                           return "Address should not exceed 35 characters";
                         }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller:
+                          _googleMapsLinkController, // Add a TextEditingController
+                      decoration: InputDecoration(
+                          labelText:
+                              'Google Maps Link(Example: https://goo.gl/maps/KiYNop6sMFmdZeM38)'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Google Maps Link cannot be empty";
+                        }
+                        // You can add more validation logic here if needed
                         return null;
                       },
                     ),
@@ -502,32 +515,19 @@ class _EditCourseState extends State<EditCourse> {
                       },
                     ),
                     SizedBox(height: 10),
-                    Slider(
-                      value: _selectedPrice,
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedPrice = newValue;
-                        });
+                    TextFormField(
+                      controller: _selectedPrice,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Price',
+                      ),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Price cannot be empty";
+                        }
+
+                        return null;
                       },
-                      min: 0,
-                      max: 9999,
-                      divisions: 9999,
-                      label: NumberFormat.currency(
-                        locale: 'en_US', // Change locale as needed
-                        symbol: '฿',
-                      ).format(_selectedPrice),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      _selectedPrice != null
-                          ? NumberFormat.currency(
-                              locale: 'en_US', // Change locale as needed
-                              symbol: '฿',
-                              decimalDigits: 0, // Display 0 decimal digits
-                            ).format(_selectedPrice)
-                          : '0 ฿',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 10),
                     Container(

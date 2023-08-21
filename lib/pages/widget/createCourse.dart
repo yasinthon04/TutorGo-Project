@@ -19,9 +19,10 @@ class _CreateCourseState extends State<CreateCourse> {
   final TextEditingController _courseNameController = TextEditingController();
   final TextEditingController _contactInfoController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
-  final TextEditingController _googleMapsLinkController = TextEditingController();
+  final TextEditingController _googleMapsLinkController =
+      TextEditingController();
   final TextEditingController _maxStudentsController = TextEditingController();
-
+  final TextEditingController _priceController = TextEditingController();
   String _selectedCategory = 'Math'; // Default category
   List<String> _selectedDays = []; // Store selected days of the week
   List<TimeOfDay> _selectedTimes = []; // Store selected time slots
@@ -29,11 +30,11 @@ class _CreateCourseState extends State<CreateCourse> {
   String? _selectedProvince = ''; // Selected province
   File? _imageFile;
   File? _selectedImage;
-  double _selectedPrice = 0;
-  String _formatPrice(double price) {
-    final formatter = NumberFormat('#,##0');
-    return formatter.format(price);
-  }
+  // double _selectedPrice = 0;
+  // String _formatPrice(double price) {
+  //   final formatter = NumberFormat('#,##0');
+  //   return formatter.format(price);
+  // }
 
   @override
   void initState() {
@@ -58,16 +59,12 @@ class _CreateCourseState extends State<CreateCourse> {
       String contactInfo = _contactInfoController.text;
       String address = addressController.text;
       String googleMapsLink = _googleMapsLinkController.text;
-
+      int price = int.tryParse(_priceController.text ?? '0') ?? 0;
       List<Map<String, dynamic>> timeData =
           _convertTimeOfDayList(_selectedTimes);
       List<String> enrolledStudents = [];
       List<String> requestedStudents = [];
       int maxStudents = int.tryParse(_maxStudentsController.text ?? '0') ?? 0;
-      String selectedPriceText = NumberFormat.currency(
-        locale: 'en_US', // Change locale as needed
-        symbol: '฿',
-      ).format(_selectedPrice);
 
       // Upload image to Firebase Storage
       if (_imageFile != null) {
@@ -87,7 +84,7 @@ class _CreateCourseState extends State<CreateCourse> {
           'address': address,
           'category': _selectedCategory,
           'province': _selectedProvince,
-          'price': selectedPriceText,
+          'price': price,
           'date': _selectedDays,
           'time': timeData,
           'imageName': imageUrl,
@@ -266,6 +263,7 @@ class _CreateCourseState extends State<CreateCourse> {
                     ),
                     TextFormField(
                       controller: _contactInfoController,
+                      keyboardType: TextInputType.number,
                       decoration:
                           InputDecoration(labelText: 'Contact Information'),
                       validator: (value) {
@@ -281,6 +279,7 @@ class _CreateCourseState extends State<CreateCourse> {
                     SizedBox(height: 10),
                     TextFormField(
                       controller: addressController,
+                      
                       decoration: InputDecoration(labelText: 'Address'),
                       validator: (value) {
                         if (value!.trim().isEmpty) {
@@ -362,28 +361,19 @@ class _CreateCourseState extends State<CreateCourse> {
                       },
                     ),
                     SizedBox(height: 10),
-                    Slider(
-                      value: _selectedPrice,
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedPrice = newValue;
-                        });
+                    TextFormField(
+                      controller: _priceController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Price',
+                      ),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Price cannot be empty";
+                        }
+
+                        return null;
                       },
-                      min: 0,
-                      max: 9999,
-                      divisions: 9999,
-                      label: NumberFormat.currency(
-                        locale: 'en_US', // Change locale as needed
-                        symbol: '฿',
-                      ).format(_selectedPrice),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      _selectedPrice != null
-                          ? '${_formatPrice(_selectedPrice)} ฿'
-                          : '0 ฿',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 10),
                     if (_selectedImage != null)

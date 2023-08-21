@@ -107,10 +107,8 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
   Widget build(BuildContext context) {
     final String courseName = widget.courseData['courseName'] ?? '';
     final String address = widget.courseData['address'] ?? '';
-    final String priceString = widget.courseData['price'] ?? '';
-    final String cleanPriceString =
-        priceString.replaceAll('฿', '').replaceAll(',', '');
-    final double price = double.tryParse(cleanPriceString) ?? 0.0;
+    final String mapUrl = widget.courseData['googleMapsLink'] ?? '';
+    final int price = widget.courseData['price'] ?? 0;
     final String contactInfo = widget.courseData['contactInfo'] ?? '';
     final String province = widget.courseData['province'] ?? '';
     final String userId = widget.courseData['userId'] ?? '';
@@ -135,7 +133,10 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
       appBar: AppBar(
         title: Text(
           'Course Information',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         elevation: 0.5,
         iconTheme: IconThemeData(color: Colors.white),
@@ -161,6 +162,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                   widget.courseId,
                   courseName,
                   address,
+                  mapUrl,
                   price,
                   contactInfo,
                   province,
@@ -305,18 +307,22 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
             SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List<Widget>.generate(
-                days.length,
-                (index) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                  child: Chip(
-                    label: Text(days[index]),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List<Widget>.generate(
+                  days.length,
+                  (index) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                    child: Chip(
+                      label: Text(days[index]),
+                    ),
                   ),
                 ),
               ),
             ),
+
             // Display Time Slots
             SizedBox(height: 5),
             Text(
@@ -674,7 +680,8 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     String courseId,
     String courseName,
     String address,
-    double price,
+    String mapUrl,
+    int price,
     String contactInfo,
     String province,
     int maxStudents,
@@ -690,6 +697,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
           CourseId: courseId,
           CourseName: courseName,
           Address: address,
+          MapUrl: mapUrl,
           Price: price,
           ContactInfo: contactInfo,
           Province: province,

@@ -244,7 +244,8 @@ class _SearchPageState extends State<SearchPage> {
       appBar: AppBar(
         title: Text(
           'Course Search',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,),
+          
         ),
         elevation: 0.5,
         iconTheme: IconThemeData(color: Colors.white),
