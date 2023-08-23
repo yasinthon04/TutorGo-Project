@@ -29,7 +29,9 @@ class _updateProfilePageState extends State<updateProfilePage> {
   final TextEditingController _firstnameController = TextEditingController();
   final TextEditingController _lastnameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _roleController = TextEditingController();
+  final TextEditingController _oldPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  String _passwordError = '';
 
   void _updateUserData(String updatedEmail, String updatedFirstname,
       String updatedLastname, String updatedPhone) {
@@ -45,6 +47,113 @@ class _updateProfilePageState extends State<updateProfilePage> {
       // Error occurred while updating data
       print('Failed to update user data: $error');
     });
+  }
+
+  Future<void> _updatePassword(String oldPassword, String newPassword) async {
+    AuthCredential credentials = EmailAuthProvider.credential(
+      email: user!.email!,
+      password: oldPassword,
+    );
+
+    try {
+      await user!.reauthenticateWithCredential(credentials);
+      await user!.updatePassword(newPassword);
+      print('Password updated successfully');
+    } catch (error) {
+      print('Failed to update password: $error');
+      throw error; // Rethrow the error to indicate failure
+    }
+  }
+
+  Widget _passwordSection() {
+    return Container(
+      padding: EdgeInsets.all(10),
+      child: Column(
+        children: <Widget>[
+          Container(
+            padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+            alignment: Alignment.topLeft,
+            child: Text(
+              "Change Password",
+              style: TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.left,
+            ),
+          ),
+          if (_passwordError.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                _passwordError,
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          TextFormField(
+            controller: _oldPasswordController,
+            decoration: const InputDecoration(
+              labelText: 'Old Password',
+              prefixIcon: Icon(Icons.lock),
+            ),
+            obscureText: true,
+            validator: (value) {
+              if (value!.isEmpty) {
+                return "Old password cannot be empty";
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            controller: _newPasswordController,
+            decoration: const InputDecoration(
+              labelText: 'New Password',
+              prefixIcon: Icon(Icons.lock),
+            ),
+            obscureText: true,
+            validator: (value) {
+              if (value!.isEmpty) {
+                return "New password cannot be empty";
+              }
+              if (value.length < 6) {
+                return "Password should be at least 6 characters long";
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorAlertDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green,
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _userInfo() {
@@ -352,6 +461,7 @@ class _updateProfilePageState extends State<updateProfilePage> {
                                       color: Colors.grey,
                                       tiles: [
                                         _userInfo(),
+                                        _passwordSection(),
                                       ],
                                     ),
                                   ],
@@ -369,21 +479,36 @@ class _updateProfilePageState extends State<updateProfilePage> {
                   SizedBox(
                     width: 200,
                     child: ElevatedButton(
-                        onPressed: () {
-                          // Get the updated values from the TextFormField widgets
-                          String updatedEmail = _emailController.text;
-                          String updatedFirstname = _firstnameController.text;
-                          String updatedLasttname = _lastnameController.text;
-                          String updatedPhone = _phoneController.text;
+                        onPressed: () async {
+                          String oldPassword = _oldPasswordController.text;
+                          String newPassword = _newPasswordController.text;
 
-                          // Call the method to update the user data
-                          _updateUserData(updatedEmail, updatedFirstname,
-                              updatedLasttname, updatedPhone);
-                          Navigator.pop(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => AccountPage()),
-                          );
+                          try {
+                            await _updatePassword(oldPassword, newPassword);
+
+                            // Get the updated values from the TextFormField widgets
+                            String updatedEmail = _emailController.text;
+                            String updatedFirstname = _firstnameController.text;
+                            String updatedLasttname = _lastnameController.text;
+                            String updatedPhone = _phoneController.text;
+
+                            // Call the method to update the user data
+                            _updateUserData(
+                              updatedEmail,
+                              updatedFirstname,
+                              updatedLasttname,
+                              updatedPhone,
+                            );
+
+                            Navigator.pop(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => AccountPage()),
+                            );
+                          } catch (error) {
+                            // Password update failed, show an alert or handle it as needed
+                            _showErrorAlertDialog('Password update failed');
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.yellow,

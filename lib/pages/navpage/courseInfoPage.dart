@@ -508,7 +508,16 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                           _commentController.clear();
                         }
                       },
-                      child: Text('Submit Comment'),
+                      child: Text(
+                        'Submit Comment',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.green,
+                      ),
                     ),
                   ],
                 ),
