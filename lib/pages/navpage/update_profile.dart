@@ -31,6 +31,9 @@ class _updateProfilePageState extends State<updateProfilePage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmNewPasswordController =
+      TextEditingController();
+
   String _passwordError = '';
 
   void _updateUserData(String updatedEmail, String updatedFirstname,
@@ -65,64 +68,130 @@ class _updateProfilePageState extends State<updateProfilePage> {
     }
   }
 
-  Widget _passwordSection() {
-    return Container(
-      padding: EdgeInsets.all(10),
-      child: Column(
-        children: <Widget>[
-          Container(
-            padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
-            alignment: Alignment.topLeft,
-            child: Text(
-              "Change Password",
-              style: TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
+  void _showChangePasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Change Password"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextFormField(
+                controller: _oldPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Old Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "Old password cannot be empty";
+                  }
+                  return null;
+                },
               ),
-              textAlign: TextAlign.left,
-            ),
+              TextFormField(
+                controller: _newPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "New password cannot be empty";
+                  }
+                  if (value.length < 6) {
+                    return "Password should be at least 6 characters long";
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _confirmNewPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm New Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value != _newPasswordController.text) {
+                    return "Passwords do not match";
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
-          if (_passwordError.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () async {
+                // Handle password change here
+                String oldPassword = _oldPasswordController.text;
+                String newPassword = _newPasswordController.text;
+
+                if (_newPasswordController.text !=
+                    _confirmNewPasswordController.text) {
+                  // Display error message if passwords don't match
+                  _showErrorAlertDialog("Passwords do not match");
+                } else {
+                  try {
+                    await _updatePassword(oldPassword, newPassword);
+                    Navigator.pop(context);
+                    // Show success message or perform further actions
+                  } catch (error) {
+                    // Handle password update error, show message, etc.
+                    _showErrorAlertDialog('Password update failed');
+                  }
+                }
+              },
               child: Text(
-                _passwordError,
-                style: TextStyle(color: Colors.red),
+                'Save',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green,
               ),
             ),
-          TextFormField(
-            controller: _oldPasswordController,
-            decoration: const InputDecoration(
-              labelText: 'Old Password',
-              prefixIcon: Icon(Icons.lock),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.red,
+              ),
             ),
-            obscureText: true,
-            validator: (value) {
-              if (value!.isEmpty) {
-                return "Old password cannot be empty";
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-            controller: _newPasswordController,
-            decoration: const InputDecoration(
-              labelText: 'New Password',
-              prefixIcon: Icon(Icons.lock),
-            ),
-            obscureText: true,
-            validator: (value) {
-              if (value!.isEmpty) {
-                return "New password cannot be empty";
-              }
-              if (value.length < 6) {
-                return "Password should be at least 6 characters long";
-              }
-              return null;
-            },
-          ),
-        ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _changePasswordButton() {
+    return ElevatedButton(
+      onPressed: () {
+        _showChangePasswordDialog();
+      },
+      child: Text(
+        'Change password',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        primary: Theme.of(context).hintColor,
       ),
     );
   }
@@ -132,7 +201,7 @@ class _updateProfilePageState extends State<updateProfilePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Error'),
+          title: Text('Please try again'),
           content: Text(message),
           actions: [
             ElevatedButton(
@@ -461,7 +530,10 @@ class _updateProfilePageState extends State<updateProfilePage> {
                                       color: Colors.grey,
                                       tiles: [
                                         _userInfo(),
-                                        _passwordSection(),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        _changePasswordButton(),
                                       ],
                                     ),
                                   ],
@@ -479,36 +551,26 @@ class _updateProfilePageState extends State<updateProfilePage> {
                   SizedBox(
                     width: 200,
                     child: ElevatedButton(
-                        onPressed: () async {
-                          String oldPassword = _oldPasswordController.text;
-                          String newPassword = _newPasswordController.text;
+                        onPressed: () {
+                          // Get the updated values from the TextFormField widgets
+                          String updatedEmail = _emailController.text;
+                          String updatedFirstname = _firstnameController.text;
+                          String updatedLasttname = _lastnameController.text;
+                          String updatedPhone = _phoneController.text;
 
-                          try {
-                            await _updatePassword(oldPassword, newPassword);
+                          // Call the method to update the user data
+                          _updateUserData(
+                            updatedEmail,
+                            updatedFirstname,
+                            updatedLasttname,
+                            updatedPhone,
+                          );
 
-                            // Get the updated values from the TextFormField widgets
-                            String updatedEmail = _emailController.text;
-                            String updatedFirstname = _firstnameController.text;
-                            String updatedLasttname = _lastnameController.text;
-                            String updatedPhone = _phoneController.text;
-
-                            // Call the method to update the user data
-                            _updateUserData(
-                              updatedEmail,
-                              updatedFirstname,
-                              updatedLasttname,
-                              updatedPhone,
-                            );
-
-                            Navigator.pop(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => AccountPage()),
-                            );
-                          } catch (error) {
-                            // Password update failed, show an alert or handle it as needed
-                            _showErrorAlertDialog('Password update failed');
-                          }
+                          Navigator.pop(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AccountPage()),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.yellow,
