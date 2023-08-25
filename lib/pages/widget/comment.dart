@@ -5,12 +5,14 @@ class Comment {
   final String content;
   final String studentId;
   final String firstName; // Add this field
+  final double rating;
   final DateTime timestamp;
 
   Comment({
     required this.content,
     required this.studentId,
     required this.firstName, // Initialize in the constructor
+    required this.rating,
     required this.timestamp,
   });
 }

@@ -12,6 +12,7 @@ import 'package:tutorgo/pages/widget/header_widget.dart';
 import '../../auth.dart';
 import '../widget/comment.dart';
 import '../widget/commentStream.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class CourseInfoPage extends StatefulWidget {
   final User? user = Auth().currentUser;
@@ -27,6 +28,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
   bool isWaitingForConfirmation = false;
   final TextEditingController _commentController = TextEditingController();
   List<Comment> courseComments = [];
+  double selectedRating = 0.0;
 
   String _formatTime(int hour, int minute) {
     final period = hour < 12 ? 'AM' : 'PM';
@@ -128,6 +130,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     int totalStudents =
         getNumberOfStudents(widget.courseData['enrolledStudents'] ?? []);
     int maxStudents = widget.courseData['maxStudents'] ?? 0;
+    
 
     return Scaffold(
       appBar: AppBar(
@@ -496,16 +499,49 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                         hintText: 'Write a comment...',
                         border: OutlineInputBorder(),
                       ),
-                      onSubmitted: (value) {
-                        _addComment(context, value);
+                    ),
+                    RatingBar.builder(
+                      initialRating:
+                          selectedRating.toDouble(), // Convert to double
+                      minRating: 1,
+                      direction: Axis.horizontal,
+                      allowHalfRating: false,
+                      itemCount: 5,
+                      itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                      itemBuilder: (context, index) => Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                      ),
+                      onRatingUpdate: (rating) {
+                        setState(() {
+                          selectedRating = rating;
+                          print('Selected Rating: $selectedRating');
+                          print(
+                              'Comment Text: ${_commentController.text}'); // Convert to int
+                        });
                       },
                     ),
                     SizedBox(height: 10),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_commentController.text.isNotEmpty) {
-                          _addComment(context, _commentController.text);
-                          _commentController.clear();
+                          String comment = _commentController.text;
+                          try {
+                            await _addCommentAndRating(
+                                context, comment, selectedRating);
+                            
+                            // Optionally show a success message to the user
+                          } catch (error) {
+                            // Handle the error, such as showing an error message
+                            print('Error adding comment and rating: $error');
+                          }
+                        } else {
+                          // Show an error message if comment is missing
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Please provide a comment."),
+                            ),
+                          );
                         }
                       },
                       child: Text(
@@ -536,6 +572,57 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _addCommentAndRating(
+      BuildContext context, String commentContent, double rating) async {
+    
+    if (widget.user != null) {
+      final String studentId = widget.user!.uid;
+
+      try {
+        // Fetch the user's first name
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(studentId)
+            .get();
+        final firstName = userDoc['firstname'] as String?;
+
+        if (firstName != null) {
+          final Comment comment = Comment(
+            content: commentContent,
+            studentId: studentId,
+            firstName: firstName,
+            rating: rating,
+            timestamp: DateTime.now(),
+          );
+
+          // Add the comment to Firebase
+          final courseRef = FirebaseFirestore.instance
+              .collection('courses')
+              .doc(widget.courseId);
+
+          final commentDoc = courseRef.collection('comments').doc();
+          await commentDoc.set({
+            'content': comment.content,
+            'studentId': comment.studentId,
+            'firstName': comment.firstName,
+            'timestamp': comment.timestamp,
+            'rating': comment.rating,
+            // 'timestamp': FieldValue.serverTimestamp(),
+          });
+          // Clear the comment input field and update the UI
+          _commentController.clear();
+          courseComments.add(comment);
+          selectedRating=0;
+        }
+      } catch (error) {
+        print('Error adding comment and rating: $error');
+      }
+    } else {
+      // Handle the case when the user is not authenticated.
+      // You might want to show a login prompt or navigate to the login screen.
+    }
   }
 
   int getNumberOfStudents(List<dynamic> requestedStudents) {
@@ -732,52 +819,6 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
         );
       },
     );
-  }
-
-  void _addComment(BuildContext context, String commentContent) async {
-    if (widget.user != null) {
-      final String studentId = widget.user!.uid;
-
-      try {
-        // Fetch the user's first name
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(studentId)
-            .get();
-        final firstName = userDoc['firstname'] as String?;
-
-        if (firstName != null) {
-          final Comment comment = Comment(
-            content: commentContent,
-            studentId: studentId,
-            firstName: firstName,
-            timestamp: DateTime.now(),
-          );
-
-          // Add the comment to Firebase
-          final courseRef = FirebaseFirestore.instance
-              .collection('courses')
-              .doc(widget.courseId);
-
-          final commentDoc = courseRef.collection('comments').doc();
-          await commentDoc.set({
-            'content': comment.content,
-            'studentId': comment.studentId,
-            'firstName': comment.firstName,
-            'timestamp': comment.timestamp,
-          });
-
-          // Clear the comment input field and update the UI
-          _commentController.clear();
-          courseComments.add(comment);
-        }
-      } catch (error) {
-        print('Error adding comment: $error');
-      }
-    } else {
-      // Handle the case when the user is not authenticated.
-      // You might want to show a login prompt or navigate to the login screen.
-    }
   }
 
   void _requestEnrollInCourse(
