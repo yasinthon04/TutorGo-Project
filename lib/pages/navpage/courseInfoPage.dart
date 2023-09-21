@@ -10,6 +10,7 @@ import 'package:tutorgo/pages/widget/editCourse.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 
 import '../../auth.dart';
+import '../widget/RatingAndCommentWidget.dart';
 import '../widget/comment.dart';
 import '../widget/commentStream.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -130,7 +131,6 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     int totalStudents =
         getNumberOfStudents(widget.courseData['enrolledStudents'] ?? []);
     int maxStudents = widget.courseData['maxStudents'] ?? 0;
-    
 
     return Scaffold(
       appBar: AppBar(
@@ -368,6 +368,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                 fontSize: 15,
               ),
             ),
+            
 
             if (!isCurrentUserCourseCreator && isStudent)
               ElevatedButton(
@@ -529,7 +530,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                           try {
                             await _addCommentAndRating(
                                 context, comment, selectedRating);
-                            
+
                             // Optionally show a success message to the user
                           } catch (error) {
                             // Handle the error, such as showing an error message
@@ -566,17 +567,84 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                 fontSize: 18,
               ),
             ),
+            FutureBuilder<List<Comment>>(
+              future: getCommentsForCourse(widget.courseId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                }
+
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+
+                final comments = snapshot.data ?? [];
+                final averageRating = calculateAverageRating(comments);
+                final totalComments = comments.length;
+
+                return RatingAndCommentWidget(
+                  averageRating: averageRating,
+                  totalComments: totalComments,
+                );
+              },
+            ),
             SizedBox(height: 10),
             CommentStream(courseId: widget.courseId),
+            
           ],
         ),
       ),
     );
   }
 
+  double calculateAverageRating(List<Comment> comments) {
+    double totalRating = 0;
+    int numberOfRatings = 0;
+
+    for (Comment comment in comments) {
+      if (comment.rating != null) {
+        totalRating += comment.rating;
+        numberOfRatings++;
+      }
+    }
+
+    return numberOfRatings > 0 ? totalRating / numberOfRatings : 0.0;
+  }
+
+  Future<List<Comment>> getCommentsForCourse(String courseId) async {
+    try {
+      final commentSnapshot = await FirebaseFirestore.instance
+          .collection('courses')
+          .doc(courseId)
+          .collection('comments')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return commentSnapshot.docs
+          .map((commentDoc) {
+            final commentData = commentDoc.data() as Map<String, dynamic>;
+            return Comment(
+              content: commentData['content'] as String,
+              firstName: commentData['firstName'] as String,
+              timestamp: (commentData['timestamp'] as Timestamp).toDate(),
+              rating: commentData['rating'] as double,
+              studentId: '', // You might need to get this from the comment data
+            );
+          })
+          .where((comment) =>
+              comment.content.isNotEmpty &&
+              comment.firstName.isNotEmpty &&
+              comment.timestamp != null &&
+              comment.rating != null)
+          .toList();
+    } catch (e) {
+      print('Error fetching comments: $e');
+      return [];
+    }
+  }
+
   Future<void> _addCommentAndRating(
       BuildContext context, String commentContent, double rating) async {
-    
     if (widget.user != null) {
       final String studentId = widget.user!.uid;
 
@@ -614,7 +682,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
           // Clear the comment input field and update the UI
           _commentController.clear();
           courseComments.add(comment);
-          selectedRating=0;
+          selectedRating = 0;
         }
       } catch (error) {
         print('Error adding comment and rating: $error');

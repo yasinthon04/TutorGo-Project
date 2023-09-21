@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tutorgo/auth.dart';
 import 'package:tutorgo/pages/login.dart';
 import 'package:tutorgo/pages/navpage/courseInfoPage.dart';
@@ -199,260 +200,389 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMyCoursesSection() {
-    return FutureBuilder<String>(
-      future: getUserRole(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        }
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-        final userRole = snapshot.data!;
+  return FutureBuilder<String>(
+    future: getUserRole(),
+    builder: (context, roleSnapshot) {
+      if (roleSnapshot.connectionState == ConnectionState.waiting) {
+        return CircularProgressIndicator();
+      }
+      if (roleSnapshot.hasError) {
+        return Text('Error: ${roleSnapshot.error}');
+      }
+      final userRole = roleSnapshot.data!;
 
-        if (userRole == 'Tutor') {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 15.0),
-                  child: Text(
-                    'My Courses',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+      if (userRole == 'Tutor') {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15.0),
+                child: Text(
+                  'My Courses',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              SizedBox(height: 10),
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('courses')
-                    .where('userId', isEqualTo: user!.uid)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  }
-                  if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  }
+            ),
+            SizedBox(height: 10),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('courses')
+                  .where('userId', isEqualTo: user!.uid)
+                  .snapshots(),
+              builder: (context, courseSnapshot) {
+                if (courseSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                }
+                if (courseSnapshot.hasError) {
+                  return Text('Error: ${courseSnapshot.error}');
+                }
 
-                  final courseDocs = snapshot.data?.docs ?? [];
-                  if (courseDocs.isNotEmpty) {
-                    return CarouselSlider(
-                      options: CarouselOptions(
-                        aspectRatio: 4 / 3,
-                        viewportFraction: 0.6,
-                        enlargeCenterPage: true,
-                        scrollDirection: Axis.horizontal,
-                        autoPlay: true,
-                        autoPlayInterval: Duration(seconds: 3),
-                        autoPlayAnimationDuration: Duration(milliseconds: 800),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                        enableInfiniteScroll: true,
-                      ),
-                      items: courseDocs.map((courseDoc) {
-                        final courseData =
-                            courseDoc.data() as Map<String, dynamic>;
-                        final courseName = courseData['courseName'] ?? '';
-                        final imageName = courseData['imageName'] ?? '';
-                        final price = courseData['price'] ?? '';
-                        final courseId = courseDoc.id;
+                final courseDocs = courseSnapshot.data?.docs ?? [];
+                if (courseDocs.isNotEmpty) {
+                  // Create a list of Future tasks to fetch course widgets with average ratings
+                  final futureCourseWidgets = courseDocs.map((courseDoc) async {
+                    final courseData = courseDoc.data() as Map<String, dynamic>;
+                    final courseName = courseData['courseName'] ?? '';
+                    final imageName = courseData['imageName'] ?? '';
+                    final price = courseData['price'] ?? '';
+                    final courseId = courseDoc.id;
 
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CourseInfoPage(
-                                  courseData: courseData,
-                                  courseId: courseId,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10.0),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.5),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      child: imageName.isNotEmpty
-                                          ? Image.network(
-                                              imageName,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Image.asset(
-                                              'assets/default_image.png',
-                                              fit: BoxFit.cover,
-                                            ),
-                                    ),
-                                  ),
-                                  ListTile(
-                                    title: Text(
-                                      courseName,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      'Price: $price',
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    // Fetch comments for the current course from Firestore
+                    final commentsSnapshot = await FirebaseFirestore.instance
+                        .collection('courses')
+                        .doc(courseId)
+                        .collection('comments')
+                        .get();
+
+                    final commentsData = commentsSnapshot.docs
+                        .map((commentDoc) =>
+                            commentDoc.data() as Map<String, dynamic>)
+                        .toList();
+
+                    double totalRating = 0;
+                    int numberOfRatings = 0;
+
+                    for (final commentData in commentsData) {
+                      final commentRating =
+                          commentData['rating'] as double?;
+                      if (commentRating != null) {
+                        totalRating += commentRating;
+                        numberOfRatings++;
+                      }
+                    }
+
+                    double averageRating =
+                        numberOfRatings > 0 ? totalRating / numberOfRatings : 0.0;
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CourseInfoPage(
+                              courseData: courseData,
+                              courseId: courseId,
                             ),
                           ),
                         );
-                      }).toList(),
-                    );
-                  } else {
-                    return Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Text(
-                        "You don't have your own course",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  child: imageName.isNotEmpty
+                                      ? Image.network(
+                                          imageName,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.asset(
+                                          'assets/default_image.png',
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
+                              ),
+                              ListTile(
+                                title: Text(
+                                  courseName,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  children: [
+                                    Text(
+                                      'Price: $price',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(width: 5),
+                                        RatingBarIndicator(
+                                          rating: averageRating,
+                                          itemBuilder: (context, index) =>
+                                              Icon(
+                                            Icons.star,
+                                            color: Colors.amber,
+                                          ),
+                                          itemCount: 5,
+                                          itemSize: 20.0,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        textAlign: TextAlign.left,
                       ),
                     );
-                  }
-                },
-              ),
-            ],
-          );
-        } else {
-          return SizedBox.shrink();
-        }
-      },
-    );
-  }
+                  }).toList();
 
-  Widget _buildEnrolledCoursesGrid(
-      String userId, List<String> enrolledCourseIds) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('courses').snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final courseDocs = snapshot.data!.docs;
-          final enrolledCourses = courseDocs.where((courseDoc) {
-            final courseId = courseDoc.id;
-            return enrolledCourseIds.contains(courseId);
-          }).toList();
+                  // Use Future.wait to await all Future tasks and get a list of Widgets
+                  return FutureBuilder<List<Widget>>(
+                    future: Future.wait(futureCourseWidgets),
+                    builder: (context, widgetSnapshot) {
+                      if (widgetSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      }
+                      if (widgetSnapshot.hasError) {
+                        return Text('Error: ${widgetSnapshot.error}');
+                      }
+                      final courseWidgets = widgetSnapshot.data ?? [];
 
-          return CarouselSlider(
-            options: CarouselOptions(
-              aspectRatio: 4 / 3,
-              viewportFraction: 0.6,
-              enlargeCenterPage: true,
-              scrollDirection: Axis.horizontal,
-              autoPlay: true,
-              autoPlayInterval: Duration(seconds: 3),
-              autoPlayAnimationDuration: Duration(milliseconds: 800),
-              autoPlayCurve: Curves.fastOutSlowIn,
-              enableInfiniteScroll: true,
-            ),
-            items: enrolledCourses.map((courseDoc) {
-              final courseData = courseDoc.data() as Map<String, dynamic>;
-              final courseName = courseData['courseName'] ?? '';
-              final imageName = courseData['imageName'] ?? '';
-              final price = courseData['price'] ?? '';
-              final courseId = courseDoc.id;
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CourseInfoPage(
-                        courseData: courseData,
-                        courseId: courseId,
+                      return CarouselSlider(
+                        options: CarouselOptions(
+                          aspectRatio: 4 / 3,
+                          viewportFraction: 0.6,
+                          enlargeCenterPage: true,
+                          scrollDirection: Axis.horizontal,
+                          autoPlay: true,
+                          autoPlayInterval: Duration(seconds: 3),
+                          autoPlayAnimationDuration: Duration(milliseconds: 800),
+                          autoPlayCurve: Curves.fastOutSlowIn,
+                          enableInfiniteScroll: true,
+                        ),
+                        items: courseWidgets,
+                      );
+                    },
+                  );
+                } else {
+                  return Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Text(
+                      "You don't have your own course",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
                       ),
+                      textAlign: TextAlign.left,
                     ),
                   );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
+                }
+              },
+            ),
+          ],
+        );
+      } else {
+        return SizedBox.shrink();
+      }
+    },
+  );
+}
+
+
+
+  Widget _buildEnrolledCoursesGrid(
+  String userId, List<String> enrolledCourseIds) {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance.collection('courses').snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        final courseDocs = snapshot.data!.docs;
+        final enrolledCourses = courseDocs.where((courseDoc) {
+          final courseId = courseDoc.id;
+          return enrolledCourseIds.contains(courseId);
+        }).toList();
+
+        return CarouselSlider(
+          options: CarouselOptions(
+            aspectRatio: 4 / 3,
+            viewportFraction: 0.6,
+            enlargeCenterPage: true,
+            scrollDirection: Axis.horizontal,
+            autoPlay: true,
+            autoPlayInterval: Duration(seconds: 3),
+            autoPlayAnimationDuration: Duration(milliseconds: 800),
+            autoPlayCurve: Curves.fastOutSlowIn,
+            enableInfiniteScroll: true,
+          ),
+          items: enrolledCourses.map((courseDoc) {
+            final courseData = courseDoc.data() as Map<String, dynamic>;
+            final courseName = courseData['courseName'] ?? '';
+            final imageName = courseData['imageName'] ?? '';
+            final price = courseData['price'] ?? '';
+            final courseId = courseDoc.id;
+            
+            // Fetch comments for the current course from Firestore
+            Future<List<Map<String, dynamic>>> fetchComments() async {
+              final commentsSnapshot = await FirebaseFirestore.instance
+                  .collection('courses')
+                  .doc(courseId)
+                  .collection('comments')
+                  .get();
+    
+              final commentsData = commentsSnapshot.docs
+                  .map((commentDoc) => commentDoc.data() as Map<String, dynamic>)
+                  .toList();
+    
+              return commentsData;
+            }
+    
+            // Calculate the average rating based on comments
+            Future<double> calculateAverageRating() async {
+              final commentsData = await fetchComments();
+              double totalRating = 0;
+              int numberOfRatings = 0;
+    
+              for (final commentData in commentsData) {
+                final commentRating = commentData['rating'] as double?;
+                if (commentRating != null) {
+                  totalRating += commentRating;
+                  numberOfRatings++;
+                }
+              }
+    
+              return numberOfRatings > 0 ? totalRating / numberOfRatings : 0.0;
+            }
+            
+            return FutureBuilder<double>(
+              future: calculateAverageRating(),
+              builder: (context, snapshot) {
+                final averageRating = snapshot.data ?? 0.0;
+    
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CourseInfoPage(
+                          courseData: courseData,
+                          courseId: courseId,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10.0),
-                            child: imageName.isNotEmpty
-                                ? Image.network(
-                                    imageName,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.asset(
-                                    'assets/default_image.png',
-                                    fit: BoxFit.cover,
-                                  ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: Offset(0, 3),
                           ),
-                        ),
-                        ListTile(
-                          title: Text(
-                            courseName,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10.0),
+                              child: imageName.isNotEmpty
+                                  ? Image.network(
+                                      imageName,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      'assets/default_image.png',
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
-                          subtitle: Text(
-                            'Price: $price',
-                            textAlign: TextAlign.center,
+                          ListTile(
+                            title: Text(
+                              courseName,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Column(
+                              children: [
+                                Text(
+                                  'Price: $price',
+                                  textAlign: TextAlign.center,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(width: 5),
+                                    RatingBarIndicator(
+                                      rating: averageRating,
+                                      itemBuilder: (context, index) => Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                      ),
+                                      itemCount: 5,
+                                      itemSize: 20.0,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            }).toList(),
-          );
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
-    );
-  }
+                );
+              },
+            );
+          }).toList(),
+        );
+      } else if (snapshot.hasError) {
+        return Text('Error: ${snapshot.error}');
+      } else {
+        return CircularProgressIndicator();
+      }
+    },
+  );
+}
+
+
+
 
   Widget _buildAllCoursesGrid(List<QueryDocumentSnapshot> courseDocs) {
     return GridView.builder(
@@ -470,65 +600,126 @@ class _HomePageState extends State<HomePage> {
         final price = courseData['price'] ?? '';
         final courseId = courseDocs[index].id;
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CourseInfoPage(
-                  courseData: courseData,
-                  courseId: courseId,
+        // Fetch comments for the current course from Firestore
+        Future<List<Map<String, dynamic>>> fetchComments() async {
+          final commentsSnapshot = await FirebaseFirestore.instance
+              .collection('courses')
+              .doc(courseId)
+              .collection('comments')
+              .get();
+
+          final commentsData = commentsSnapshot.docs
+              .map((commentDoc) => commentDoc.data() as Map<String, dynamic>)
+              .toList();
+
+          return commentsData;
+        }
+
+        // Calculate the average rating based on comments
+        Future<double> calculateAverageRating() async {
+          final commentsData = await fetchComments();
+          double totalRating = 0;
+          int numberOfRatings = 0;
+
+          for (final commentData in commentsData) {
+            final commentRating = commentData['rating'] as double?;
+            if (commentRating != null) {
+              totalRating += commentRating;
+              numberOfRatings++;
+            }
+          }
+
+          return numberOfRatings > 0 ? totalRating / numberOfRatings : 0.0;
+        }
+
+        return FutureBuilder<double>(
+          future: calculateAverageRating(),
+          builder: (context, snapshot) {
+            final averageRating = snapshot.data ?? 0.0;
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CourseInfoPage(
+                      courseData: courseData,
+                      courseId: courseId,
+                    ),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.0),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.5),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: Offset(0, 3), // changes position of shadow
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(10.0),
+                          ),
+                          child: imageName.isNotEmpty
+                              ? Image.network(
+                                  imageName,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  'assets/default_image.png',
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                      ListTile(
+                        title: Text(
+                          courseName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Row(
+                          children: [
+                            Text('Price: $price'),
+                            SizedBox(
+                                width:
+                                    13), // Add spacing between price and rating
+                            RatingBar.builder(
+                              initialRating: averageRating,
+                              minRating: 1,
+                              direction: Axis.horizontal,
+                              allowHalfRating: true,
+                              itemCount: 5,
+                              itemSize: 12.0,
+                              itemBuilder: (context, _) => Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                              ),
+                              onRatingUpdate: (rating) {
+                                // You can add a callback here if needed
+                              },
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               ),
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: Offset(0, 3), // changes position of shadow
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(10.0),
-                      ),
-                      child: imageName.isNotEmpty
-                          ? Image.network(
-                              imageName,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.asset(
-                              'assets/default_image.png',
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                  ),
-                  ListTile(
-                    title: Text(
-                      courseName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text('Price: $price'),
-                  ),
-                ],
-              ),
-            ),
-          ),
         );
       },
     );
