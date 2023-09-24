@@ -63,7 +63,8 @@ class CommentStream extends StatelessWidget {
                     comment.content,
                     style: TextStyle(
                       color: Colors.grey,
-                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                   trailing: Column(
@@ -81,7 +82,7 @@ class CommentStream extends StatelessWidget {
                           Text(
                             '${comment.rating}',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),

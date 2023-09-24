@@ -13,10 +13,9 @@ class RatingAndCommentWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      
       children: [
         // Display stars based on the average rating
-        for (int i = 0; i < averageRating.round(); i++)
           Icon(
             Icons.star,
             color: Colors.amber,
@@ -31,10 +30,11 @@ class RatingAndCommentWidget extends StatelessWidget {
         ),
         SizedBox(width: 10), // Add some spacing between rating and total comments
         Text(
-          '($totalComments comments)',
+          '($totalComments Reviews)',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 15,
+            color: const Color.fromARGB(255, 129, 129, 129),
+            fontSize: 16,
           ),
         ),
       ],

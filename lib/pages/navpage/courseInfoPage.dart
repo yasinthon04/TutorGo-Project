@@ -64,23 +64,91 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
           return AlertDialog(
             title: Text(
               'Tutor Information',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (tutorImage.isNotEmpty)
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: NetworkImage(tutorImage),
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                          10), // Half of the width/height for a circular shape
+                      child: Image.network(
+                        tutorImage,
+                        width: 250, // Set the desired width
+                        height: 250, // Set the desired height
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 SizedBox(height: 10),
-                Text('Name : $tutorFirstname $tutorLastname'),
+                RichText(
+                  text: TextSpan(
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: 'Name : ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '$tutorFirstname $tutorLastname ',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 SizedBox(height: 10),
-                Text('Email : $tutorEmail'),
+                RichText(
+                  text: TextSpan(
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: 'Email : ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '$tutorEmail',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 SizedBox(height: 10),
-                Text('Mobile : $tutorMobile'),
+                RichText(
+                  text: TextSpan(
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: 'Mobile : ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '$tutorMobile',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             actions: [
@@ -103,6 +171,29 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
           );
         },
       );
+    }
+  }
+
+  String tutorFirstname = '';
+  String tutorLastname = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData(); // Fetch your tutor data here
+  }
+
+  Future<void> fetchData() async {
+    final String userId = widget.courseData['userId'];
+    final tutorSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+    if (tutorSnapshot.exists) {
+      final tutorData = tutorSnapshot.data() as Map<String, dynamic>;
+      setState(() {
+        tutorFirstname = tutorData['firstname'] ?? '';
+        tutorLastname = tutorData['lastname'] ?? '';
+      });
     }
   }
 
@@ -257,119 +348,324 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
               height: 75,
               child: HeaderWidget(75, false, Icons.house_rounded),
             ),
-
-            if (widget.courseData['imageName'].isNotEmpty)
-              Image.network(
-                widget.courseData['imageName'],
-                height: 200,
-                width: 200,
-                fit: BoxFit.cover,
-              )
-            else
-              Image.asset(
-                'assets/images/logo.png',
-                height: 200,
-                width: 200,
-                fit: BoxFit.cover,
-              ),
             SizedBox(height: 20),
-            Text(
-              'Course Name: $courseName',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            SizedBox(height: 5),
-            GestureDetector(
-              onTap: () {
-                if (widget.courseData['googleMapsLink'] != null &&
-                    widget.courseData['googleMapsLink'].isNotEmpty) {
-                  print(
-                      'Google Maps Link: ${widget.courseData['googleMapsLink']}');
-                  launch(widget.courseData['googleMapsLink']);
-                }
-              },
-              child: Text(
-                'Address: $address (Go to Map)',
-                style: TextStyle(
-                  color: Colors
-                      .blue, // Change the color to make it look like a hyperlink
-                ),
-              ),
-            ),
-
-            SizedBox(height: 5),
-            Text('Province: $province'),
-            SizedBox(height: 5),
-            Text('Price/Month: $price'),
-            SizedBox(height: 5),
-            Text('Contact Information: $contactInfo'),
-            SizedBox(height: 5),
-            // Display Days of the Week
-
-            Text(
-              'Days of the Week:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            SizedBox(height: 5),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List<Widget>.generate(
-                  days.length,
-                  (index) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                    child: Chip(
-                      label: Text(days[index]),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 30.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  // Image
+                  if (widget.courseData['imageName'].isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        widget.courseData['imageName'],
+                        height: 250,
+                        width: 350,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        height: 250,
+                        width: 350,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ),
+                  SizedBox(height: 20), // Add space between image and text
+                  // Text
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Course Name: $courseName',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  _viewTutorInformation(context);
+                                },
+                                child: RichText(
+                                  text: TextSpan(
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                        text: 'By: ',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: '$tutorFirstname $tutorLastname',
+                                        style: TextStyle(
+                                          color: Theme.of(context).hintColor,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                'Price', // Replace 'price' with the actual price value
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      const Color.fromARGB(255, 129, 129, 129),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 5),
+                        ],
+                      ),
+                      SizedBox(height: 5),
+                      FutureBuilder<List<Comment>>(
+                        future: getCommentsForCourse(widget.courseId),
+                        builder: (context, snapshot) {
+                          final comments = snapshot.data ?? [];
+                          final averageRating =
+                              calculateAverageRating(comments);
+                          final totalComments = comments.length;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  RatingAndCommentWidget(
+                                    averageRating: averageRating,
+                                    totalComments: totalComments,
+                                  ),
+                                  Text(
+                                    '฿ $price', // Replace 'price' with the actual price value
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                      fontSize: 23,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                            ],
+                          );
+                        },
+                      ),
+                      SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Address: ',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors
+                                      .black, // Change the color if needed
+                                  fontSize: 16),
+                            ),
+                            TextSpan(
+                              text: '$address ',
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize:
+                                      16 // Change the color to make it look like a hyperlink
+                                  ),
+                              children: <InlineSpan>[
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (widget.courseData['googleMapsLink'] !=
+                                              null &&
+                                          widget.courseData['googleMapsLink']
+                                              .isNotEmpty) {
+                                        print(
+                                            'Google Maps Link: ${widget.courseData['googleMapsLink']}');
+                                        launch(widget
+                                            .courseData['googleMapsLink']);
+                                      }
+                                    },
+                                    child: Icon(
+                                      Icons
+                                          .map, // Replace with the icon you want
+                                      color: Theme.of(context).hintColor,
+                                      // Change the color if needed
+                                      size: 23, // Adjust the size as needed
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Province: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '$province ',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Contact Information: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '$contactInfo ',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Total Students: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '$totalStudents/$maxStudents ',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Time: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '${_formatTime(times[0]['hour'], times[0]['minute'])} - ${_formatTime(times[1]['hour'], times[1]['minute'])} ',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-            // Display Time Slots
-            SizedBox(height: 5),
-            Text(
-              'Time:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            SizedBox(height: 5),
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5.0),
-                  child: Text(
-                    'Start: ${_formatTime(times[0]['hour'], times[0]['minute'])}',
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5.0),
-                  child: Text(
-                    'End: ${_formatTime(times[1]['hour'], times[1]['minute'])}',
-                  ),
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: () => _viewTutorInformation(context),
-              child: Text(
-                'View Tutor Information',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-            ),
-            // Inside the Column widget
-            SizedBox(height: 5),
-            Text(
-              'Total Students: $totalStudents/$maxStudents',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-            
+                      // Display Days of the Week
+                      SizedBox(height: 5),
+                      Text(
+                        'Days of the Week:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width -
+                              15, // Adjust the padding
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: List<Widget>.generate(
+                              days.length,
+                              (index) => Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 5.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color:
+                                            Colors.black), // Add border color
+                                    borderRadius: BorderRadius.circular(
+                                        5), // Add border radius
+                                  ),
+                                  child: Chip(
+                                    label: Text(
+                                      days[index],
+                                      style: TextStyle(
+                                        color: Colors.black, // Text color
+                                        fontWeight:
+                                            FontWeight.bold, // Bold text
+                                        fontSize: 16, // Font size
+                                      ),
+                                    ),
+                                    backgroundColor: Colors
+                                        .transparent, // Set background color to transparent
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 1.0), // Adjust padding
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
 
+                      // Inside the Column widget
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 30),
             if (!isCurrentUserCourseCreator && isStudent)
               ElevatedButton(
                 onPressed: () async {
@@ -466,17 +762,22 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                     }
                   }
                 },
-                child: Text(
-                  // Update the button text based on whether a request is pending
-                  (widget.courseData['requestedStudents'] ?? [])
-                          .contains(user!.uid)
-                      ? 'Waiting...'
-                      : isEnrolled
-                          ? 'Cancel Enrollment'
-                          : 'Enroll',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  child: Text(
+                    // Update the button text based on whether a request is pending
+                    (widget.courseData['requestedStudents'] ?? [])
+                            .contains(user!.uid)
+                        ? 'Waiting...'
+                        : isEnrolled
+                            ? 'Cancel Enrollment'
+                            : 'Enroll',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20, // Adjust the font size as needed
+                    ),
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -484,14 +785,18 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                           .contains(user!.uid)
                       ? Colors.grey
                       : isEnrolled
-                          ? Colors.red
+                          ? Color.fromARGB(255, 221, 42, 29)
                           : Theme.of(context).hintColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                        25), // Adjust the border radius as needed
+                  ),
+                  elevation: 4, // Add elevation/shadow
                 ),
               ),
-
             if (isStudent && isEnrolled)
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(35.0),
                 child: Column(
                   children: [
                     TextField(
@@ -501,6 +806,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                         border: OutlineInputBorder(),
                       ),
                     ),
+                    SizedBox(height: 10),
                     RatingBar.builder(
                       initialRating:
                           selectedRating.toDouble(), // Convert to double
@@ -508,7 +814,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                       direction: Axis.horizontal,
                       allowHalfRating: false,
                       itemCount: 5,
-                      itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                      itemPadding: EdgeInsets.symmetric(horizontal: 5.0),
                       itemBuilder: (context, index) => Icon(
                         Icons.star,
                         color: Colors.amber,
@@ -546,20 +852,27 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                         }
                       },
                       child: Text(
-                        'Submit Comment',
+                        'Submit',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          fontSize: 20,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        primary: Colors.green,
+                        primary: Theme.of(context).hintColor,
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              25), // Adjust the border radius as needed
+                        ),
+                        elevation: 4,
                       ),
                     ),
                   ],
                 ),
               ),
-            SizedBox(height: 20),
             Text(
               'Comments',
               style: TextStyle(
@@ -567,30 +880,8 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                 fontSize: 18,
               ),
             ),
-            FutureBuilder<List<Comment>>(
-              future: getCommentsForCourse(widget.courseId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                }
-
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
-
-                final comments = snapshot.data ?? [];
-                final averageRating = calculateAverageRating(comments);
-                final totalComments = comments.length;
-
-                return RatingAndCommentWidget(
-                  averageRating: averageRating,
-                  totalComments: totalComments,
-                );
-              },
-            ),
             SizedBox(height: 10),
             CommentStream(courseId: widget.courseId),
-            
           ],
         ),
       ),
