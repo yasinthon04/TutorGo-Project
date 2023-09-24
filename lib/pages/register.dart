@@ -54,7 +54,7 @@ class _RegisterState extends State<Register> {
             ),
             Container(
               margin: EdgeInsets.fromLTRB(25, 50, 25, 10),
-              padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
               alignment: Alignment.center,
               child: Column(
                 children: [

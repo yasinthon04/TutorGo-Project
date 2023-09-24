@@ -37,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const HeaderWidget(250, false, Icons.ac_unit),
                   Positioned(
-                    top: 50,
+                    top: 70,
                     left: 0,
                     right: 0,
                     child: Image.asset(
@@ -51,8 +51,8 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SafeArea(
               child: Container(
-                padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+                margin: EdgeInsets.fromLTRB(20, 0, 20, 10),
                 child: Column(
                   children: [
                     Text(
