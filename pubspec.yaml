@@ -51,7 +51,12 @@ dependencies:
   google_nav_bar: ^5.0.6
   carousel_slider: ^4.2.1
   flutter_rating_bar: ^4.0.1
+  flutter_launcher_icons: ^0.13.1
 
+flutter_icons:
+    android: true
+    ios: true
+    image_path: "assets/icons/icon2.png"
 
 dev_dependencies:
   flutter_test:
