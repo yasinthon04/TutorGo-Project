@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorgo/pages/navpage/scheduleInfoPage.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -130,25 +131,38 @@ class _SchedulePageState extends State<SchedulePage> {
                       return '${courseTime.format(context)}';
                     }).join(' - ');
 
-                    return Card(
-                      margin:
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Course: $courseName',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                    return GestureDetector(
+                      onTap: () {
+                        // Navigate to the schedule info page and pass course data
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ScheduleInfoPage(
+                              courseData: courseData,
                             ),
-                            SizedBox(height: 10),
-                            Text('Days: ${days.join(', ')}'),
-                            Text('Times: $formattedTimes'),
-                          ],
+                          ),
+                        );
+                      },
+                      child: Card(
+                        margin:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                        child: Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Course: $courseName',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text('Days: ${days.join(', ')}'),
+                              Text('Times: $formattedTimes'),
+                            ],
+                          ),
                         ),
                       ),
                     );
