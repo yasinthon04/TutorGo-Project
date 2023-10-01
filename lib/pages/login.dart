@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
                     left: 0,
                     right: 0,
                     child: Image.asset(
-                      'lib/assets/images/logo.png',
+                      'lib/assets/images/ic_tutorgo.png',
                       width: 130,
                       height: 130,
                     ),
