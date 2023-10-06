@@ -222,6 +222,13 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     int totalStudents =
         getNumberOfStudents(widget.courseData['enrolledStudents'] ?? []);
     int maxStudents = widget.courseData['maxStudents'] ?? 0;
+    final List<Map<String, dynamic>> chaptersData =
+        List<Map<String, dynamic>>.from(widget.courseData['chapters'] ?? []);
+
+    final List<Map<String, String>> chapters = chaptersData.map((chapter) {
+      // Cast the dynamic values to String if needed
+      return Map<String, String>.from(chapter);
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -252,20 +259,20 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
               icon: Icon(Icons.edit),
               onPressed: () {
                 _showEditCourseDialog(
-                  context,
-                  widget.courseId,
-                  courseName,
-                  address,
-                  mapUrl,
-                  price,
-                  contactInfo,
-                  province,
-                  maxStudents,
-                  courseImage,
-                  category,
-                  days,
-                  times,
-                );
+                    context,
+                    widget.courseId,
+                    courseName,
+                    address,
+                    mapUrl,
+                    price,
+                    contactInfo,
+                    province,
+                    maxStudents,
+                    courseImage,
+                    category,
+                    days,
+                    times,
+                    chapters);
               },
             ),
           if (isCurrentUserCourseCreator)
@@ -375,7 +382,8 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                         fit: BoxFit.cover,
                       ),
                     ),
-                  SizedBox(height: 20), // Add space between image and text
+                  SizedBox(height: 20),
+                  // Add space between image and text
                   // Text
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1144,6 +1152,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     String category,
     List<String> days,
     List<Map<String, dynamic>> times,
+    List<Map<String, String>> chapters,
   ) {
     showDialog(
       context: context,
@@ -1161,6 +1170,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
           Days: days,
           Times: times,
           MaxStudents: maxStudents,
+          Chapters: chapters,
         );
       },
     );

@@ -26,6 +26,7 @@ class EditCourse extends StatefulWidget {
   final String Category;
   final List<String> Days;
   final List<Map<String, dynamic>> Times;
+  final List<Map<String, String>> Chapters;
 
   EditCourse({
     required this.CourseId,
@@ -40,6 +41,7 @@ class EditCourse extends StatefulWidget {
     required this.Category,
     required this.Days,
     required this.Times,
+    required this.Chapters,
   });
 
   @override
@@ -50,8 +52,7 @@ class _EditCourseState extends State<EditCourse> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _courseNameController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
-  TextEditingController _googleMapsLinkController =
-      TextEditingController();
+  TextEditingController _googleMapsLinkController = TextEditingController();
   TextEditingController _contactInfoController = TextEditingController();
   TextEditingController _maxStudentsController = TextEditingController();
   TextEditingController _selectedPrice = TextEditingController();
@@ -62,6 +63,23 @@ class _EditCourseState extends State<EditCourse> {
   String? _selectedProvince = ''; // Set an initial value
   File? _imageFile;
   List<String> _enrolledStudents = [];
+  List<Map<String, String>> _chapters = [];
+
+  void _addChapter() {
+    setState(() {
+      _chapters.add({
+        'chapterNo': '',
+        'chapterName': '',
+      });
+    });
+  }
+
+  // Function to remove a chapter
+  void _removeChapter(int index) {
+    setState(() {
+      _chapters.removeAt(index);
+    });
+  }
 
   @override
   void initState() {
@@ -71,14 +89,14 @@ class _EditCourseState extends State<EditCourse> {
     _googleMapsLinkController = TextEditingController(text: widget.MapUrl);
     _selectedPrice = TextEditingController(text: widget.Price.toString());
     _contactInfoController = TextEditingController(text: widget.ContactInfo);
-    _maxStudentsController = TextEditingController(text: widget.MaxStudents.toString());
+    _maxStudentsController =
+        TextEditingController(text: widget.MaxStudents.toString());
     _imageFile = File(widget.CourseImage);
     _selectedCategory = widget.Category;
-    _selectedDays = List<String>.from(widget.Days); // No need for split
+    _selectedDays = List<String>.from(widget.Days);
     _selectedTimes = _convertTimeMapListToTimeOfDayList(widget.Times);
     _loadProvinces().then((_) {
       setState(() {
-        // Set the selected province to the current province if available
         if (_provinceItems.isNotEmpty) {
           _selectedProvince = _provinceItems[0].value;
           if (_provinceItems.any((item) => item.value == widget.Province)) {
@@ -87,6 +105,26 @@ class _EditCourseState extends State<EditCourse> {
         }
       });
     });
+    if (widget.Chapters is List<Map<String, dynamic>>) {
+      // Extract chapterNo and chapterName from widget.Chapters
+      _chapters = (widget.Chapters as List<Map<String, dynamic>>)
+          .map((chapter) {
+            final chapterNo = chapter['chapterNo'] as String?;
+            final chapterName = chapter['chapterName'] as String?;
+            if (chapterNo != null && chapterName != null) {
+              return {'chapterNo': chapterNo, 'chapterName': chapterName};
+            } else {
+              // Handle missing or invalid data
+              return null; // You can choose to skip or handle invalid entries
+            }
+          })
+          .where((chapter) => chapter != null) // Remove null entries
+          .cast<Map<String, String>>() // Cast to the expected type
+          .toList();
+    } else {
+      // Handle incorrect data type or missing data
+      _chapters = []; // Set an empty list or handle the error as needed
+    }
     super.initState();
   }
 
@@ -109,7 +147,7 @@ class _EditCourseState extends State<EditCourse> {
 
     Map<String, dynamic> courseData =
         courseSnapshot.data() as Map<String, dynamic>;
-        _enrolledStudents = List<String>.from(courseData['enrolledStudents']);
+    _enrolledStudents = List<String>.from(courseData['enrolledStudents']);
     String imageUrl = courseData['imageName']; // Get the existing image URL
 
     // Create a temporary File object to hold the image
@@ -127,7 +165,8 @@ class _EditCourseState extends State<EditCourse> {
       _courseNameController =
           TextEditingController(text: courseData['courseName']);
       _addressController = TextEditingController(text: courseData['address']);
-      _selectedPrice = TextEditingController(text: courseData['price'].toString());
+      _selectedPrice =
+          TextEditingController(text: courseData['price'].toString());
       _contactInfoController =
           TextEditingController(text: courseData['contactInfo']);
       _selectedProvince = courseData['province'];
@@ -137,7 +176,6 @@ class _EditCourseState extends State<EditCourse> {
       _selectedTimes = _convertTimeMapListToTimeOfDayList(courseData['time']);
       _maxStudentsController =
           TextEditingController(text: courseData['maxStudents'].toString());
-      
     });
   }
 
@@ -147,7 +185,7 @@ class _EditCourseState extends State<EditCourse> {
     if (_formKey.currentState!.validate()) {
       // Get the form field values
       String courseName = _courseNameController.text;
-      String contactInfo =_contactInfoController.text;
+      String contactInfo = _contactInfoController.text;
       String address = _addressController.text;
       String googleMapsLink = _googleMapsLinkController.text;
       int price = int.tryParse(_selectedPrice.text ?? '0') ?? 0;
@@ -172,6 +210,17 @@ class _EditCourseState extends State<EditCourse> {
       } else {
         print("Image file does not exist or is null.");
       }
+
+      // Prepare the chapter data
+      List<Map<String, String>> chapters = _chapters.map((chapter) {
+        return {
+          'chapterNo':
+              chapter['chapterNo'] ?? '', // Provide a default empty string
+          'chapterName':
+              chapter['chapterName'] ?? '', // Provide a default empty string
+        };
+      }).toList();
+
       if (_selectedProvince != null && _selectedProvince!.isNotEmpty) {
         // Update the course data in Firestore
         try {
@@ -192,7 +241,8 @@ class _EditCourseState extends State<EditCourse> {
             'userId': FirebaseAuth.instance.currentUser?.uid,
             'enrolledStudents': enrolledStudents,
             'requestedStudents': requestedStudents,
-            'maxStudents': maxStudents
+            'maxStudents': maxStudents,
+            'chapters': chapters, // Include the chapter data
           });
         } catch (error) {
           print('Firestore Update Error: $error');
@@ -365,6 +415,7 @@ class _EditCourseState extends State<EditCourse> {
 
   @override
   Widget build(BuildContext context) {
+    print(_chapters);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -604,6 +655,86 @@ class _EditCourseState extends State<EditCourse> {
                         SizedBox(
                             height: 20), // Add some spacing below the section
                       ],
+                    ),
+                    SizedBox(height: 10),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _chapters.length,
+                      itemBuilder: (context, index) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Container(
+                                padding: EdgeInsets.only(left: 8.0),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors.grey), // Add border styling
+                                  borderRadius: BorderRadius.circular(
+                                      8.0), // Add border radius
+                                ),
+                                child: TextFormField(
+                                  initialValue: _chapters[index]
+                                      ['chapterNo'], // Set initial value
+                                  onChanged: (value) {
+                                    _chapters[index]['chapterNo'] = value;
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'No',
+                                    border: InputBorder
+                                        .none, // Remove the default border
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                padding: EdgeInsets.only(left: 8.0),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors.grey), // Add border styling
+                                  borderRadius: BorderRadius.circular(
+                                      8.0), // Add border radius
+                                ),
+                                child: TextFormField(
+                                  initialValue: _chapters[index]
+                                      ['chapterName'], // Set initial value
+                                  onChanged: (value) {
+                                    _chapters[index]['chapterName'] = value;
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Chapter Name',
+                                    border: InputBorder
+                                        .none, // Remove the default border
+                                  ),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.remove_circle),
+                              onPressed: () {
+                                _removeChapter(index);
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _addChapter,
+                      child: Text(
+                        'Add New Chapter',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        primary: Theme.of(context).hintColor,
+                      ),
                     ),
                     SizedBox(height: 10),
                     Row(
