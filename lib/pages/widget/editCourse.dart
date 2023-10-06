@@ -657,12 +657,25 @@ class _EditCourseState extends State<EditCourse> {
                       ],
                     ),
                     SizedBox(height: 10),
+                    Align(
+                      alignment:
+                          Alignment.centerLeft, // Align the text to the left
+                      child: Text(
+                        'Chapter:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
                     ListView.builder(
                       shrinkWrap: true,
                       itemCount: _chapters.length,
                       itemBuilder: (context, index) {
                         return Row(
                           children: [
+                            SizedBox(width: 8),
                             Expanded(
                               flex: 2,
                               child: Container(

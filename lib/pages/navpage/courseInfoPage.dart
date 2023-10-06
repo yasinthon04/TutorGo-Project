@@ -665,8 +665,63 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                             ),
                           ),
                         ),
-                      )
+                      ),
+                      SizedBox(height: 10),
+                      Visibility(
+                        visible:
+                            isEnrolled, // Conditionally show based on enrollment status
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Chapter:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: chaptersData.length,
+                              itemBuilder: (context, index) {
+                                final chapter = chaptersData[index];
+                                final chapterNo = chapter['chapterNo'] ?? '';
+                                final chapterName =
+                                    chapter['chapterName'] ?? '';
 
+                                // Here, you can create a checkbox for each chapter
+                                bool isChapterLearned =
+                                    false; // Initialize as not learned
+                                // You can retrieve the student's learning status from your data
+
+                                return ListTile(
+                                  leading: Checkbox(
+                                    value: isChapterLearned,
+                                    onChanged: (value) {
+                                      // Handle checkbox state change here
+                                      // You can update the student's learning status in your data
+                                      setState(() {
+                                        isChapterLearned = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                  title: Text(
+                                    '$chapterNo - $chapterName',
+                                    style: TextStyle(
+                                      color: isChapterLearned
+                                          ? Colors.green
+                                          : Colors.black,
+                                      decoration: isChapterLearned
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      )
                       // Inside the Column widget
                     ],
                   ),

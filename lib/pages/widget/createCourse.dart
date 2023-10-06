@@ -428,7 +428,17 @@ class _CreateCourseState extends State<CreateCourse> {
                     Text('Select Time Slots:'),
                     for (int i = 0; i < 2; i++) _buildTimePicker(i),
                     SizedBox(height: 10),
-                    // Display the list of chapter input fields dynamically
+                    Align(
+                      alignment:
+                          Alignment.centerLeft, // Align the text to the left
+                      child: Text(
+                        'Chapter:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                     ListView.builder(
                       shrinkWrap: true,
                       itemCount: chapters.length,
