@@ -30,13 +30,14 @@ class _CreateCourseState extends State<CreateCourse> {
   String? _selectedProvince = ''; // Selected province
   File? _imageFile;
   File? _selectedImage;
-  List<Map<String, String>> chapters = [];
+  List<Map<String, dynamic>> chapters = [];
   
   void _addChapter() {
     setState(() {
       chapters.add({
         'chapterNo': '',
         'chapterName': '',
+        'isLearned': false,
       });
     });
   }

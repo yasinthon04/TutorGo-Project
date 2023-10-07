@@ -26,7 +26,7 @@ class EditCourse extends StatefulWidget {
   final String Category;
   final List<String> Days;
   final List<Map<String, dynamic>> Times;
-  final List<Map<String, String>> Chapters;
+  final List<Map<String, dynamic>> Chapters;
 
   EditCourse({
     required this.CourseId,
@@ -63,13 +63,16 @@ class _EditCourseState extends State<EditCourse> {
   String? _selectedProvince = ''; // Set an initial value
   File? _imageFile;
   List<String> _enrolledStudents = [];
-  List<Map<String, String>> _chapters = [];
+  List<Map<String, dynamic>> _chapters = [];
+  User? user;
+  String studentId = '';
 
   void _addChapter() {
     setState(() {
       _chapters.add({
         'chapterNo': '',
         'chapterName': '',
+        'isLearned': false,
       });
     });
   }
@@ -84,6 +87,8 @@ class _EditCourseState extends State<EditCourse> {
   @override
   void initState() {
     _loadCourseData();
+    user = FirebaseAuth.instance.currentUser;
+    studentId = user?.uid ?? '';
     _courseNameController = TextEditingController(text: widget.CourseName);
     _addressController = TextEditingController(text: widget.Address);
     _googleMapsLinkController = TextEditingController(text: widget.MapUrl);
@@ -106,25 +111,32 @@ class _EditCourseState extends State<EditCourse> {
       });
     });
     if (widget.Chapters is List<Map<String, dynamic>>) {
-      // Extract chapterNo and chapterName from widget.Chapters
+      // Extract chapterNo, chapterName, and isLearned from widget.Chapters
       _chapters = (widget.Chapters as List<Map<String, dynamic>>)
           .map((chapter) {
             final chapterNo = chapter['chapterNo'] as String?;
             final chapterName = chapter['chapterName'] as String?;
+            final isLearned = chapter['isLearned'] as bool? ??
+                false; // Add isLearned with a default value of false
             if (chapterNo != null && chapterName != null) {
-              return {'chapterNo': chapterNo, 'chapterName': chapterName};
+              return {
+                'chapterNo': chapterNo,
+                'chapterName': chapterName,
+                'isLearned': isLearned, // Include isLearned in the chapter data
+              };
             } else {
               // Handle missing or invalid data
               return null; // You can choose to skip or handle invalid entries
             }
           })
           .where((chapter) => chapter != null) // Remove null entries
-          .cast<Map<String, String>>() // Cast to the expected type
+          .cast<Map<String, dynamic>>() // Cast to the expected type
           .toList();
     } else {
       // Handle incorrect data type or missing data
       _chapters = []; // Set an empty list or handle the error as needed
     }
+
     super.initState();
   }
 
@@ -212,12 +224,11 @@ class _EditCourseState extends State<EditCourse> {
       }
 
       // Prepare the chapter data
-      List<Map<String, String>> chapters = _chapters.map((chapter) {
+      List<Map<String, dynamic>> chapters = _chapters.map((chapter) {
         return {
-          'chapterNo':
-              chapter['chapterNo'] ?? '', // Provide a default empty string
-          'chapterName':
-              chapter['chapterName'] ?? '', // Provide a default empty string
+          'chapterNo': chapter['chapterNo'] ?? '',
+          'chapterName': chapter['chapterName'] ?? '',
+          'isLearned': false,
         };
       }).toList();
 
@@ -265,7 +276,8 @@ class _EditCourseState extends State<EditCourse> {
         MaterialPageRoute(
           builder: (context) => CourseInfoPage(
             courseId: widget.CourseId,
-            courseData: updatedCourseData, // Pass the updated courseData
+            courseData: updatedCourseData,
+            studentId: studentId, // Pass the user's UID if available
           ),
         ),
       );

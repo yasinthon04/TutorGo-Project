@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
@@ -17,10 +18,14 @@ class _SearchPageState extends State<SearchPage> {
   List<String> _provinces = []; // List to store provinces
   String _selectedProvince = 'Bangkok'; // Currently selected province
   String _selectedCategory = '';
+  User? user;
+  String studentId = '';
 
   @override
   void initState() {
     super.initState();
+    user = FirebaseAuth.instance.currentUser;
+    studentId = user?.uid ?? '';
     _searchFocusNode = FocusNode();
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(_onSearchFocusChanged);
@@ -141,6 +146,7 @@ class _SearchPageState extends State<SearchPage> {
                     builder: (context) => CourseInfoPage(
                       courseData: courseData,
                       courseId: courseId,
+                      studentId: studentId,
                     ),
                   ),
                 );

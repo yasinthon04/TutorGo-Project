@@ -19,7 +19,11 @@ class CourseInfoPage extends StatefulWidget {
   final User? user = Auth().currentUser;
   final Map<String, dynamic> courseData;
   final String courseId;
-  CourseInfoPage({required this.courseData, required this.courseId});
+  final String studentId;
+  CourseInfoPage(
+      {required this.courseData,
+      required this.courseId,
+      required this.studentId});
 
   @override
   _CourseInfoPageState createState() => _CourseInfoPageState();
@@ -30,6 +34,84 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
   final TextEditingController _commentController = TextEditingController();
   List<Comment> courseComments = [];
   double selectedRating = 0.0;
+
+  Future<void> updateChapterLearnedStatusForTutor(
+      String courseId, String chapterNo, bool isLearned) async {
+    try {
+      final courseRef =
+          FirebaseFirestore.instance.collection('courses').doc(courseId);
+      final courseSnapshot = await courseRef.get();
+
+      if (courseSnapshot.exists) {
+        final List<dynamic> chapters = courseSnapshot['chapters'] ?? [];
+
+        // Find the chapter by chapterNo in the list of chapters
+        final Map<String, dynamic>? foundChapter = chapters.firstWhere(
+          (chapter) => chapter['chapterNo'] == chapterNo,
+          orElse: () => null,
+        );
+
+        if (foundChapter != null) {
+          // Update the isLearned status of the chapter in the foundChapter map
+          foundChapter['isLearned'] = isLearned;
+
+          // Update the chapters field in the course document
+          await courseRef.update({
+            'chapters': chapters,
+          });
+        } else {
+          print('Chapter with chapterNo $chapterNo not found in the course.');
+        }
+      } else {
+        print('Course document does not exist.');
+      }
+    } catch (error) {
+      print('Error updating chapter learned status: $error');
+    }
+  }
+
+  Future<void> updateChapterLearnedStatusForStudent(String courseId,
+      String studentId, String chapterNo, bool isLearned) async {
+    try {
+      final courseRef =
+          FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+      // Create a reference to the enrolled student's document within the course
+      final enrolledStudentRef =
+          courseRef.collection('enrolledStudents').doc(studentId);
+
+      // Fetch the enrolled student's document
+      final enrolledStudentSnapshot = await enrolledStudentRef.get();
+
+      if (enrolledStudentSnapshot.exists) {
+        Map<String, dynamic> enrolledStudentData =
+            enrolledStudentSnapshot.data() as Map<String, dynamic>;
+        List<dynamic> chapterInfoList =
+            enrolledStudentData['chapterInfo'] ?? [];
+
+        // Find the chapter by chapterNo in the list of chapterInfo
+        for (var chapterInfo in chapterInfoList) {
+          if (chapterInfo['chapterNo'] == chapterNo) {
+            // Toggle the isLearned status
+            chapterInfo['isLearned'] = !isLearned; // Toggle the status
+
+            // Update the chapterInfoList field in the enrolled student's document
+            await enrolledStudentRef.update({
+              'chapterInfo': chapterInfoList,
+            });
+
+            return; // Exit the loop once the chapter is found and updated
+          }
+        }
+
+        print('Chapter with chapterNo $chapterNo not found for the student.');
+      } else {
+        print('Enrolled student document does not exist.');
+      }
+    } catch (error) {
+      print('Error updating chapter learned status: $error');
+    }
+  }
 
   String _formatTime(int hour, int minute) {
     final period = hour < 12 ? 'AM' : 'PM';
@@ -225,9 +307,9 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     final List<Map<String, dynamic>> chaptersData =
         List<Map<String, dynamic>>.from(widget.courseData['chapters'] ?? []);
 
-    final List<Map<String, String>> chapters = chaptersData.map((chapter) {
+    final List<Map<String, dynamic>> chapters = chaptersData.map((chapter) {
       // Cast the dynamic values to String if needed
-      return Map<String, String>.from(chapter);
+      return Map<String, dynamic>.from(chapter);
     }).toList();
 
     return Scaffold(
@@ -668,8 +750,100 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                       ),
                       SizedBox(height: 10),
                       Visibility(
-                        visible:
-                            isEnrolled, // Conditionally show based on enrollment status
+                        visible: isEnrolled,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Chapter:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('courses')
+                                  .doc(widget.courseId)
+                                  .collection('enrolledStudents')
+                                  .doc(widget.studentId)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  // Handle loading state
+                                  return CircularProgressIndicator();
+                                }
+
+                                if (!snapshot.hasData ||
+                                    snapshot.data == null) {
+                                  // Handle case where the snapshot is null or doesn't have data
+                                  return Text(
+                                      'Enrolled student document does not exist.');
+                                }
+
+                                if (!snapshot.data!.exists) {
+                                  // Handle case where the enrolled student document does not exist
+                                  return Text(
+                                      'Enrolled student document does not exist.');
+                                }
+
+                                // Access the chapterInfo data from the enrolled student document
+                                List<dynamic> chaptersData =
+                                    snapshot.data!['chapterInfo'] ?? [];
+
+                                return ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: chaptersData.length,
+                                  itemBuilder: (context, index) {
+                                    final chapter = chaptersData[index];
+                                    final chapterNo =
+                                        chapter['chapterNo'] ?? '';
+                                    final chapterName =
+                                        chapter['chapterName'] ?? '';
+                                    bool isChapterLearned =
+                                        chapter['isLearned'] ?? false;
+
+                                    return ListTile(
+                                      leading: Checkbox(
+                                        value: isChapterLearned,
+                                        onChanged: (value) async {
+                                          // Handle checkbox state change here
+                                          setState(() {
+                                            isChapterLearned = value ?? false;
+                                          });
+
+                                          // Update the isLearned status of the chapter in your data
+                                          updateChapterLearnedStatusForStudent(
+                                            widget.courseId, // The course ID
+                                            widget
+                                                .studentId, // The student's ID
+                                            chapterNo, // The chapter number
+                                            !isChapterLearned, // Toggle the isLearned status
+                                          );
+                                        },
+                                      ),
+                                      title: Text(
+                                        '$chapterNo - $chapterName',
+                                        style: TextStyle(
+                                          color: isChapterLearned
+                                              ? Colors.green
+                                              : Colors.black,
+                                          decoration: isChapterLearned
+                                              ? TextDecoration.lineThrough
+                                              : null,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Visibility(
+                        visible: isCurrentUserCourseCreator,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -688,21 +862,24 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                                 final chapterNo = chapter['chapterNo'] ?? '';
                                 final chapterName =
                                     chapter['chapterName'] ?? '';
-
-                                // Here, you can create a checkbox for each chapter
                                 bool isChapterLearned =
-                                    false; // Initialize as not learned
-                                // You can retrieve the student's learning status from your data
+                                    chapter['isLearned'] ?? false;
 
                                 return ListTile(
                                   leading: Checkbox(
                                     value: isChapterLearned,
-                                    onChanged: (value) {
+                                    onChanged: (value) async {
                                       // Handle checkbox state change here
-                                      // You can update the student's learning status in your data
                                       setState(() {
                                         isChapterLearned = value ?? false;
                                       });
+
+                                      // Update the isLearned status of the chapter in your data
+                                      updateChapterLearnedStatusForTutor(
+                                        widget.courseId, // The course ID
+                                        chapterNo, // The chapter number
+                                        isChapterLearned, // Pass the updated value
+                                      );
                                     },
                                   ),
                                   title: Text(
@@ -722,7 +899,6 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                           ],
                         ),
                       )
-                      // Inside the Column widget
                     ],
                   ),
                 ],
@@ -1207,7 +1383,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     String category,
     List<String> days,
     List<Map<String, dynamic>> times,
-    List<Map<String, String>> chapters,
+    List<Map<String, dynamic>> chapters,
   ) {
     showDialog(
       context: context,
@@ -1535,13 +1711,46 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
         'enrolledStudents': FieldValue.arrayUnion([studentId]),
       });
 
-      // Store courseId in student's data
-      final studentRef =
-          FirebaseFirestore.instance.collection('users').doc(studentId);
+      // Fetch the course data and check if it exists
+      DocumentSnapshot courseSnapshot = await courseRef.get();
+      if (courseSnapshot.exists) {
+        Map<String, dynamic> courseData =
+            courseSnapshot.data() as Map<String, dynamic>;
+        List<dynamic> chapters = courseData['chapters'] ?? [];
 
-      await studentRef.update({
-        'enrolledCourses': FieldValue.arrayUnion([courseId]),
-      });
+        // Create a structure for the enrolled student's chapter information
+        List<Map<String, dynamic>> enrolledStudentChapters = [];
+
+        // Populate the chapter information for the enrolled student
+        for (var chapter in chapters) {
+          Map<String, dynamic> chapterInfo = {
+            'chapterNo': chapter['chapterNo'],
+            'chapterName': chapter['chapterName'],
+            'isLearned': false,
+          };
+          enrolledStudentChapters.add(chapterInfo);
+        }
+
+        // Create a reference to the enrolled student's document within the course
+        final enrolledStudentRef =
+            courseRef.collection('enrolledStudents').doc(studentId);
+
+        // Set the chapter information for the enrolled student within the course
+        await enrolledStudentRef.set({
+          'chapterInfo': enrolledStudentChapters,
+        });
+
+        // Additionally, you can keep the chapter information within the student's document
+        final studentRef =
+            FirebaseFirestore.instance.collection('users').doc(studentId);
+
+        // Update the student's enrolledCourses field with the updated array
+        await studentRef.update({
+          'enrolledCourses': FieldValue.arrayUnion([courseId]),
+        });
+      } else {
+        print('Course document does not exist.');
+      }
     } catch (error) {
       print('Error confirming student request: $error');
     }
