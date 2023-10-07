@@ -35,6 +35,14 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
   List<Comment> courseComments = [];
   double selectedRating = 0.0;
 
+  int calculatePercentage(List<dynamic> chaptersData) {
+    int totalLessons = chaptersData.length;
+    int lessonsLearned =
+        chaptersData.where((chapter) => chapter['isLearned'] == true).length;
+    double percentage = (lessonsLearned / totalLessons) * 100;
+    return percentage.toInt();
+  }
+
   Future<void> updateChapterLearnedStatusForTutor(
       String courseId, String chapterNo, bool isLearned) async {
     try {
@@ -769,12 +777,6 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                                   .doc(widget.studentId)
                                   .snapshots(),
                               builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  // Handle loading state
-                                  return CircularProgressIndicator();
-                                }
-
                                 if (!snapshot.hasData ||
                                     snapshot.data == null) {
                                   // Handle case where the snapshot is null or doesn't have data
@@ -792,56 +794,107 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                                 List<dynamic> chaptersData =
                                     snapshot.data!['chapterInfo'] ?? [];
 
-                                return ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: chaptersData.length,
-                                  itemBuilder: (context, index) {
-                                    final chapter = chaptersData[index];
-                                    final chapterNo =
-                                        chapter['chapterNo'] ?? '';
-                                    final chapterName =
-                                        chapter['chapterName'] ?? '';
-                                    bool isChapterLearned =
-                                        chapter['isLearned'] ?? false;
+                                int percentageCompleted =
+                                    calculatePercentage(chaptersData);
 
-                                    return ListTile(
-                                      leading: Checkbox(
-                                        value: isChapterLearned,
-                                        onChanged: (value) async {
-                                          // Handle checkbox state change here
-                                          setState(() {
-                                            isChapterLearned = value ?? false;
-                                          });
+                                return Column(
+                                  children: [
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: chaptersData.length,
+                                      itemBuilder: (context, index) {
+                                        final chapter = chaptersData[index];
+                                        final chapterNo =
+                                            chapter['chapterNo'] ?? '';
+                                        final chapterName =
+                                            chapter['chapterName'] ?? '';
+                                        bool isChapterLearned =
+                                            chapter['isLearned'] ?? false;
 
-                                          // Update the isLearned status of the chapter in your data
-                                          updateChapterLearnedStatusForStudent(
-                                            widget.courseId, // The course ID
-                                            widget
-                                                .studentId, // The student's ID
-                                            chapterNo, // The chapter number
-                                            !isChapterLearned, // Toggle the isLearned status
-                                          );
-                                        },
-                                      ),
-                                      title: Text(
-                                        '$chapterNo - $chapterName',
-                                        style: TextStyle(
-                                          color: isChapterLearned
-                                              ? Colors.green
-                                              : Colors.black,
-                                          decoration: isChapterLearned
-                                              ? TextDecoration.lineThrough
-                                              : null,
+                                        return ListTile(
+                                          leading: Checkbox(
+                                            value: isChapterLearned,
+                                            onChanged: (value) async {
+                                              // Handle checkbox state change here
+                                              setState(() {
+                                                isChapterLearned =
+                                                    value ?? false;
+                                              });
+
+                                              // Update the isLearned status of the chapter in your data
+                                              updateChapterLearnedStatusForStudent(
+                                                widget
+                                                    .courseId, // The course ID
+                                                widget
+                                                    .studentId, // The student's ID
+                                                chapterNo, // The chapter number
+                                                !isChapterLearned, // Toggle the isLearned status
+                                              );
+                                            },
+                                          ),
+                                          title: Text(
+                                            '$chapterNo - $chapterName',
+                                            style: TextStyle(
+                                              color: isChapterLearned
+                                                  ? Colors.green
+                                                  : Colors.black,
+                                              decoration: isChapterLearned
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: RichText(
+                                        text: TextSpan(
+                                          children: <InlineSpan>[
+                                            TextSpan(
+                                              text:
+                                                  'Completed: $percentageCompleted%',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            WidgetSpan(
+                                              child: Icon(
+                                                Icons.emoji_events,
+                                                color: Colors.orange,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    );
-                                  },
+                                    ),
+                                    // Container to style the progress bar
+                                    Container(
+                                      margin:
+                                          EdgeInsets.symmetric(vertical: 10),
+                                      height: 15, // Adjust the height as needed
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                            10), // Adjust the radius as needed
+                                        child: LinearProgressIndicator(
+                                          value: percentageCompleted / 100,
+                                          backgroundColor: Colors.grey[300],
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.orange),
+                                        ),
+                                      ),
+                                    )
+                                  ],
                                 );
                               },
                             ),
                           ],
                         ),
                       ),
+
                       Visibility(
                         visible: isCurrentUserCourseCreator,
                         child: Column(
@@ -854,45 +907,113 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: chaptersData.length,
-                              itemBuilder: (context, index) {
-                                final chapter = chaptersData[index];
-                                final chapterNo = chapter['chapterNo'] ?? '';
-                                final chapterName =
-                                    chapter['chapterName'] ?? '';
-                                bool isChapterLearned =
-                                    chapter['isLearned'] ?? false;
+                            StreamBuilder<DocumentSnapshot?>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('courses')
+                                  .doc(widget.courseId)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return CircularProgressIndicator(); // Placeholder while loading data
+                                }
 
-                                return ListTile(
-                                  leading: Checkbox(
-                                    value: isChapterLearned,
-                                    onChanged: (value) async {
-                                      // Handle checkbox state change here
-                                      setState(() {
-                                        isChapterLearned = value ?? false;
-                                      });
+                                final courseData = snapshot.data?.data()
+                                        as Map<String, dynamic>? ??
+                                    {};
+                                final chaptersData =
+                                    courseData['chapters'] as List<dynamic>;
 
-                                      // Update the isLearned status of the chapter in your data
-                                      updateChapterLearnedStatusForTutor(
-                                        widget.courseId, // The course ID
-                                        chapterNo, // The chapter number
-                                        isChapterLearned, // Pass the updated value
-                                      );
-                                    },
-                                  ),
-                                  title: Text(
-                                    '$chapterNo - $chapterName',
-                                    style: TextStyle(
-                                      color: isChapterLearned
-                                          ? Colors.green
-                                          : Colors.black,
-                                      decoration: isChapterLearned
-                                          ? TextDecoration.lineThrough
-                                          : null,
+                                int percentageCompleted =
+                                    calculatePercentage(chaptersData);
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Display additional information or customization here
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: chaptersData.length,
+                                      itemBuilder: (context, index) {
+                                        final chapter = chaptersData[index]
+                                            as Map<String, dynamic>;
+                                        final chapterNo =
+                                            chapter['chapterNo'] as String? ??
+                                                '';
+                                        final chapterName =
+                                            chapter['chapterName'] as String? ??
+                                                '';
+                                        bool isChapterLearned =
+                                            chapter['isLearned'] as bool? ??
+                                                false;
+
+                                        return ListTile(
+                                          leading: Checkbox(
+                                            value: isChapterLearned,
+                                            onChanged: (value) async {
+                                              // Handle checkbox state change here
+                                              await updateChapterLearnedStatusForTutor(
+                                                widget
+                                                    .courseId, // The course ID
+                                                chapterNo, // The chapter number
+                                                value ??
+                                                    false, // Pass the updated value
+                                              );
+                                            },
+                                          ),
+                                          title: Text(
+                                            '$chapterNo - $chapterName',
+                                            style: TextStyle(
+                                              color: isChapterLearned
+                                                  ? Colors.green
+                                                  : Colors.black,
+                                              decoration: isChapterLearned
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  ),
+                                    RichText(
+                                      text: TextSpan(
+                                        children: <InlineSpan>[
+                                          TextSpan(
+                                            text:
+                                                'Completed: $percentageCompleted%',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          WidgetSpan(
+                                            child: Icon(
+                                              Icons.emoji_events,
+                                              color: Colors.orange,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Container to style the progress bar
+                                    Container(
+                                      margin:
+                                          EdgeInsets.symmetric(vertical: 10),
+                                      height: 15, // Adjust the height as needed
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                            10), // Adjust the radius as needed
+                                        child: LinearProgressIndicator(
+                                          value: percentageCompleted / 100,
+                                          backgroundColor: Colors.grey[300],
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.orange),
+                                        ),
+                                      ),
+                                    )
+                                  ],
                                 );
                               },
                             ),
