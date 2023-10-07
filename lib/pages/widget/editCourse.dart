@@ -231,6 +231,35 @@ class _EditCourseState extends State<EditCourse> {
           'isLearned': false,
         };
       }).toList();
+      for (String studentUID in enrolledStudents) {
+        // Construct a reference to the student's document in Firestore
+        DocumentReference studentRef =
+            FirebaseFirestore.instance.collection('students').doc(studentUID);
+
+        // Fetch the student's data from Firestore
+        DocumentSnapshot studentSnapshot = await studentRef.get();
+
+        // Check if the student document exists
+        if (studentSnapshot.exists) {
+          // Update the chapter info for the student
+          List<Map<String, dynamic>> updatedChapters = _chapters.map((chapter) {
+            return {
+              'chapterNo': chapter['chapterNo'] ?? '',
+              'chapterName': chapter['chapterName'] ?? '',
+              'isLearned': false,
+            };
+          }).toList();
+
+          // Update the 'chapters' field in the student's document
+          await studentRef.update({'chapters': updatedChapters});
+
+          // Print a message or perform any other necessary actions
+          print('Chapter info updated for student with UID: $studentUID');
+        } else {
+          // Handle the case where the student document does not exist
+          print('Student with UID: $studentUID does not exist in Firestore.');
+        }
+      }
 
       if (_selectedProvince != null && _selectedProvince!.isNotEmpty) {
         // Update the course data in Firestore
