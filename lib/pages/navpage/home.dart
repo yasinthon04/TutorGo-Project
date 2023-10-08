@@ -336,6 +336,7 @@ class _HomePageState extends State<HomePage> {
                               builder: (context) => CourseInfoPage(
                                 courseData: courseData,
                                 courseId: courseId,
+                                studentId: user!.uid,
                               ),
                             ),
                           );
@@ -545,6 +546,7 @@ class _HomePageState extends State<HomePage> {
                           builder: (context) => CourseInfoPage(
                             courseData: courseData,
                             courseId: courseId,
+                            studentId: user!.uid,
                           ),
                         ),
                       );
