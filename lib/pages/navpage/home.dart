@@ -210,37 +210,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      floatingActionButton: FutureBuilder<String>(
-        future: getUserRole(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // Return a loading indicator while waiting for the Future to complete
-            return CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else {
-            // Snapshot has data
-            final userRole = snapshot.data;
-            print('User role: $userRole');
-
-            return userRole == 'Student'
-                ? FloatingActionButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return PostCourse();
-                        },
-                      );
-                    },
-                    child: Icon(Icons.add,
-                        color: Colors.white), // Only display the icon
-                    backgroundColor: Theme.of(context).hintColor,
-                  )
-                : Container(); // Return an empty container for non-students
-          }
-        },
-      ),
     );
   }
 

@@ -1,9 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorgo/auth.dart';
 import 'package:tutorgo/pages/navpage/postCourseInfoPage.dart';
+import 'package:tutorgo/pages/widget/postCourse.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 
+Future<String> getUserRole() async {
+  final User? user = Auth().currentUser;
+    final userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user?.uid)
+        .get();
+
+    final userData = userSnapshot.data() as Map<String, dynamic>;
+    final role = userData['role'] as String;
+
+    return role;
+  }
 class PostCoursePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -51,7 +66,7 @@ class PostCoursePage extends StatelessWidget {
                   var postCourses = snapshot.data!.docs;
 
                   return ListView.builder(
-                    shrinkWrap: true, // Ensure the ListView doesn't scroll itself
+                    shrinkWrap: true,
                     itemCount: postCourses.length,
                     itemBuilder: (context, index) {
                       var postCourse =
@@ -82,20 +97,17 @@ class PostCoursePage extends StatelessWidget {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Add an Image widget here with the course image
                                 Image.network(
-                                  postCourse[
-                                      'imageUrl'], // Replace with the actual image URL
+                                  postCourse['imageUrl'],
                                   width: 100.0,
                                   height: 100.0,
-                                  fit: BoxFit.cover, // Adjust the fit as needed
+                                  fit: BoxFit.cover,
                                 ),
-                                SizedBox(
-                                    width:
-                                        16.0), // Add spacing between the image and details
+                                SizedBox(width: 16.0),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Course Name: ${postCourse['courseName']}',
@@ -154,7 +166,8 @@ class PostCoursePage extends StatelessWidget {
                                 IconButton(
                                   onPressed: () {
                                     if (postCourse['googleMapsLink'] != null &&
-                                        postCourse['googleMapsLink'].isNotEmpty) {
+                                        postCourse['googleMapsLink']
+                                            .isNotEmpty) {
                                       String mapLink =
                                           postCourse['googleMapsLink'];
                                       launch(mapLink);
@@ -178,6 +191,34 @@ class PostCoursePage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FutureBuilder<String>(
+        future: getUserRole(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else {
+            final userRole = snapshot.data;
+            print('User role: $userRole');
+
+            return userRole == 'Student'
+                ? FloatingActionButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return PostCourse();
+                        },
+                      );
+                    },
+                    child: Icon(Icons.add, color: Colors.white),
+                    backgroundColor: Theme.of(context).hintColor,
+                  )
+                : Container();
+          }
+        },
       ),
     );
   }
