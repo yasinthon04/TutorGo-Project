@@ -19,7 +19,11 @@ class CourseInfoPage extends StatefulWidget {
   final User? user = Auth().currentUser;
   final Map<String, dynamic> courseData;
   final String courseId;
-  CourseInfoPage({required this.courseData, required this.courseId});
+  final String studentId;
+  CourseInfoPage(
+      {required this.courseData,
+      required this.courseId,
+      required this.studentId});
 
   @override
   _CourseInfoPageState createState() => _CourseInfoPageState();
@@ -30,6 +34,92 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
   final TextEditingController _commentController = TextEditingController();
   List<Comment> courseComments = [];
   double selectedRating = 0.0;
+
+  int calculatePercentage(List<dynamic> chaptersData) {
+    int totalLessons = chaptersData.length;
+    int lessonsLearned =
+        chaptersData.where((chapter) => chapter['isLearned'] == true).length;
+    double percentage = (lessonsLearned / totalLessons) * 100;
+    return percentage.toInt();
+  }
+
+  Future<void> updateChapterLearnedStatusForTutor(
+      String courseId, String chapterNo, bool isLearned) async {
+    try {
+      final courseRef =
+          FirebaseFirestore.instance.collection('courses').doc(courseId);
+      final courseSnapshot = await courseRef.get();
+
+      if (courseSnapshot.exists) {
+        final List<dynamic> chapters = courseSnapshot['chapters'] ?? [];
+
+        // Find the chapter by chapterNo in the list of chapters
+        final Map<String, dynamic>? foundChapter = chapters.firstWhere(
+          (chapter) => chapter['chapterNo'] == chapterNo,
+          orElse: () => null,
+        );
+
+        if (foundChapter != null) {
+          // Update the isLearned status of the chapter in the foundChapter map
+          foundChapter['isLearned'] = isLearned;
+
+          // Update the chapters field in the course document
+          await courseRef.update({
+            'chapters': chapters,
+          });
+        } else {
+          print('Chapter with chapterNo $chapterNo not found in the course.');
+        }
+      } else {
+        print('Course document does not exist.');
+      }
+    } catch (error) {
+      print('Error updating chapter learned status: $error');
+    }
+  }
+
+  Future<void> updateChapterLearnedStatusForStudent(String courseId,
+      String studentId, String chapterNo, bool isLearned) async {
+    try {
+      final courseRef =
+          FirebaseFirestore.instance.collection('courses').doc(courseId);
+
+      // Create a reference to the enrolled student's document within the course
+      final enrolledStudentRef =
+          courseRef.collection('enrolledStudents').doc(studentId);
+
+      // Fetch the enrolled student's document
+      final enrolledStudentSnapshot = await enrolledStudentRef.get();
+
+      if (enrolledStudentSnapshot.exists) {
+        Map<String, dynamic> enrolledStudentData =
+            enrolledStudentSnapshot.data() as Map<String, dynamic>;
+        List<dynamic> chapterInfoList =
+            enrolledStudentData['chapterInfo'] ?? [];
+
+        // Find the chapter by chapterNo in the list of chapterInfo
+        for (var chapterInfo in chapterInfoList) {
+          if (chapterInfo['chapterNo'] == chapterNo) {
+            // Toggle the isLearned status
+            chapterInfo['isLearned'] = !isLearned; // Toggle the status
+
+            // Update the chapterInfoList field in the enrolled student's document
+            await enrolledStudentRef.update({
+              'chapterInfo': chapterInfoList,
+            });
+
+            return; // Exit the loop once the chapter is found and updated
+          }
+        }
+
+        print('Chapter with chapterNo $chapterNo not found for the student.');
+      } else {
+        print('Enrolled student document does not exist.');
+      }
+    } catch (error) {
+      print('Error updating chapter learned status: $error');
+    }
+  }
 
   String _formatTime(int hour, int minute) {
     final period = hour < 12 ? 'AM' : 'PM';
@@ -222,6 +312,13 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     int totalStudents =
         getNumberOfStudents(widget.courseData['enrolledStudents'] ?? []);
     int maxStudents = widget.courseData['maxStudents'] ?? 0;
+    final List<Map<String, dynamic>> chaptersData =
+        List<Map<String, dynamic>>.from(widget.courseData['chapters'] ?? []);
+
+    final List<Map<String, dynamic>> chapters = chaptersData.map((chapter) {
+      // Cast the dynamic values to String if needed
+      return Map<String, dynamic>.from(chapter);
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -252,20 +349,20 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
               icon: Icon(Icons.edit),
               onPressed: () {
                 _showEditCourseDialog(
-                  context,
-                  widget.courseId,
-                  courseName,
-                  address,
-                  mapUrl,
-                  price,
-                  contactInfo,
-                  province,
-                  maxStudents,
-                  courseImage,
-                  category,
-                  days,
-                  times,
-                );
+                    context,
+                    widget.courseId,
+                    courseName,
+                    address,
+                    mapUrl,
+                    price,
+                    contactInfo,
+                    province,
+                    maxStudents,
+                    courseImage,
+                    category,
+                    days,
+                    times,
+                    chapters);
               },
             ),
           if (isCurrentUserCourseCreator)
@@ -375,7 +472,8 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                         fit: BoxFit.cover,
                       ),
                     ),
-                  SizedBox(height: 20), // Add space between image and text
+                  SizedBox(height: 20),
+                  // Add space between image and text
                   // Text
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -657,9 +755,271 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
                             ),
                           ),
                         ),
-                      )
+                      ),
+                      SizedBox(height: 10),
+                      Visibility(
+                        visible: isEnrolled,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Chapter:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('courses')
+                                  .doc(widget.courseId)
+                                  .collection('enrolledStudents')
+                                  .doc(widget.studentId)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData ||
+                                    snapshot.data == null) {
+                                  // Handle case where the snapshot is null or doesn't have data
+                                  return Text(
+                                      'Enrolled student document does not exist.');
+                                }
 
-                      // Inside the Column widget
+                                if (!snapshot.data!.exists) {
+                                  // Handle case where the enrolled student document does not exist
+                                  return Text(
+                                      'Enrolled student document does not exist.');
+                                }
+
+                                // Access the chapterInfo data from the enrolled student document
+                                List<dynamic> chaptersData =
+                                    snapshot.data!['chapterInfo'] ?? [];
+
+                                int percentageCompleted =
+                                    calculatePercentage(chaptersData);
+
+                                return Column(
+                                  children: [
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: chaptersData.length,
+                                      itemBuilder: (context, index) {
+                                        final chapter = chaptersData[index];
+                                        final chapterNo =
+                                            chapter['chapterNo'] ?? '';
+                                        final chapterName =
+                                            chapter['chapterName'] ?? '';
+                                        bool isChapterLearned =
+                                            chapter['isLearned'] ?? false;
+
+                                        return ListTile(
+                                          leading: Checkbox(
+                                            value: isChapterLearned,
+                                            onChanged: (value) async {
+                                              // Handle checkbox state change here
+                                              setState(() {
+                                                isChapterLearned =
+                                                    value ?? false;
+                                              });
+
+                                              // Update the isLearned status of the chapter in your data
+                                              updateChapterLearnedStatusForStudent(
+                                                widget
+                                                    .courseId, // The course ID
+                                                widget
+                                                    .studentId, // The student's ID
+                                                chapterNo, // The chapter number
+                                                !isChapterLearned, // Toggle the isLearned status
+                                              );
+                                            },
+                                          ),
+                                          title: Text(
+                                            '$chapterNo - $chapterName',
+                                            style: TextStyle(
+                                              color: isChapterLearned
+                                                  ? Colors.green
+                                                  : Colors.black,
+                                              decoration: isChapterLearned
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: RichText(
+                                        text: TextSpan(
+                                          children: <InlineSpan>[
+                                            TextSpan(
+                                              text:
+                                                  'Completed: $percentageCompleted%',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            WidgetSpan(
+                                              child: Icon(
+                                                Icons.emoji_events,
+                                                color: Colors.orange,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    // Container to style the progress bar
+                                    Container(
+                                      margin:
+                                          EdgeInsets.symmetric(vertical: 10),
+                                      height: 15, // Adjust the height as needed
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                            10), // Adjust the radius as needed
+                                        child: LinearProgressIndicator(
+                                          value: percentageCompleted / 100,
+                                          backgroundColor: Colors.grey[300],
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.orange),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Visibility(
+                        visible: isCurrentUserCourseCreator,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Chapter:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            StreamBuilder<DocumentSnapshot?>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('courses')
+                                  .doc(widget.courseId)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return CircularProgressIndicator(); // Placeholder while loading data
+                                }
+
+                                final courseData = snapshot.data?.data()
+                                        as Map<String, dynamic>? ??
+                                    {};
+                                final chaptersData =
+                                    courseData['chapters'] as List<dynamic>;
+
+                                int percentageCompleted =
+                                    calculatePercentage(chaptersData);
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Display additional information or customization here
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: chaptersData.length,
+                                      itemBuilder: (context, index) {
+                                        final chapter = chaptersData[index]
+                                            as Map<String, dynamic>;
+                                        final chapterNo =
+                                            chapter['chapterNo'] as String? ??
+                                                '';
+                                        final chapterName =
+                                            chapter['chapterName'] as String? ??
+                                                '';
+                                        bool isChapterLearned =
+                                            chapter['isLearned'] as bool? ??
+                                                false;
+
+                                        return ListTile(
+                                          leading: Checkbox(
+                                            value: isChapterLearned,
+                                            onChanged: (value) async {
+                                              // Handle checkbox state change here
+                                              await updateChapterLearnedStatusForTutor(
+                                                widget
+                                                    .courseId, // The course ID
+                                                chapterNo, // The chapter number
+                                                value ??
+                                                    false, // Pass the updated value
+                                              );
+                                            },
+                                          ),
+                                          title: Text(
+                                            '$chapterNo - $chapterName',
+                                            style: TextStyle(
+                                              color: isChapterLearned
+                                                  ? Colors.green
+                                                  : Colors.black,
+                                              decoration: isChapterLearned
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    RichText(
+                                      text: TextSpan(
+                                        children: <InlineSpan>[
+                                          TextSpan(
+                                            text:
+                                                'Completed: $percentageCompleted%',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          WidgetSpan(
+                                            child: Icon(
+                                              Icons.emoji_events,
+                                              color: Colors.orange,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Container to style the progress bar
+                                    Container(
+                                      margin:
+                                          EdgeInsets.symmetric(vertical: 10),
+                                      height: 15, // Adjust the height as needed
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                            10), // Adjust the radius as needed
+                                        child: LinearProgressIndicator(
+                                          value: percentageCompleted / 100,
+                                          backgroundColor: Colors.grey[300],
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.orange),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      )
                     ],
                   ),
                 ],
@@ -1144,6 +1504,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
     String category,
     List<String> days,
     List<Map<String, dynamic>> times,
+    List<Map<String, dynamic>> chapters,
   ) {
     showDialog(
       context: context,
@@ -1161,6 +1522,7 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
           Days: days,
           Times: times,
           MaxStudents: maxStudents,
+          Chapters: chapters,
         );
       },
     );
@@ -1470,13 +1832,46 @@ class _CourseInfoPageState extends State<CourseInfoPage> {
         'enrolledStudents': FieldValue.arrayUnion([studentId]),
       });
 
-      // Store courseId in student's data
-      final studentRef =
-          FirebaseFirestore.instance.collection('users').doc(studentId);
+      // Fetch the course data and check if it exists
+      DocumentSnapshot courseSnapshot = await courseRef.get();
+      if (courseSnapshot.exists) {
+        Map<String, dynamic> courseData =
+            courseSnapshot.data() as Map<String, dynamic>;
+        List<dynamic> chapters = courseData['chapters'] ?? [];
 
-      await studentRef.update({
-        'enrolledCourses': FieldValue.arrayUnion([courseId]),
-      });
+        // Create a structure for the enrolled student's chapter information
+        List<Map<String, dynamic>> enrolledStudentChapters = [];
+
+        // Populate the chapter information for the enrolled student
+        for (var chapter in chapters) {
+          Map<String, dynamic> chapterInfo = {
+            'chapterNo': chapter['chapterNo'],
+            'chapterName': chapter['chapterName'],
+            'isLearned': false,
+          };
+          enrolledStudentChapters.add(chapterInfo);
+        }
+
+        // Create a reference to the enrolled student's document within the course
+        final enrolledStudentRef =
+            courseRef.collection('enrolledStudents').doc(studentId);
+
+        // Set the chapter information for the enrolled student within the course
+        await enrolledStudentRef.set({
+          'chapterInfo': enrolledStudentChapters,
+        });
+
+        // Additionally, you can keep the chapter information within the student's document
+        final studentRef =
+            FirebaseFirestore.instance.collection('users').doc(studentId);
+
+        // Update the student's enrolledCourses field with the updated array
+        await studentRef.update({
+          'enrolledCourses': FieldValue.arrayUnion([courseId]),
+        });
+      } else {
+        print('Course document does not exist.');
+      }
     } catch (error) {
       print('Error confirming student request: $error');
     }

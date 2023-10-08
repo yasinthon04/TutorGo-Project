@@ -30,11 +30,24 @@ class _CreateCourseState extends State<CreateCourse> {
   String? _selectedProvince = ''; // Selected province
   File? _imageFile;
   File? _selectedImage;
-  // double _selectedPrice = 0;
-  // String _formatPrice(double price) {
-  //   final formatter = NumberFormat('#,##0');
-  //   return formatter.format(price);
-  // }
+  List<Map<String, dynamic>> chapters = [];
+  
+  void _addChapter() {
+    setState(() {
+      chapters.add({
+        'chapterNo': '',
+        'chapterName': '',
+        'isLearned': false,
+      });
+    });
+  }
+
+  // Function to remove a chapter
+  void _removeChapter(int index) {
+    setState(() {
+      chapters.removeAt(index);
+    });
+  }
 
   @override
   void initState() {
@@ -77,8 +90,8 @@ class _CreateCourseState extends State<CreateCourse> {
         await storageRef.putFile(_imageFile!);
         String imageUrl = await storageRef.getDownloadURL();
 
-        // Save the course data to Firestore
-        await FirebaseFirestore.instance.collection('courses').add({
+        // Create a map for the course data
+        Map<String, dynamic> courseData = {
           'courseName': courseName,
           'contactInfo': contactInfo,
           'address': address,
@@ -92,12 +105,16 @@ class _CreateCourseState extends State<CreateCourse> {
           'userId': FirebaseAuth.instance.currentUser?.uid,
           'enrolledStudents': enrolledStudents,
           'requestedStudents': requestedStudents,
-          'maxStudents': maxStudents
-        });
-      }
+          'maxStudents': maxStudents,
+          'chapters': chapters, // Include the chapters data
+        };
 
-      // Close the dialog
-      Navigator.pop(context);
+        // Save the course data to Firestore
+        await FirebaseFirestore.instance.collection('courses').add(courseData);
+
+        // Close the dialog
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -279,7 +296,6 @@ class _CreateCourseState extends State<CreateCourse> {
                     SizedBox(height: 10),
                     TextFormField(
                       controller: addressController,
-                      
                       decoration: InputDecoration(labelText: 'Address'),
                       validator: (value) {
                         if (value!.trim().isEmpty) {
@@ -413,6 +429,91 @@ class _CreateCourseState extends State<CreateCourse> {
                     Text('Select Time Slots:'),
                     for (int i = 0; i < 2; i++) _buildTimePicker(i),
                     SizedBox(height: 10),
+                    Align(
+                      alignment:
+                          Alignment.centerLeft, // Align the text to the left
+                      child: Text(
+                        'Chapter:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: chapters.length,
+                      itemBuilder: (context, index) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Container(
+                                padding: EdgeInsets.only(left: 8.0),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors.grey), // Add border styling
+                                  borderRadius: BorderRadius.circular(
+                                      8.0), // Add border radius
+                                ),
+                                child: TextFormField(
+                                  onChanged: (value) {
+                                    chapters[index]['chapterNo'] = value;
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'No',
+                                    border: InputBorder
+                                        .none, // Remove the default border
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                padding: EdgeInsets.only(left: 8.0),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors.grey), // Add border styling
+                                  borderRadius: BorderRadius.circular(
+                                      8.0), // Add border radius
+                                ),
+                                child: TextFormField(
+                                  onChanged: (value) {
+                                    chapters[index]['chapterName'] = value;
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Chapter Name',
+                                    border: InputBorder
+                                        .none, // Remove the default border
+                                  ),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.remove_circle),
+                              onPressed: () {
+                                _removeChapter(index);
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _addChapter,
+                      child: Text('Add New Chapter',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),),
+                        style: ElevatedButton.styleFrom(
+                        primary: Theme.of(context).hintColor,
+                      ),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
