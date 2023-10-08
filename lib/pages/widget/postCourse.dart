@@ -71,7 +71,13 @@ class _PostCourseState extends State<PostCourse> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Post Course Information'),
+      title: Text(
+        'Post Course Information',
+        style: TextStyle(
+          fontSize: 20.0,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -153,13 +159,25 @@ class _PostCourseState extends State<PostCourse> {
               ),
               ElevatedButton(
                 onPressed: () => _pickImage(ImageSource.gallery),
-                child: Text('Select Image'),
+                child: Text(
+                  'Select Image',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Theme.of(context).hintColor,
+                ),
               ),
               if (_imageFile != null)
-                Image.file(
-                  _imageFile!,
-                  width: 200,
-                  height: 200,
+                Container(
+                  padding: EdgeInsets.all(10.0),
+                  child: Image.file(
+                    _imageFile!,
+                    width: 200,
+                    height: 200,
+                  ),
                 ),
             ],
           ),
@@ -170,11 +188,29 @@ class _PostCourseState extends State<PostCourse> {
           onPressed: () {
             Navigator.of(context).pop(); // Close the dialog
           },
-          child: Text('Cancel'),
+          child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Theme.of(context).hintColor,
+                ),
         ),
         ElevatedButton(
           onPressed: _submitForm,
-          child: Text('Create'),
+          child: Text(
+            'Create',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                ),
         ),
       ],
     );

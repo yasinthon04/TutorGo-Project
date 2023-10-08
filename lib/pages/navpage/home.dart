@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                         PostCoursePage()), // Navigate to PostCoursePage
               );
             },
-            icon: Icon(Icons.work), // Icon for navigating to PostCoursePage
+            icon: Icon(Icons.newspaper), // Icon for navigating to PostCoursePage
           ),
         ],
       ),
@@ -235,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                     },
                     child: Icon(Icons.add,
                         color: Colors.white), // Only display the icon
-                    backgroundColor: const Color.fromARGB(255, 0, 80, 145),
+                    backgroundColor: Theme.of(context).hintColor,
                   )
                 : Container(); // Return an empty container for non-students
           }

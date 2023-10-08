@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tutorgo/pages/navpage/PostCoursePage.dart';
+import 'package:tutorgo/pages/widget/header_widget.dart';
 
 class EditPostPage extends StatefulWidget {
   final Map<String, dynamic> postCourseData;
@@ -18,6 +19,7 @@ class EditPostPage extends StatefulWidget {
 }
 
 class _EditPostPageState extends State<EditPostPage> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _courseNameController;
   late TextEditingController _addressController;
   late TextEditingController _contactInfoController;
@@ -135,53 +137,169 @@ class _EditPostPageState extends State<EditPostPage> {
       appBar: AppBar(
         title: Text(
           'Edit Post',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+          style: TextStyle(color: Colors.white),
+        ),
+        elevation: 0.5,
+        iconTheme: IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                Theme.of(context).primaryColor,
+                Theme.of(context).hintColor,
+              ],
+            ),
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _courseNameController,
-              decoration: InputDecoration(labelText: 'Course Name'),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              height: 75,
+              child: HeaderWidget(75, false, Icons.house_rounded),
             ),
-            TextField(
-              controller: _addressController,
-              decoration: InputDecoration(labelText: 'Address'),
-            ),
-            TextField(
-              controller: _contactInfoController,
-              decoration: InputDecoration(labelText: 'Contact Info'),
-            ),
-            TextField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Price'),
-            ),
-            TextField(
-              controller: _googleMapsLinkController,
-              decoration: InputDecoration(labelText: 'Google Maps Link'),
-            ),
-            if (_imageUrlController.text.isNotEmpty)
-              Image.network(
-                _imageUrlController.text,
-                height: 100.0,
-                width: 100.0,
-                fit: BoxFit.cover,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 50),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _courseNameController,
+                      decoration: InputDecoration(labelText: 'Course Name'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Course Name cannot be empty";
+                        }
+                        if (value.length > 35) {
+                          return "Course Name should not exceed 35 characters";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: _contactInfoController,
+                      keyboardType: TextInputType.number,
+                      decoration:
+                          InputDecoration(labelText: 'Contact Information'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Contact Information cannot be empty";
+                        }
+                        if (value.length != 10) {
+                          return "Contact Information should be 10 digits";
+                        }
+                        return null;
+                      },
+                    ),
+                    
+                    TextFormField(
+                      controller: _addressController,
+                      decoration: InputDecoration(labelText: 'Address'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Address cannot be empty";
+                        }
+                        if (value.length > 35) {
+                          return "Address should not exceed 35 characters";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller:
+                          _googleMapsLinkController, // Add a TextEditingController
+                      decoration: InputDecoration(
+                          labelText:
+                              'Google Maps Link(Example: https://goo.gl/maps/KiYNop6sMFmdZeM38)'),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Google Maps Link cannot be empty";
+                        }
+                        // You can add more validation logic here if needed
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: _priceController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Price',
+                      ),
+                      validator: (value) {
+                        if (value!.trim().isEmpty) {
+                          return "Price cannot be empty";
+                        }
+
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    if (_imageUrlController.text.isNotEmpty)
+                      Image.network(
+                        _imageUrlController.text,
+                        height: 100.0,
+                        width: 100.0,
+                        fit: BoxFit.cover,
+                      ),
+                      SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _pickImage,
+                      child: Text('Upload New Image',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        primary: Theme.of(context).hintColor,
+                      ),),
+                    
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _updatePostCourseData,
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.green,
+                          ),
+                        ),
+                        SizedBox(width: 10), // Add spacing between buttons
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                  ],
+                ),
               ),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Upload New Image'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updatePostCourseData,
-              child: Text('Save Changes'),
             ),
           ],
         ),
