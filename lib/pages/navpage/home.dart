@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tutorgo/auth.dart';
 import 'package:tutorgo/pages/login.dart';
+import 'package:tutorgo/pages/navpage/PostCoursePage.dart';
 import 'package:tutorgo/pages/navpage/courseInfoPage.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 import 'package:tutorgo/pages/widget/postCourse.dart';
@@ -89,6 +90,17 @@ class _HomePageState extends State<HomePage> {
               }
               return SizedBox.shrink();
             },
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        PostCoursePage()), // Navigate to PostCoursePage
+              );
+            },
+            icon: Icon(Icons.work), // Icon for navigating to PostCoursePage
           ),
         ],
       ),
@@ -221,10 +233,8 @@ class _HomePageState extends State<HomePage> {
                         },
                       );
                     },
-                    child: Icon(
-                      Icons.add,
-                      color: Colors.white
-                    ), // Only display the icon
+                    child: Icon(Icons.add,
+                        color: Colors.white), // Only display the icon
                     backgroundColor: const Color.fromARGB(255, 0, 80, 145),
                   )
                 : Container(); // Return an empty container for non-students
