@@ -38,7 +38,7 @@ class PostCoursePage extends StatelessWidget {
             child: HeaderWidget(75, false, Icons.house_rounded),
           ),
           Expanded(
-            child: StreamBuilder(
+            child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('postCourse')
                   .snapshots(),
@@ -52,15 +52,26 @@ class PostCoursePage extends StatelessWidget {
                 return ListView.builder(
                   itemCount: postCourses.length,
                   itemBuilder: (context, index) {
-                    var postCourse = postCourses[index].data();
+                    var postCourse =
+                        postCourses[index].data() as Map<String, dynamic>;
+                    String? postCourseId = postCourses[index].id;
+
                     return GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PostCourseInfoPage(postCourseData: postCourse),
-                          ),
-                        );
+                        if (postCourseId != null && postCourseId.isNotEmpty) {
+                          print('$postCourseId');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PostCourseInfoPage(
+                                postCourseData: postCourse,
+                                postCourseId: postCourseId,
+                              ),
+                            ),
+                          );
+                        } else {
+                          print('Invalid postCourseId');
+                        }
                       },
                       child: Card(
                         margin: EdgeInsets.all(16.0),
@@ -97,14 +108,15 @@ class PostCoursePage extends StatelessWidget {
                                 onPressed: () {
                                   if (postCourse['googleMapsLink'] != null &&
                                       postCourse['googleMapsLink'].isNotEmpty) {
-                                    String mapLink = postCourse['googleMapsLink'];
+                                    String mapLink =
+                                        postCourse['googleMapsLink'];
                                     launch(mapLink);
                                   }
                                 },
                                 icon: Icon(
                                   Icons.pin_drop_rounded,
                                   color: Colors.blueGrey,
-                                  size: 48.0, // Adjust the size as needed
+                                  size: 48.0,
                                 ),
                               ),
                             ],

@@ -1,11 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:tutorgo/pages/widget/editPost.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tutorgo/pages/widget/header_widget.dart';
 
 class PostCourseInfoPage extends StatelessWidget {
   final Map<String, dynamic> postCourseData;
+  final String? postCourseId;
 
-  const PostCourseInfoPage({required this.postCourseData});
+  const PostCourseInfoPage({required this.postCourseData, this.postCourseId});
+
+  bool get isStudent {
+    return postCourseData['userId'] == FirebaseAuth.instance.currentUser?.uid;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +66,27 @@ class PostCourseInfoPage extends StatelessWidget {
                   },
                   child: Text('Open in Google Maps'),
                 ),
+                if (isStudent)
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigate to the edit page
+                      if (postCourseId != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditPostPage(
+                              postCourseData: postCourseData,
+                              postCourseId:
+                                  postCourseId, // Pass the postCourseId here
+                            ),
+                          ),
+                        );
+                      } else {
+                        print('Invalid postCourseId');
+                      }
+                    },
+                    child: Text('Edit Post'),
+                  ),
               ],
             ),
           ),
