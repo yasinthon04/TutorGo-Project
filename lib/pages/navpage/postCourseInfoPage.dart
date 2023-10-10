@@ -92,6 +92,213 @@ class _PostCourseInfoPageState extends State<PostCourseInfoPage> {
     }
   }
 
+  void _viewListAndRequestOfTutor(
+      BuildContext context, String postCourseId) async {
+    final courseRef =
+        FirebaseFirestore.instance.collection('postCourse').doc(postCourseId);
+
+    final courseSnapshot = await courseRef.get();
+
+    if (courseSnapshot.exists) {
+      // final enrolledTutor = courseSnapshot['enrolledTutors'] ?? [];
+      final requestedTutors = courseSnapshot['requestedTutors'] ?? [];
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('List of Tutors',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            contentPadding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Divider(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+                  child: Text(
+                    'Requested Tutors',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+                if (requestedTutors.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('No tutor have requested to join.'),
+                  )
+                else
+                  for (String userId in requestedTutors)
+                    FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        }
+                        if (snapshot.hasError) {
+                          return Text('Error loading tutor data');
+                        }
+                        final tutorData =
+                            snapshot.data?.data() as Map<String, dynamic>? ??
+                                {};
+                        final tutorName =
+                            '${tutorData['firstname']} ${tutorData['lastname']}';
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ListTile(
+                              title: Text(tutorName),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      _confirmTutorRequest(
+                                          postCourseId, userId);
+                                      _enrollInCourse(context, postCourseId);
+                                      Navigator.pop(context);
+                                    },
+                                    icon: Icon(Icons.check),
+                                    color: Colors.green,
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      _removeTutorRequest(postCourseId, userId);
+                                      Navigator.pop(context);
+                                    },
+                                    icon: Icon(Icons.close),
+                                    color: Colors.red,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                // SizedBox(height: 4),
+                // Padding(
+                //   padding: const EdgeInsets.only(top: 8.0, left: 4.0),
+                //   child: Text(
+                //     'Enrolled Students',
+                //     style: TextStyle(fontWeight: FontWeight.bold),
+                //     textAlign: TextAlign.left,
+                //   ),
+                // ),
+                // if (enrolledStudents.isEmpty)
+                //   Padding(
+                //     padding: const EdgeInsets.all(8.0),
+                //     child: Text('No students are currently enrolled.'),
+                //   )
+                // else
+                //   for (String studentId in enrolledStudents)
+                //     FutureBuilder<DocumentSnapshot>(
+                //       future: FirebaseFirestore.instance
+                //           .collection('users')
+                //           .doc(studentId)
+                //           .get(),
+                //       builder: (context, snapshot) {
+                //         if (snapshot.connectionState ==
+                //             ConnectionState.waiting) {
+                //           return CircularProgressIndicator();
+                //         }
+                //         if (snapshot.hasError) {
+                //           return Text('Error loading student data');
+                //         }
+                //         final studentData =
+                //             snapshot.data?.data() as Map<String, dynamic>? ??
+                //                 {};
+                //         final studentName =
+                //             '${studentData['firstname']} ${studentData['lastname']}';
+
+                //         return Column(
+                //           crossAxisAlignment: CrossAxisAlignment.start,
+                //           children: [
+                //             ListTile(
+                //               title: Text(studentName),
+                //               trailing: IconButton(
+                //                 onPressed: () {
+                //                   _confirmDeleteStudent(
+                //                       context, courseId, studentId);
+                //                 },
+                //                 icon: Icon(Icons.delete),
+                //                 color: Colors.red,
+                //               ),
+                //             ),
+                //           ],
+                //         );
+                //       },
+                //     ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Close',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Theme.of(context).hintColor,
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void _confirmTutorRequest(String postCourseId, String userId) async {
+    final courseRef =
+        FirebaseFirestore.instance.collection('postCourse').doc(postCourseId);
+
+    try {
+      await courseRef.update({
+        'requestedTutor': FieldValue.arrayRemove([userId]),
+        'enrolledTutor': FieldValue.arrayUnion([userId]),
+      });
+
+      // Create a reference to the enrolled student's document within the course
+      final enrolledTutorRef =
+          courseRef.collection('enrolledTutors').doc(userId);
+
+      final tutorRef =
+          FirebaseFirestore.instance.collection('users').doc(userId);
+
+      // Update the student's enrolledCourses field with the updated array
+      await tutorRef.update({
+        'enrolledJob': FieldValue.arrayUnion([postCourseId]),
+      });
+    } catch (error) {
+      print('Error confirming tutor request: $error');
+    }
+  }
+
+  void _removeTutorRequest(String postCourseId, String userId) async {
+    final courseRef =
+        FirebaseFirestore.instance.collection('postCourse').doc(postCourseId);
+
+    try {
+      await courseRef.update({
+        'requestedTutor': FieldValue.arrayRemove([userId]),
+      });
+    } catch (error) {
+      print('Error removing tutor request: $error');
+    }
+  }
+
   Future<bool> _showTutorEnrollConfirmation(BuildContext context) async {
     return await showDialog<bool>(
           context: context,
@@ -157,6 +364,8 @@ class _PostCourseInfoPageState extends State<PostCourseInfoPage> {
 
   @override
   Widget build(BuildContext context) {
+    int requestedTutorCount =
+        widget.postCourseData['requestedTutors']?.length ?? 0;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -204,6 +413,37 @@ class _PostCourseInfoPageState extends State<PostCourseInfoPage> {
                 Icons.edit, // Change to your desired icon
                 color: Colors.white,
               ),
+            ),
+          if (isStudent)
+            IconButton(
+              icon: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(Icons.view_list),
+                  if (requestedTutorCount > 0)
+                    Positioned(
+                      top: -2,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.red, // Customize the color
+                        ),
+                        child: Text(
+                          requestedTutorCount.toString(),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              onPressed: () {
+                _viewListAndRequestOfTutor(context, widget.postCourseId!);
+              },
             ),
         ],
       ),
@@ -325,49 +565,51 @@ class _PostCourseInfoPageState extends State<PostCourseInfoPage> {
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (isEnrolled) {
-                        if (widget.postCourseId != null) {
-                          _cancelEnrollment(context, widget.postCourseId!);
-                        } else {
-                          print('Invalid postCourseId');
-                        }
-                      } else {
-                        bool shouldEnroll =
-                            await _showTutorEnrollConfirmation(context);
-
-                        if (shouldEnroll) {
+                  if (!isStudent)
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (isEnrolled) {
                           if (widget.postCourseId != null) {
-                            _enrollInCourse(context, widget.postCourseId!);
+                            _cancelEnrollment(context, widget.postCourseId!);
                           } else {
                             print('Invalid postCourseId');
                           }
+                        } else {
+                          bool shouldEnroll =
+                              await _showTutorEnrollConfirmation(context);
+
+                          if (shouldEnroll) {
+                            if (widget.postCourseId != null) {
+                              _requestEnrollInCourse(
+                                  context, widget.postCourseId!);
+                            } else {
+                              print('Invalid postCourseId');
+                            }
+                          }
                         }
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 10),
-                      child: Text(
-                        isEnrolled ? 'Cancel Enrollment' : 'Enroll as Tutor',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 20,
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 10),
+                        child: Text(
+                          isEnrolled ? 'Cancel Enrollment' : 'Enroll as Tutor',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
                         ),
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      primary: isEnrolled
-                          ? Color.fromARGB(255, 221, 42, 29)
-                          : Theme.of(context).hintColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
+                      style: ElevatedButton.styleFrom(
+                        primary: isEnrolled
+                            ? Color.fromARGB(255, 221, 42, 29)
+                            : Theme.of(context).hintColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        elevation: 4,
                       ),
-                      elevation: 4,
                     ),
-                  ),
                 ],
               ),
             ),
