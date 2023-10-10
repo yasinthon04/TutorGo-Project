@@ -314,24 +314,31 @@ class _PostCourseInfoPageState extends State<PostCourseInfoPage> {
                     Navigator.pop(context, false); // User canceled
                   },
                   child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
+                'Cancel',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).hintColor,
+              ),
+           
                 ),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context, true); // User confirmed
                   },
                   child: Text(
-                    'Enroll',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
+                'Enroll',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green,
+              ),
                 ),
               ],
             );
@@ -565,51 +572,58 @@ class _PostCourseInfoPageState extends State<PostCourseInfoPage> {
                       ],
                     ),
                   ),
+                  SizedBox(height: 20),
                   if (!isStudent)
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (isEnrolled) {
-                          if (widget.postCourseId != null) {
-                            _cancelEnrollment(context, widget.postCourseId!);
-                          } else {
-                            print('Invalid postCourseId');
-                          }
-                        } else {
-                          bool shouldEnroll =
-                              await _showTutorEnrollConfirmation(context);
-
-                          if (shouldEnroll) {
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (isEnrolled) {
                             if (widget.postCourseId != null) {
-                              _requestEnrollInCourse(
-                                  context, widget.postCourseId!);
+                              _cancelEnrollment(context, widget.postCourseId!);
                             } else {
                               print('Invalid postCourseId');
                             }
+                          } else {
+                            bool shouldEnroll =
+                                await _showTutorEnrollConfirmation(context);
+
+                            if (shouldEnroll) {
+                              if (widget.postCourseId != null) {
+                                _requestEnrollInCourse(
+                                    context, widget.postCourseId!);
+                              } else {
+                                print('Invalid postCourseId');
+                              }
+                            }
                           }
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 10),
-                        child: Text(
-                          isEnrolled ? 'Cancel Enrollment' : 'Enroll as Tutor',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 20,
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 10,
+                          ),
+                          child: Text(
+                            isEnrolled
+                                ? 'Cancel Enrollment'
+                                : 'Enroll as Tutor',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
                           ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        primary: isEnrolled
-                            ? Color.fromARGB(255, 221, 42, 29)
-                            : Theme.of(context).hintColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
+                        style: ElevatedButton.styleFrom(
+                          primary: isEnrolled
+                              ? Color.fromARGB(255, 221, 42, 29)
+                              : Theme.of(context).hintColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          elevation: 4,
                         ),
-                        elevation: 4,
                       ),
-                    ),
+                    )
                 ],
               ),
             ),
